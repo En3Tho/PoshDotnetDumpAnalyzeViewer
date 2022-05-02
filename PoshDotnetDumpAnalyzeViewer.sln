@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoshDotnetDumpAnalyzeViewer", "PoshDotnetDumpAnalyzeViewer\PoshDotnetDumpAnalyzeViewer.csproj", "{EE45C619-30E4-4EF6-8FB8-6B774FE03754}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoshDotnetDumpAnalyzeViewerHost", "PoshDotnetDumpAnalyzeViewerHost\PoshDotnetDumpAnalyzeViewerHost.csproj", "{707D0425-3C33-4235-AA1F-3035822C3D8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoshDotnetDumpAnalyzeViewerModule", "PoshDotnetDumpAnalyzeViewerModule\PoshDotnetDumpAnalyzeViewerModule.csproj", "{74D49D04-36B2-4271-A435-8FC820907EF9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE45C619-30E4-4EF6-8FB8-6B774FE03754}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE45C619-30E4-4EF6-8FB8-6B774FE03754}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE45C619-30E4-4EF6-8FB8-6B774FE03754}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE45C619-30E4-4EF6-8FB8-6B774FE03754}.Release|Any CPU.Build.0 = Release|Any CPU
+		{707D0425-3C33-4235-AA1F-3035822C3D8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{707D0425-3C33-4235-AA1F-3035822C3D8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{707D0425-3C33-4235-AA1F-3035822C3D8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{707D0425-3C33-4235-AA1F-3035822C3D8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74D49D04-36B2-4271-A435-8FC820907EF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74D49D04-36B2-4271-A435-8FC820907EF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74D49D04-36B2-4271-A435-8FC820907EF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74D49D04-36B2-4271-A435-8FC820907EF9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
