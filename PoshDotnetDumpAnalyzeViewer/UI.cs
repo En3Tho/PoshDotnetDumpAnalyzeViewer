@@ -4,8 +4,6 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-// in theory in memory bus with commands of different types is better? try it? maybe on redis viewer?
-
 public record Views(
     Toplevel Toplevel,
     Window Window,
@@ -122,7 +120,7 @@ public static class ViewsExtensions
                         }
                         else
                         {
-                            var commandResultTab = await UI.SendCommand(bridge, clipboard, tabManager, command);
+                            var commandResultTab = await UI.SendCommand(bridge, clipboard, command);
                             commandResultTab.Item1.AddTabClosing(tabManager);
                             tabManager.SetTab(command, commandResultTab);
                             commandHistory.AddCommand(command);
@@ -193,7 +191,7 @@ public static class ViewsExtensions
 
 public class UI
 {
-    public static async Task<(CommandViews, CommandOutput)> SendCommand(DotnetDumpAnalyzeBridge bridge, MiniClipboard clipboard, TabManager tabManager, string command)
+    public static async Task<(CommandViews, CommandOutput)> SendCommand(DotnetDumpAnalyzeBridge bridge, MiniClipboard clipboard, string command)
     {
         var result = await bridge.PerformCommand(command);
         var commandResultViews = MakeCommandViews().SetupLogic(clipboard, command, result.Output);
@@ -311,7 +309,7 @@ public class UI
 
         SpinWaitTask(Task.Run(async () =>
         {
-            var (helpCommandTab, output) = await SendCommand(bridge, clipboard, tabManager, "help");
+            var (helpCommandTab, output) = await SendCommand(bridge, clipboard, "help");
             tabManager.SetTab("help", (helpCommandTab, output));
         }, source.Token));
 

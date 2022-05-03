@@ -30,8 +30,16 @@ public static class ProcessUtil
             throw new($"dotnet dump exited unexpectedly with code: {dotnetDump.ExitCode}");
         }
 
-        // skip first messages
-        while (await dotnetDump.StandardOutput.ReadLineAsync() is not (null or Constants.EndCommandOutputAnchor)) { }
+        var messages = new List<string>();
+
+        await foreach (var message in dotnetDump.StandardOutput.ReadAllLinesToEndAsync())
+        {
+            if (message is Constants.EndCommandErrorAnchor)
+                throw new(string.Join(" ,", messages));
+            if (message is Constants.EndCommandOutputAnchor)
+                break;
+            messages.Add(message);
+        }
 
         dotnetDump.Exited += (_, _) =>
         {
