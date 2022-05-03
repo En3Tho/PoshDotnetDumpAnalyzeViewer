@@ -1,6 +1,6 @@
 ﻿using PoshDotnetDumpAnalyzeViewer;
 
-var dotnetDump = await ProcessUtil.StartDotnetDumpAnalyze(@"D:\Downloads\ctdump\cloud-ru-29-04.dump");
+var dotnetDump = await ProcessUtil.StartDotnetDumpAnalyze(@"/home/oem/Source/Dumps/core_20220502_234252");
 
 UI.Run(dotnetDump);
 

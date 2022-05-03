@@ -4,6 +4,8 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
+// in theory in memory bus with commands of different types is better? try it? maybe on redis viewer?
+
 public record Views(
     Toplevel Toplevel,
     Window Window,
@@ -18,18 +20,26 @@ public record CommandViews(
 
 public static class CommandViewsExtensions
 {
-    public static CommandViews SetupLogic(this CommandViews @this, string command, string[] initialSource)
+    public static CommandViews SetupLogic(this CommandViews @this, MiniClipboard clipboard, string command, string[] initialSource)
     {
-        var commandText = $"Command: {command}";
         var lastFilter = "";
 
         @this.Tab.Text = command;
         @this.OutputListView.SetSource(initialSource);
 
-        @this.FilterTextField.KeyPress += args =>
+        @this.OutputListView.KeyPress += args =>
         {
-            if (args.KeyEvent.Key != Key.Enter) return;
+            switch (args.KeyEvent.Key)
+            {
+                case Key.CtrlMask | Key.C:
+                    clipboard.Set(@this.OutputListView.Source.ToList()[@this.OutputListView.SelectedItem]?.ToString());
+                    args.Handled = true;
+                    break;
+            }
+        };
 
+        void ProcessEnterKey()
+        {
             var filter = (@this.FilterTextField.Text ?? ustring.Empty).ToString()!;
 
             if (lastFilter.Equals(filter)) return;
@@ -45,76 +55,58 @@ public static class CommandViewsExtensions
             }
 
             lastFilter = filter;
+        }
+
+
+        @this.FilterTextField.KeyPress += args =>
+        {
+            switch (args.KeyEvent.Key)
+            {
+                case Key.Enter:
+                    ProcessEnterKey();
+                    args.Handled = true;
+                    break;
+
+                case Key.CtrlMask | Key.C:
+                    @this.FilterTextField.Copy(clipboard);
+                    args.Handled = true;
+                    break;
+
+                case Key.CtrlMask | Key.V:
+                    if (clipboard.Get() is { } text)
+                        @this.FilterTextField.Paste(text);
+                    args.Handled = true;
+                    break;
+            }
         };
 
         return @this;
     }
-}
 
-public static class TaskExtensions
-{
-    public static async Task WithErrorHandler(this Task @this, Action<Exception> errorHandler)
+    public static CommandViews AddTabClosing(this CommandViews @this, TabManager tabManager)
     {
-        try
+        @this.Tab.View.KeyPress += args =>
         {
-            await @this;
-        }
-        catch (Exception exn)
-        {
-            errorHandler(exn);
-        }
-    }
-}
+            if (args.KeyEvent.Key != (Key.CtrlMask | Key.W)) return;
+            if (!@this.Tab.View.HasFocus) return;
 
-public static class SemaphoreSlimExtensions
-{
-    public static async Task RunTask(this SemaphoreSlim @this, Task task)
-    {
-        await @this.WaitAsync();
-        try
-        {
-            await task;
-        }
-        finally
-        {
-            @this.Release();
-        }
+            tabManager.RemoveTab(@this.Tab);
+            args.Handled = true;
+        };
+        return @this;
     }
 }
 
 public static class ViewsExtensions
 {
-    public static async Task<CommandViews> FireCommand(this Views @this, DotnetDumpAnalyzeBridge bridge, string command)
+    public static Views SetupLogic(this Views @this, MiniClipboard clipboard, TabManager tabManager, DotnetDumpAnalyzeBridge bridge)
     {
-        var result = await bridge.PerformCommand(command);
-        var commandResultViews = UI.MakeCommandViews().SetupLogic(command, result.Output);
-        return commandResultViews;
-    }
-
-    public static Views SetupLogic(this Views @this, DotnetDumpAnalyzeBridge bridge)
-    {
-        var tabMap = new Dictionary<string, CommandViews>(StringComparer.OrdinalIgnoreCase);
         var semaphore = new SemaphoreSlim(1);
+        var errorHandler = UI.MakeExceptionHandler(tabManager, clipboard);
+        var commandHistory = new CommandHistory();
 
-        var currentCommand = "";
-
-        var errorHandler = UI.MakeExceptionHandler(@this);
-
-        Task.Run(async () =>
+        void ProcessEnterKey()
         {
-            var helpCommandTab = await @this.FireCommand(bridge, "help");
-            tabMap.Add("help", helpCommandTab);
-            @this.TabView.AddTab(helpCommandTab.Tab, true);
-        });
-
-        @this.CommandInput.KeyPress += args =>
-        {
-            // not sure why but enter key press on filter text filed triggers this one too. A bug?
-            if (!@this.CommandInput.HasFocus) return;
-            if (args.KeyEvent.Key != Key.Enter) return;
-
-            args.Handled = true;
-
             @this.CommandInput.Enabled = false;
             var work =
                 Task.Run(async () =>
@@ -122,18 +114,20 @@ public static class ViewsExtensions
                     try
                     {
                         var command = (@this.CommandInput.Text ?? ustring.Empty).ToString()!;
-                        if (currentCommand == command) return;
+                        if (string.IsNullOrEmpty(command)) return;
 
-                        if (tabMap.TryGetValue(command, out var commandViews))
-                            @this.TabView.SelectedTab = commandViews.Tab;
+                        if (tabManager.TryGetTab(command) is { Output.IsOk: true } tabInfo)
+                        {
+                            @this.TabView.SelectedTab = tabInfo.Views.Tab;
+                        }
                         else
                         {
-                            var commandResultTab = await @this.FireCommand(bridge, command);
-                            tabMap.Add(command, commandResultTab);
-                            @this.TabView.AddTab(commandResultTab.Tab, true);
+                            var commandResultTab = await UI.SendCommand(bridge, clipboard, tabManager, command);
+                            commandResultTab.Item1.AddTabClosing(tabManager);
+                            tabManager.SetTab(command, commandResultTab);
+                            commandHistory.AddCommand(command);
                         }
 
-                        currentCommand = command;
                         @this.CommandInput.Text = ustring.Empty;
                     }
                     finally
@@ -144,6 +138,53 @@ public static class ViewsExtensions
 
             var _ =
                 semaphore.RunTask(work.WithErrorHandler(exn => errorHandler(exn)));
+        }
+
+        void ProcessUp()
+        {
+            if (commandHistory.PreviousCommand() is { } command)
+                @this.CommandInput.Text = command;
+        }
+
+        void ProcessDown()
+        {
+            if (commandHistory.NextCommand() is { } command)
+                @this.CommandInput.Text = command;
+        }
+
+        @this.CommandInput.KeyPress += args =>
+        {
+            // not sure why but enter key press on filter text filed triggers this one too. A bug?
+            if (!@this.CommandInput.HasFocus) return;
+
+            switch (args.KeyEvent.Key)
+            {
+                case Key.Enter:
+                    ProcessEnterKey();
+                    args.Handled = true;
+                    break;
+
+                case Key.CursorUp:
+                    ProcessUp();
+                    args.Handled = true;
+                    break;
+
+                case Key.CursorDown:
+                    ProcessDown();
+                    args.Handled = true;
+                    break;
+
+                case Key.CtrlMask | Key.C:
+                    @this.CommandInput.Copy(clipboard);
+                    args.Handled = true;
+                    break;
+
+                case Key.CtrlMask | Key.V:
+                    if (clipboard.Get() is { } text)
+                        @this.CommandInput.Paste(text);
+                    args.Handled = true;
+                    break;
+            }
         };
 
         return @this;
@@ -152,22 +193,23 @@ public static class ViewsExtensions
 
 public class UI
 {
-    public static Func<Exception, bool> MakeExceptionHandler(Views @this)
+    public static async Task<(CommandViews, CommandOutput)> SendCommand(DotnetDumpAnalyzeBridge bridge, MiniClipboard clipboard, TabManager tabManager, string command)
+    {
+        var result = await bridge.PerformCommand(command);
+        var commandResultViews = MakeCommandViews().SetupLogic(clipboard, command, result.Output);
+        return (commandResultViews, result);
+    }
+
+    public static Func<Exception, bool> MakeExceptionHandler(TabManager tabManager, MiniClipboard clipboard)
     {
         return exn =>
         {
-            var errorSource = exn.StackTrace?.Split(Environment.NewLine) ?? Array.Empty<string>();
-            var cmdViews = MakeCommandViews().SetupLogic("Unhandled exception", errorSource);
-            @this.TabView.AddTab(cmdViews.Tab, true);
+            var errorSource = exn.ToString().Split(Environment.NewLine);
+            var cmdViews = MakeCommandViews().SetupLogic(clipboard, "Unhandled exception", errorSource).AddTabClosing(tabManager);
+            var cmdOutput = new CommandOutput(true, errorSource);
+            tabManager.SetTab(exn.Message, (cmdViews, cmdOutput));
             return true;
         };
-    }
-
-    public static string MakeCommandViewsLabelText(string command, string? filter)
-    {
-        var commandText = $"Command: {command}";
-        var filterText = string.IsNullOrEmpty(filter) ? "" : $"Filter: {filter}";
-        return string.Join(". ", commandText, filterText);
     }
 
     public static CommandViews MakeCommandViews()
@@ -180,19 +222,27 @@ public class UI
 
         var listView = new ListView
         {
-            Height = Dim.Fill() - Dim.Sized(1),
+            Height = Dim.Fill() - Dim.Sized(3),
+            Width = Dim.Fill()
+        };
+
+        var filterFrame = new FrameView("Filter")
+        {
+            Y = Pos.Bottom(listView),
+            Height = 3,
             Width = Dim.Fill()
         };
 
         var filterField = new TextField
         {
-            Y = Pos.Bottom(listView),
             Height = 1,
             Width = Dim.Fill()
         };
 
+        filterFrame.Add(filterField);
+
         window.Add(listView);
-        window.Add(filterField);
+        window.Add(filterFrame);
 
         var tab = new TabView.Tab("", window);
 
@@ -210,22 +260,37 @@ public class UI
         var tabView = new TabView
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill() - Dim.Sized(1)
+            Height = Dim.Fill() - Dim.Sized(3)
+        };
+
+        var commandFrame = new FrameView("Command")
+        {
+            Y = Pos.Bottom(tabView),
+            Height = 3,
+            Width = Dim.Fill()
         };
 
         var commandInput = new TextField
         {
-            Y = Pos.Bottom(tabView),
             Width = Dim.Fill(),
             Height = 1
         };
 
+        commandFrame.Add(commandInput);
+
         window.Add(tabView);
-        window.Add(commandInput);
+        window.Add(commandFrame);
 
         toplevel.Add(window);
 
         return new(toplevel, window, tabView, commandInput);
+    }
+
+    public static void SpinWaitTask(Task task)
+    {
+        while (!task.IsCompleted) { }
+
+        task.GetAwaiter().GetResult();
     }
 
     public static void Run(Process dotnetDumpProcess)
@@ -235,10 +300,21 @@ public class UI
         var source = new CancellationTokenSource();
         Application.Top.Closing += _ => source.Cancel();
 
-        var bridge = new DotnetDumpAnalyzeBridge(dotnetDumpProcess, source.Token);
+        var views = MakeViews(Application.Top);
 
-        var views = MakeViews(Application.Top).SetupLogic(bridge);
-        var exceptionHandler = MakeExceptionHandler(views);
+        var bridge = new DotnetDumpAnalyzeBridge(dotnetDumpProcess, source.Token);
+        var tabManager = new TabManager(views.TabView);
+        var clipboard = new MiniClipboard(Application.Driver.Clipboard);
+
+        views.SetupLogic(clipboard, tabManager, bridge);
+        var exceptionHandler = MakeExceptionHandler(tabManager, clipboard);
+
+        SpinWaitTask(Task.Run(async () =>
+        {
+            var (helpCommandTab, output) = await SendCommand(bridge, clipboard, tabManager, "help");
+            tabManager.SetTab("help", (helpCommandTab, output));
+        }, source.Token));
+
         Application.Run(views.Toplevel, exceptionHandler);
         Application.Shutdown();
     }
