@@ -2,70 +2,91 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public record MiniClipboard(IClipboard Clipboard)
+public record MiniClipboard(IClipboard Clipboard) : IClipboard
 {
     private string? _clipboard;
 
-    public void Set(string? value)
+    public string? GetClipboardData()
     {
-        var trimmed = value?.Trim();
+        TryGetClipboardData(out var result);
+        return result;
+    }
+
+    public bool TryGetClipboardData(out string? result)
+    {
+        if (!Clipboard.TryGetClipboardData(out result))
+            result = _clipboard;
+        return true;
+    }
+
+    public void SetClipboardData(string? text)
+    {
+        var trimmed = text?.Trim();
         Clipboard.TrySetClipboardData(trimmed);
         _clipboard = trimmed;
     }
 
-    public string? Get()
+    public bool TrySetClipboardData(string? text)
     {
-        if (Clipboard.TryGetClipboardData(out var result))
-            return result;
-        return _clipboard;
+        SetClipboardData(text);
+        return true;
     }
+
+    public bool IsSupported => true;
 }
 
-public class CommandHistory
+public class HistoryList<T>
 {
-    private readonly List<string> _commands = new();
-    private int _currentIndex = 0;
+    private readonly List<T> _items = new();
+    private int _currentIndex;
 
-    private void RemoveCommand(string command)
+    private void RemoveCommand(T item)
     {
-        if (_commands.IndexOf(command) is >= 0 and var idx)
-            _commands.RemoveAt(idx);
+        if (_items.IndexOf(item) is >= 0 and var idx)
+            _items.RemoveAt(idx);
     }
 
-    private string? GetCurrentCommand()
+    private T? GetCurrentCommand()
     {
-        if (_currentIndex >= 0 && _currentIndex < _commands.Count)
-            return _commands[_currentIndex];
-        return null;
+        if (_currentIndex >= 0 && _currentIndex < _items.Count)
+            return _items[_currentIndex];
+        return default;
     }
-    
-    public void AddCommand(string command)
+
+    public void AddCommand(T command)
     {
         RemoveCommand(command);
-        
-        _commands.Add(command);
-        _currentIndex = _commands.Count;
+
+        _items.Add(command);
+        _currentIndex = _items.Count;
     }
 
-    public string? PreviousCommand()
+    public T? PreviousCommand()
     {
-        _currentIndex = Math.Max(-1, _currentIndex - 1);
+        _currentIndex = Math.Max(0, _currentIndex - 1);
         return GetCurrentCommand();
     }
 
-    public string? NextCommand()
+    public T? NextCommand()
     {
-        _currentIndex = Math.Min(_currentIndex + 1, _commands.Count);
+        _currentIndex = Math.Min(_currentIndex + 1, _items.Count);
         return GetCurrentCommand();
     }
 }
 
 public class TabManager
 {
-    readonly Dictionary<string, (CommandViews Views, CommandOutput Output)> _tabMap = new(StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<string, (CommandViews Views, CommandOutput Output)> _tabMap =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly MainLoop _loop;
     private readonly TabView _tabView;
 
-    public TabManager(TabView tabView) => _tabView = tabView;
+    public TabManager(MainLoop loop, TabView tabView)
+    {
+        _loop = loop;
+        _tabView = tabView;
+    }
 
     public (CommandViews Views, CommandOutput Output)? TryGetTab(string command)
     {
@@ -96,8 +117,9 @@ public class TabManager
     {
         if (_tabMap.TryGetValue(command, out var result))
         {
-            _tabView.RemoveTab(result.Views.Tab);
+            _loop.Invoke(() => { _tabView.RemoveTab(result.Views.Tab); });
         }
+
         _tabMap.Remove(command);
     }
 
@@ -106,6 +128,6 @@ public class TabManager
         RemoveTab(command);
 
         _tabMap[command] = result;
-        _tabView.AddTab(result.Views.Tab, true);
+        _loop.Invoke(() => { _tabView.AddTab(result.Views.Tab, true); });
     }
 }

@@ -19,9 +19,51 @@ public static class TaskExtensions
 
 public static class TextFieldExtensions
 {
-    public static void Copy(this TextField @this, MiniClipboard clipboard)
+    public static TextField AddClipboard(this TextField @this, IClipboard clipboard,
+        Key copyKey = Key.CtrlMask | Key.C, Key pasteKey = Key.CtrlMask | Key.V)
     {
-        clipboard.Set(@this.SelectedText is { Length: > 0 }
+        @this.KeyPress += args =>
+        {
+            if (args.KeyEvent.Key == copyKey)
+            {
+                @this.Copy(clipboard);
+                args.Handled = true;
+            }
+            else if (args.KeyEvent.Key == pasteKey)
+            {
+                if (clipboard.GetClipboardData() is {} clipboardData)
+                    @this.Paste(clipboardData);
+                args.Handled = true;
+            }
+        };
+
+        return @this;
+    }
+
+    public static TextField AddCommandHistory(this TextField @this, HistoryList<string> historyList,
+        Key previousCommandKey = Key.CursorUp, Key nextCommandKey = Key.CursorDown)
+    {
+        @this.KeyPress += args =>
+        {
+            if (args.KeyEvent.Key == previousCommandKey)
+            {
+                if (historyList.PreviousCommand() is { } previousCommand)
+                    @this.Text = previousCommand;
+                args.Handled = true;
+            }
+            else if (args.KeyEvent.Key == nextCommandKey)
+            {
+                @this.Text = historyList.NextCommand() ?? "";
+                args.Handled = true;
+            }
+        };
+
+        return @this;
+    }
+
+    public static void Copy(this TextField @this, IClipboard clipboard)
+    {
+        clipboard.SetClipboardData(@this.SelectedText is { Length: > 0 }
             ? @this.SelectedText.ToString()
             : @this.Text?.ToString());
     }
@@ -59,6 +101,7 @@ public static class ViewExtensions
         {
             @this.Add(nextView);
         }
+
         return @this;
     }
 }

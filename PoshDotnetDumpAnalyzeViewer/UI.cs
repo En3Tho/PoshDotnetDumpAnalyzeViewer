@@ -18,11 +18,10 @@ public record CommandViews(
 
 public static class CommandViewsExtensions
 {
-    public static CommandViews SetupLogic(this CommandViews @this, MiniClipboard clipboard, string command, string[] initialSource)
+    public static CommandViews SetupLogic(this CommandViews @this, IClipboard clipboard, string[] initialSource)
     {
         var lastFilter = "";
 
-        @this.Tab.Text = command;
         @this.OutputListView.SetSource(initialSource);
 
         @this.OutputListView.KeyPress += args =>
@@ -30,11 +29,13 @@ public static class CommandViewsExtensions
             switch (args.KeyEvent.Key)
             {
                 case Key.CtrlMask | Key.C:
-                    clipboard.Set(@this.OutputListView.Source.ToList()[@this.OutputListView.SelectedItem]?.ToString());
+                    clipboard.SetClipboardData(@this.OutputListView.Source.ToList()[@this.OutputListView.SelectedItem]?.ToString());
                     args.Handled = true;
                     break;
             }
         };
+
+        var commandHistory = new HistoryList<string>();
 
         void ProcessEnterKey()
         {
@@ -56,27 +57,19 @@ public static class CommandViewsExtensions
             }
 
             lastFilter = filter;
+            if (!string.IsNullOrWhiteSpace(filter))
+                commandHistory.AddCommand(filter);
         }
 
-        @this.FilterTextField.KeyPress += args =>
+        @this.FilterTextField
+            .AddClipboard(clipboard)
+            .AddCommandHistory(commandHistory)
+            .KeyPress += args =>
         {
-            switch (args.KeyEvent.Key)
+            if (args.KeyEvent.Key == Key.Enter)
             {
-                case Key.Enter:
-                    ProcessEnterKey();
-                    args.Handled = true;
-                    break;
-
-                case Key.CtrlMask | Key.C:
-                    @this.FilterTextField.Copy(clipboard);
-                    args.Handled = true;
-                    break;
-
-                case Key.CtrlMask | Key.V:
-                    if (clipboard.Get() is { } text)
-                        @this.FilterTextField.Paste(text);
-                    args.Handled = true;
-                    break;
+                ProcessEnterKey();
+                args.Handled = true;
             }
         };
 
@@ -99,11 +92,11 @@ public static class CommandViewsExtensions
 
 public static class ViewsExtensions
 {
-    public static Views SetupLogic(this Views @this, MiniClipboard clipboard, TabManager tabManager, DotnetDumpAnalyzeBridge bridge)
+    public static Views SetupLogic(this Views @this, IClipboard clipboard, TabManager tabManager, DotnetDumpAnalyzeBridge bridge)
     {
         var semaphore = new SemaphoreSlim(1);
         var errorHandler = UI.MakeExceptionHandler(tabManager, clipboard);
-        var commandHistory = new CommandHistory();
+        var commandHistory = new HistoryList<string>();
 
         void ProcessEnterKey()
         {
@@ -114,7 +107,7 @@ public static class ViewsExtensions
                     try
                     {
                         var command = (@this.CommandInput.Text ?? ustring.Empty).ToString()!;
-                        if (string.IsNullOrEmpty(command)) return;
+                        if (string.IsNullOrWhiteSpace(command)) return;
 
                         if (tabManager.TryGetTab(command) is { Output.IsOk: true } tabInfo)
                         {
@@ -124,8 +117,9 @@ public static class ViewsExtensions
                         {
                             var commandResultTab = await UI.SendCommand(bridge, clipboard, command);
                             commandResultTab.Views.AddTabClosing(tabManager);
-                            tabManager.SetTab(command, commandResultTab);
                             commandHistory.AddCommand(command);
+
+                            tabManager.SetTab(command, commandResultTab);
                         }
 
                         @this.CommandInput.Text = ustring.Empty;
@@ -140,54 +134,20 @@ public static class ViewsExtensions
                 semaphore.RunTask(work.WithErrorHandler(exn => errorHandler(exn)));
         }
 
-        void ProcessUp()
-        {
-            @this.CommandInput.Text = commandHistory.PreviousCommand() ?? "";
-        }
-
-        void ProcessDown()
-        {
-            @this.CommandInput.Text = commandHistory.NextCommand() ?? "";
-        }
-
-        // TODO:
-        // this.CommandInput.AddClipboard(clipboard, Key.CtrlMask | Key.C, Key.CtrlMask | Key.v)
-        // this.CommandInput.AddHistory(history, CursorUp, CursorDown)
-
-        @this.CommandInput.KeyPress += args =>
+        @this.CommandInput
+            .AddClipboard(clipboard)
+            .AddCommandHistory(commandHistory)
+            .KeyPress += args =>
         {
             // TODO: check if this is a bug and try to fix it
             // TODO: try to fix double finger scroll in gui.cs?
             // not sure why but enter key press on filter text filed triggers this one too. A bug?
             if (!@this.CommandInput.HasFocus) return;
 
-            switch (args.KeyEvent.Key)
+            if (args.KeyEvent.Key == Key.Enter)
             {
-                case Key.Enter:
-                    ProcessEnterKey();
-                    args.Handled = true;
-                    break;
-
-                case Key.CursorUp:
-                    ProcessUp();
-                    args.Handled = true;
-                    break;
-
-                case Key.CursorDown:
-                    ProcessDown();
-                    args.Handled = true;
-                    break;
-
-                case Key.CtrlMask | Key.C:
-                    @this.CommandInput.Copy(clipboard);
-                    args.Handled = true;
-                    break;
-
-                case Key.CtrlMask | Key.V:
-                    if (clipboard.Get() is { } text)
-                        @this.CommandInput.Paste(text);
-                    args.Handled = true;
-                    break;
+                ProcessEnterKey();
+                args.Handled = true;
             }
         };
 
@@ -198,27 +158,29 @@ public static class ViewsExtensions
 public class UI
 {
     public static async Task<(CommandViews Views, CommandOutput Output)> SendCommand(DotnetDumpAnalyzeBridge bridge,
-        MiniClipboard clipboard, string command)
+        IClipboard clipboard, string command)
     {
         var result = await bridge.PerformCommand(command);
-        var commandResultViews = MakeCommandViews().SetupLogic(clipboard, command, result.Output);
+        var commandResultViews = MakeCommandViews(command).SetupLogic(clipboard, result.Output);
         return (commandResultViews, result);
     }
 
-    public static Func<Exception, bool> MakeExceptionHandler(TabManager tabManager, MiniClipboard clipboard)
+    public static Func<Exception, bool> MakeExceptionHandler(TabManager tabManager, IClipboard clipboard)
     {
         return exn =>
         {
             var errorSource = exn.ToString().Split(Environment.NewLine);
-            var cmdViews = MakeCommandViews().SetupLogic(clipboard, "Unhandled exception", errorSource)
-                .AddTabClosing(tabManager);
+            var cmdViews =
+                MakeCommandViews("Unhandled exception")
+                    .SetupLogic(clipboard, errorSource)
+                    .AddTabClosing(tabManager);
             var cmdOutput = new CommandOutput(true, errorSource);
             tabManager.SetTab(exn.Message, (cmdViews, cmdOutput));
             return true;
         };
     }
 
-    public static CommandViews MakeCommandViews()
+    public static CommandViews MakeCommandViews(string command)
     {
         var window = new Window
         {
@@ -250,7 +212,7 @@ public class UI
             filterFrame.With(
                 filterField));
 
-        var tab = new TabView.Tab("", window);
+        var tab = new TabView.Tab(command, window);
 
         return new(tab, window, listView, filterField);
     }
@@ -266,7 +228,7 @@ public class UI
         var tabView = new TabView
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill() - Dim.Sized(3)
+            Height = Dim.Fill() - Dim.Sized(3),
         };
 
         var commandFrame = new FrameView("Command")
@@ -309,7 +271,7 @@ public class UI
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
 
         var views = MakeViews(Application.Top);
-        var tabManager = new TabManager(views.TabView);
+        var tabManager = new TabManager(Application.MainLoop, views.TabView);
 
         views.SetupLogic(clipboard, tabManager, bridge);
         var exceptionHandler = MakeExceptionHandler(tabManager, clipboard);
