@@ -50,6 +50,19 @@ public static class TextFieldExtensions
     }
 }
 
+public static class ViewExtensions
+{
+    public static T With<T>(this T @this, View view, params View[] views) where T : View
+    {
+        @this.Add(view);
+        foreach (var nextView in views)
+        {
+            @this.Add(nextView);
+        }
+        return @this;
+    }
+}
+
 public static class SemaphoreSlimExtensions
 {
     public static async Task RunTask(this SemaphoreSlim @this, Task task)

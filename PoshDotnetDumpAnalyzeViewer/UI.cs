@@ -48,13 +48,15 @@ public static class CommandViewsExtensions
             }
             else
             {
-                var filteredOutput = initialSource.Where(outputString => outputString.Contains(filter, StringComparison.OrdinalIgnoreCase)).ToArray();
+                var filteredOutput =
+                    initialSource
+                        .Where(outputString => outputString.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                        .ToArray();
                 @this.OutputListView.SetSource(filteredOutput);
             }
 
             lastFilter = filter;
         }
-
 
         @this.FilterTextField.KeyPress += args =>
         {
@@ -121,7 +123,7 @@ public static class ViewsExtensions
                         else
                         {
                             var commandResultTab = await UI.SendCommand(bridge, clipboard, command);
-                            commandResultTab.Item1.AddTabClosing(tabManager);
+                            commandResultTab.Views.AddTabClosing(tabManager);
                             tabManager.SetTab(command, commandResultTab);
                             commandHistory.AddCommand(command);
                         }
@@ -140,18 +142,22 @@ public static class ViewsExtensions
 
         void ProcessUp()
         {
-            if (commandHistory.PreviousCommand() is { } command)
-                @this.CommandInput.Text = command;
+            @this.CommandInput.Text = commandHistory.PreviousCommand() ?? "";
         }
 
         void ProcessDown()
         {
-            if (commandHistory.NextCommand() is { } command)
-                @this.CommandInput.Text = command;
+            @this.CommandInput.Text = commandHistory.NextCommand() ?? "";
         }
+
+        // TODO:
+        // this.CommandInput.AddClipboard(clipboard, Key.CtrlMask | Key.C, Key.CtrlMask | Key.v)
+        // this.CommandInput.AddHistory(history, CursorUp, CursorDown)
 
         @this.CommandInput.KeyPress += args =>
         {
+            // TODO: check if this is a bug and try to fix it
+            // TODO: try to fix double finger scroll in gui.cs?
             // not sure why but enter key press on filter text filed triggers this one too. A bug?
             if (!@this.CommandInput.HasFocus) return;
 
@@ -191,7 +197,8 @@ public static class ViewsExtensions
 
 public class UI
 {
-    public static async Task<(CommandViews, CommandOutput)> SendCommand(DotnetDumpAnalyzeBridge bridge, MiniClipboard clipboard, string command)
+    public static async Task<(CommandViews Views, CommandOutput Output)> SendCommand(DotnetDumpAnalyzeBridge bridge,
+        MiniClipboard clipboard, string command)
     {
         var result = await bridge.PerformCommand(command);
         var commandResultViews = MakeCommandViews().SetupLogic(clipboard, command, result.Output);
@@ -203,7 +210,8 @@ public class UI
         return exn =>
         {
             var errorSource = exn.ToString().Split(Environment.NewLine);
-            var cmdViews = MakeCommandViews().SetupLogic(clipboard, "Unhandled exception", errorSource).AddTabClosing(tabManager);
+            var cmdViews = MakeCommandViews().SetupLogic(clipboard, "Unhandled exception", errorSource)
+                .AddTabClosing(tabManager);
             var cmdOutput = new CommandOutput(true, errorSource);
             tabManager.SetTab(exn.Message, (cmdViews, cmdOutput));
             return true;
@@ -237,10 +245,10 @@ public class UI
             Width = Dim.Fill()
         };
 
-        filterFrame.Add(filterField);
-
-        window.Add(listView);
-        window.Add(filterFrame);
+        window.With(
+            listView,
+            filterFrame.With(
+                filterField));
 
         var tab = new TabView.Tab("", window);
 
@@ -274,12 +282,11 @@ public class UI
             Height = 1
         };
 
-        commandFrame.Add(commandInput);
-
-        window.Add(tabView);
-        window.Add(commandFrame);
-
-        toplevel.Add(window);
+        toplevel.With(
+            window.With(
+                tabView,
+                commandFrame.With(
+                    commandInput)));
 
         return new(toplevel, window, tabView, commandInput);
     }
@@ -298,15 +305,16 @@ public class UI
         var source = new CancellationTokenSource();
         Application.Top.Closing += _ => source.Cancel();
 
-        var views = MakeViews(Application.Top);
-
         var bridge = new DotnetDumpAnalyzeBridge(dotnetDumpProcess, source.Token);
-        var tabManager = new TabManager(views.TabView);
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
+
+        var views = MakeViews(Application.Top);
+        var tabManager = new TabManager(views.TabView);
 
         views.SetupLogic(clipboard, tabManager, bridge);
         var exceptionHandler = MakeExceptionHandler(tabManager, clipboard);
 
+        // TODO: better way to await operation and dispatch command
         SpinWaitTask(Task.Run(async () =>
         {
             var (helpCommandTab, output) = await SendCommand(bridge, clipboard, "help");
