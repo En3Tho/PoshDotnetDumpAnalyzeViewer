@@ -74,9 +74,14 @@ public class HistoryList<T>
     }
 }
 
+public interface IViewWithTab
+{
+    public TabView.Tab Tab { get; }
+}
+
 public class TabManager
 {
-    readonly Dictionary<string, (CommandViews Views, CommandOutput Output)> _tabMap =
+    private readonly Dictionary<string, TabView.Tab> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
     private readonly MainLoop _loop;
@@ -88,7 +93,7 @@ public class TabManager
         _tabView = tabView;
     }
 
-    public (CommandViews Views, CommandOutput Output)? TryGetTab(string command)
+    public TabView.Tab? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
         return default;
@@ -98,7 +103,7 @@ public class TabManager
     {
         foreach (var commandsAndKeys in _tabMap)
         {
-            if (ReferenceEquals(commandsAndKeys.Value.Views.Tab, tab))
+            if (ReferenceEquals(commandsAndKeys.Value, tab))
                 return commandsAndKeys.Key;
         }
 
@@ -117,17 +122,17 @@ public class TabManager
     {
         if (_tabMap.TryGetValue(command, out var result))
         {
-            _loop.Invoke(() => { _tabView.RemoveTab(result.Views.Tab); });
+            _loop.Invoke(() => { _tabView.RemoveTab(result); });
         }
 
         _tabMap.Remove(command);
     }
 
-    public void SetTab(string command, (CommandViews Views, CommandOutput Output) result)
+    public void SetTab(string command, TabView.Tab result)
     {
         RemoveTab(command);
 
         _tabMap[command] = result;
-        _loop.Invoke(() => { _tabView.AddTab(result.Views.Tab, true); });
+        _loop.Invoke(() => { _tabView.AddTab(result, true); });
     }
 }

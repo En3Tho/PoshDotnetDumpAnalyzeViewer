@@ -108,4 +108,4 @@ public class DotnetDumpAnalyzeBridge
     }
 }
 
-public record struct CommandOutput(bool IsOk, string[] Output);
+public record struct CommandOutput(bool IsOk, string[] Lines);

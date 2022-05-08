@@ -2,7 +2,7 @@
 
 try
 {
-    var dotnetDump = await ProcessUtil.StartDotnetDumpAnalyze(@"D:\Downloads\ctdump\cloud-ru-29-04.dump");
+    var dotnetDump = await ProcessUtil.StartDotnetDumpAnalyze(@"C:\Users\RZRL\dump_20220506_140504.dmp");
 
     UI.Run(dotnetDump);
 

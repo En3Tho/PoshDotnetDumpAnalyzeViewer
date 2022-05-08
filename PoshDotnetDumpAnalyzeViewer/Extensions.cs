@@ -121,3 +121,19 @@ public static class SemaphoreSlimExtensions
         }
     }
 }
+
+public static class ArrayExtensions
+{
+    public static int IndexAfter<T>(this T[] @this, T value) where T : IEquatable<T>
+    {
+        var indexOfValue = @this.AsSpan().IndexOf(value);
+        if (indexOfValue == -1 || indexOfValue == @this.Length - 1) return -1;
+        return indexOfValue + 1;
+    }
+}
+
+public static class EnumerableExtensions
+{
+    public static IEnumerable<T> TakeAfter<T>(this IEnumerable<T> @this, T value) where T : IEquatable<T>
+        => @this.SkipWhile(element => !value.Equals(element)).Skip(1);
+}
