@@ -11,7 +11,7 @@ public struct DefaultOutputParser : IOutputParser
     }
 }
 
-public sealed record DefaultCommandHandler(IClipboard Clipboard) : CommandHandler<OutputLine, DefaultOutputParser>(Clipboard)
+public sealed record DefaultCommandHandlerBase(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = new();
     public override bool IsSupported(string command) => true;
@@ -23,7 +23,7 @@ public sealed record DefaultCommandHandler(IClipboard Clipboard) : CommandHandle
     }
 }
 
-public sealed record QuitCommandHandler(IClipboard Clipboard) : CommandHandler<OutputLine, DefaultOutputParser>(Clipboard)
+public sealed record QuitCommandHandlerBase(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } =
         new() { Commands.Exit, Commands.Q, Commands.Quit };
@@ -52,8 +52,8 @@ public struct HelpOutputParser : IOutputParser
     }
 }
 
-public sealed record HelpCommandHandler
-    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandler<HelpOutputLine, HelpOutputParser>(Clipboard)
+public sealed record HelpCommandHandlerBase
+    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandlerBase<HelpOutputLine, HelpOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = new() { Commands.Help };
 
