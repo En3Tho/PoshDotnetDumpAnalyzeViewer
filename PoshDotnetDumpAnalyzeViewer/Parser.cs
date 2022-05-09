@@ -17,14 +17,5 @@ public static class Parser
                     }
                 ).ToArray();
         }
-
-        public static string[] GetCommandsFromOutput(string[] output)
-        {
-            return
-                output
-                    .TakeAfter("Commands:")
-                    .SelectMany(GetCommandsFromLine)
-                    .ToArray();
-        }
     }
 }

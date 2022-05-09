@@ -92,6 +92,19 @@ public static class TextFieldExtensions
     }
 }
 
+public static class ListViewExtensions
+{
+    public static T GetSource<T>(this ListView @this)
+    {
+        return (T)@this.Source.ToList();
+    }
+
+    public static T GetSelectedItem<T>(this ListView @this)
+    {
+        return @this.GetSource<IList<T>>()[@this.SelectedItem];
+    }
+}
+
 public static class ViewExtensions
 {
     public static T With<T>(this T @this, View view, params View[] views) where T : View
@@ -129,6 +142,30 @@ public static class ArrayExtensions
         var indexOfValue = @this.AsSpan().IndexOf(value);
         if (indexOfValue == -1 || indexOfValue == @this.Length - 1) return -1;
         return indexOfValue + 1;
+    }
+
+    public static int IndexBefore<T>(this T[] @this, T value) where T : IEquatable<T>
+    {
+        var indexOfValue = @this.AsSpan().LastIndexOf(value);
+        if (indexOfValue <= 0) return -1;
+        return indexOfValue - 1;
+    }
+
+    public static T[] TakeAfter<T>(this T[] @this, T value) where T : IEquatable<T>
+    {
+        var start = @this.IndexAfter(value);
+        if (start == -1) return Array.Empty<T>();
+        return @this[start..];
+    }
+
+    public static T[] TakeBetween<T>(this T[] @this, T first, T last) where T : IEquatable<T>
+    {
+        var start = @this.IndexAfter(first);
+        if (start == -1) return Array.Empty<T>();
+
+        var end = @this.IndexBefore(last);
+        if (end == -1 || end <= start) return Array.Empty<T>();
+        return @this[start..end];
     }
 }
 

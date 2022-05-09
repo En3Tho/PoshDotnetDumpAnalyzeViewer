@@ -17,7 +17,7 @@ public record DefaultCommandViews(
 
 public static class CommandViewsExtensions
 {
-    public static DefaultCommandViews SetupLogic(this DefaultCommandViews @this, IClipboard clipboard, string[] initialSource)
+    public static DefaultCommandViews SetupLogic<T>(this DefaultCommandViews @this, IClipboard clipboard, T[] initialSource) where T : IOutputLine<T>
     {
         var lastFilter = "";
 
@@ -50,7 +50,7 @@ public static class CommandViewsExtensions
             {
                 var filteredOutput =
                     initialSource
-                        .Where(outputString => outputString.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                        .Where(line => line.Line.Contains(filter, StringComparison.OrdinalIgnoreCase))
                         .ToArray();
                 @this.OutputListView.SetSource(filteredOutput);
             }
@@ -160,7 +160,7 @@ public class UI
     public static async Task<DefaultCommandViews> SendCommand(DotnetDumpAnalyzeBridge bridge,
         IClipboard clipboard, string command)
     {
-        var result = await bridge.PerformCommand(command);
+        var result = await bridge.PerformCommand<DefaultOutputLine>(command);
         var commandResultViews = MakeDefaultCommandViews(command).SetupLogic(clipboard, result.Lines);
         return commandResultViews;
     }
@@ -169,7 +169,11 @@ public class UI
     {
         return exn =>
         {
-            var errorSource = exn.ToString().Split(Environment.NewLine);
+            var errorSource =
+                exn.ToString()
+                   .Split(Environment.NewLine)
+                   .Select(x => new DefaultOutputLine(x)).ToArray();
+
             var commandViews =
                 MakeDefaultCommandViews("Unhandled exception")
                     .SetupLogic(clipboard, errorSource);
