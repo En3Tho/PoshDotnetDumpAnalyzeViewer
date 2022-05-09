@@ -6,7 +6,7 @@ public static class Parser
     {
         public static string[] GetCommandsFromLine(string line)
         {
-            return line.Split(",", StringSplitOptions.TrimEntries)
+            return line[..42].Split(",", StringSplitOptions.TrimEntries)
                 .Select(part =>
                     {
                         var indexOfCommandArgs = part.IndexOf('<');

@@ -11,13 +11,27 @@ public static class App
         Application.Init();
 
         var source = new CancellationTokenSource();
-        Application.Top.Closing += _ => source.Cancel();
+        Application.Top.Closing += _ =>
+        {
+            source.Cancel();
+            process.Kill(true);
+        };
 
         var bridge = new DotnetDumpAnalyzeBridge(process, source.Token);
         var topLevelViews = UI.MakeViews(Application.Top);
         var tabManager = new TabManager(Application.MainLoop, topLevelViews.TabView);
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
         var historyList = new HistoryList<string>();
+
+        topLevelViews.TabView.KeyPress += args =>
+        {
+            if (args.KeyEvent.Key == (Key.CtrlMask | Key.W))
+            {
+                // special case help
+                if (topLevelViews.TabView is { SelectedTab: {} selectedTab} && selectedTab.Text.ToString() != "help")
+                    tabManager.RemoveTab(selectedTab);
+            }
+        };
 
         var commandQueue = new CommandQueue();
 
@@ -30,7 +44,7 @@ public static class App
 
         var commandQueueWorker = new CommandQueueWorker(bridge, topLevelViews, historyList, tabManager, handlers);
 
-        topLevelViews.SetupLogic(commandQueue, clipboard);
+        topLevelViews.SetupLogic(commandQueue, clipboard, historyList);
         var exceptionHandler = UI.MakeExceptionHandler(tabManager, clipboard);
 
         commandQueue.Start(commandQueueWorker, source.Token);

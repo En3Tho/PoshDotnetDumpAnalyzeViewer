@@ -91,10 +91,8 @@ public static class CommandViewsExtensions
 
 public static class ViewsExtensions
 {
-    public static TopLevelViews SetupLogic(this TopLevelViews @this, CommandQueue queue, IClipboard clipboard)
+    public static TopLevelViews SetupLogic(this TopLevelViews @this, CommandQueue queue, IClipboard clipboard, HistoryList<string> commandHistory)
     {
-        var commandHistory = new HistoryList<string>();
-
         void ProcessEnterKey()
         {
             var command = (@this.CommandInput.Text ?? ustring.Empty).ToString()!;

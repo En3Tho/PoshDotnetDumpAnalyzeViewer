@@ -22,9 +22,7 @@ public record CommandQueueWorker(
 
             var handler = Handlers.First(x => x.IsSupported(command));
             var view = await handler.HandleCommand(DotnetDump, command);
-            var tab =
-                new TabView.Tab(command, view)
-                    .AddTabClosing(TabManager);
+            var tab = new TabView.Tab(command, view);
             CommandHistory.AddCommand(command);
             TabManager.SetTab(command, tab);
         }

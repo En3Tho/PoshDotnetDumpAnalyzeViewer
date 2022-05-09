@@ -69,7 +69,7 @@ public sealed record HelpCommandHandler
             // To function ?
             if (args.KeyEvent.Key == Key.Enter)
             {
-                if (listView.GetSelectedItem<IHelpCommand>() is { } line)
+                if (listView.GetSelectedOutput<IHelpCommand>() is { } line)
                 {
                     var command = line.Commands[0];
                     CommandQueue.SendCommand($"help {command}");

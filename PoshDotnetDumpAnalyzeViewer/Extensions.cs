@@ -100,11 +100,12 @@ public static class ListViewExtensions
         return @this.Source.ToList() as T;
     }
 
-    public static T? GetSelectedItem<T>(this ListView @this)
+    public static TOutputSpeciality? GetSelectedOutput<TOutputSpeciality>(this ListView @this)
+        where TOutputSpeciality : class
     {
         var selectedItem = @this.SelectedItem;
-        if (@this.GetSource<IList<T>>() is { } source && selectedItem >= 0)
-            return source[selectedItem];
+        if (@this.GetSource<IList<OutputLine>>() is { } source && selectedItem >= 0)
+            return source[selectedItem] as TOutputSpeciality;
 
         return default;
     }
