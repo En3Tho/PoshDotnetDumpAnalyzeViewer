@@ -1,8 +1,12 @@
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public readonly record struct DefaultOutputLine(string Line) : IOutputLine<DefaultOutputLine>
+public record OutputLine(string Line) : IOutputLine<OutputLine>
 {
     public override string ToString() => Line;
+}
 
-    public static DefaultOutputLine FromLine(string line) => new(line);
+public sealed record HelpOutputLine(string Line) : OutputLine(Line), IOutputLine<HelpOutputLine>, IHelpCommand
+{
+    public override string ToString() => Line;
+    public string[] Commands => Parser.Help.GetCommandsFromLine(Line);
 }

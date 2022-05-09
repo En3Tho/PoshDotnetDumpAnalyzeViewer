@@ -160,8 +160,8 @@ public class UI
     public static async Task<DefaultCommandViews> SendCommand(DotnetDumpAnalyzeBridge bridge,
         IClipboard clipboard, string command)
     {
-        var result = await bridge.PerformCommand<DefaultOutputLine>(command);
-        var commandResultViews = MakeDefaultCommandViews(command).SetupLogic(clipboard, result.Lines);
+        var result = await bridge.PerformCommand<DefaultOutputParser>(command);
+        var commandResultViews = MakeDefaultCommandViews().SetupLogic(clipboard, result.Lines);
         return commandResultViews;
     }
 
@@ -172,10 +172,10 @@ public class UI
             var errorSource =
                 exn.ToString()
                    .Split(Environment.NewLine)
-                   .Select(x => new DefaultOutputLine(x)).ToArray();
+                   .Select(x => new OutputLine(x)).ToArray();
 
             var commandViews =
-                MakeDefaultCommandViews("Unhandled exception")
+                MakeDefaultCommandViews()
                     .SetupLogic(clipboard, errorSource);
 
             var tab =
@@ -187,7 +187,7 @@ public class UI
         };
     }
 
-    public static DefaultCommandViews MakeDefaultCommandViews(string command)
+    public static DefaultCommandViews MakeDefaultCommandViews()
     {
         var window = new Window
         {

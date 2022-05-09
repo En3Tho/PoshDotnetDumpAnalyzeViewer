@@ -5,7 +5,6 @@ namespace PoshDotnetDumpAnalyzeViewer;
 public interface IOutputLine<T>
 {
     string Line { get; }
-    static abstract T FromLine(string line);
 }
 
 public interface IThreadId
@@ -26,6 +25,11 @@ public interface IMethodTable
 public interface ITypeName
 {
     Memory<char> TypeName { get; }
+}
+
+public interface IHelpCommand
+{
+    string[] Commands { get; }
 }
 
 public static class SubcommandsView

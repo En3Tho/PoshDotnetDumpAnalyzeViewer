@@ -94,14 +94,19 @@ public static class TextFieldExtensions
 
 public static class ListViewExtensions
 {
-    public static T GetSource<T>(this ListView @this)
+    public static T? GetSource<T>(this ListView @this)
+        where T : class
     {
-        return (T)@this.Source.ToList();
+        return @this.Source.ToList() as T;
     }
 
-    public static T GetSelectedItem<T>(this ListView @this)
+    public static T? GetSelectedItem<T>(this ListView @this)
     {
-        return @this.GetSource<IList<T>>()[@this.SelectedItem];
+        var selectedItem = @this.SelectedItem;
+        if (@this.GetSource<IList<T>>() is { } source && selectedItem >= 0)
+            return source[selectedItem];
+
+        return default;
     }
 }
 
@@ -166,6 +171,30 @@ public static class ArrayExtensions
         var end = @this.IndexBefore(last);
         if (end == -1 || end <= start) return Array.Empty<T>();
         return @this[start..end];
+    }
+
+    private static void Map<TIn, TOut>(this Span<TIn> @this, Span<TOut> result, Func<TIn, TOut> mapper)
+    {
+        if (@this.Length != result.Length)
+            throw new ArgumentException("Span's lengths are different");
+
+        for (var i = 0; i < @this.Length; i++)
+            result[i] = mapper(@this[i]);
+    }
+
+    public static TOut[] Map<TIn, TOut>(this TIn[] @this, Func<TIn, TOut> mapper)
+    {
+        var result = new TOut[@this.Length];
+        @this.AsSpan().Map(result.AsSpan(), mapper);
+        return result;
+    }
+
+    public static TOut[] MapRange<TIn, TOut>(this TIn[] @this, RangeMapper<TIn, TOut> mapper1, RangeMapper<TIn, TOut> mapper2)
+    {
+        var result = new TOut[@this.Length];
+        @this.AsSpan(mapper1.Range).Map(result.AsSpan(mapper1.Range), x => mapper1.Map(x));
+        @this.AsSpan(mapper2.Range).Map(result.AsSpan(mapper2.Range), x => mapper2.Map(x));
+        return result;
     }
 }
 
