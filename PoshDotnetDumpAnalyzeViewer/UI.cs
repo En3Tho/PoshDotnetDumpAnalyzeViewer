@@ -91,47 +91,15 @@ public static class CommandViewsExtensions
 
 public static class ViewsExtensions
 {
-    public static TopLevelViews SetupLogic(this TopLevelViews @this, IClipboard clipboard, TabManager tabManager, DotnetDumpAnalyzeBridge bridge)
+    public static TopLevelViews SetupLogic(this TopLevelViews @this, CommandQueue queue, IClipboard clipboard)
     {
-        var semaphore = new SemaphoreSlim(1);
-        var errorHandler = UI.MakeExceptionHandler(tabManager, clipboard);
         var commandHistory = new HistoryList<string>();
 
         void ProcessEnterKey()
         {
-            @this.CommandInput.Enabled = false;
-            var work =
-                Task.Run(async () =>
-                {
-                    try
-                    {
-                        var command = (@this.CommandInput.Text ?? ustring.Empty).ToString()!;
-                        if (string.IsNullOrWhiteSpace(command)) return;
-
-                        if (tabManager.TryGetTab(command) is { } existingTab)
-                        {
-                            @this.TabView.SelectedTab = existingTab;
-                        }
-                        else
-                        {
-                            var commandResultTab = await UI.SendCommand(bridge, clipboard, command);
-                            var tab =
-                                new TabView.Tab(command, commandResultTab.Window)
-                                    .AddTabClosing(tabManager);
-                            commandHistory.AddCommand(command);
-                            tabManager.SetTab(command, tab);
-                        }
-
-                        @this.CommandInput.Text = ustring.Empty;
-                    }
-                    finally
-                    {
-                        @this.CommandInput.Enabled = true;
-                    }
-                });
-
-            var _ =
-                semaphore.RunTask(work.WithErrorHandler(exn => errorHandler(exn)));
+            var command = (@this.CommandInput.Text ?? ustring.Empty).ToString()!;
+            if (string.IsNullOrWhiteSpace(command)) return;
+            queue.SendCommand(command);
         }
 
         @this.CommandInput
@@ -157,14 +125,6 @@ public static class ViewsExtensions
 
 public class UI
 {
-    public static async Task<DefaultCommandViews> SendCommand(DotnetDumpAnalyzeBridge bridge,
-        IClipboard clipboard, string command)
-    {
-        var result = await bridge.PerformCommand<DefaultOutputParser>(command);
-        var commandResultViews = MakeDefaultCommandViews().SetupLogic(clipboard, result.Lines);
-        return commandResultViews;
-    }
-
     public static Func<Exception, bool> MakeExceptionHandler(TabManager tabManager, IClipboard clipboard)
     {
         return exn =>
@@ -222,7 +182,7 @@ public class UI
         return new(window, listView, filterField);
     }
 
-    private static TopLevelViews MakeViews(Toplevel toplevel)
+    public static TopLevelViews MakeViews(Toplevel toplevel)
     {
         var window = new Window
         {
@@ -256,42 +216,5 @@ public class UI
                     commandInput)));
 
         return new(toplevel, window, tabView, commandInput);
-    }
-
-    public static void SpinWaitTask(Task task)
-    {
-        while (!task.IsCompleted) { }
-
-        task.GetAwaiter().GetResult();
-    }
-
-    public static void Run(Process dotnetDumpProcess)
-    {
-        Application.Init();
-
-        var source = new CancellationTokenSource();
-        Application.Top.Closing += _ => source.Cancel();
-
-        var bridge = new DotnetDumpAnalyzeBridge(dotnetDumpProcess, source.Token);
-        var clipboard = new MiniClipboard(Application.Driver.Clipboard);
-
-        var topLevelViews = MakeViews(Application.Top);
-        var tabManager = new TabManager(Application.MainLoop, topLevelViews.TabView);
-
-        topLevelViews.SetupLogic(clipboard, tabManager, bridge);
-        var exceptionHandler = MakeExceptionHandler(tabManager, clipboard);
-
-        // TODO: better way to await operation and dispatch command
-        SpinWaitTask(Task.Run(async () =>
-        {
-            var helpCommandViews = await SendCommand(bridge, clipboard, "help");
-            var tab = new TabView.Tab("Unhandled exception", helpCommandViews.Window);
-            tabManager.SetTab("help", tab);
-            // var commands = Parser.Help.GetCommandsFromOutput(output.Lines);
-            // topLevelViews.CommandInput.Autocomplete.AllSuggestions = new(commands);
-        }, source.Token));
-
-        Application.Run(topLevelViews.Toplevel, exceptionHandler);
-        Application.Shutdown();
     }
 }

@@ -11,7 +11,7 @@ public struct DefaultOutputParser : IOutputParser
     }
 }
 
-public sealed record DefaultCommandHandlerBase(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
+public sealed record DefaultCommandHandler(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = new();
     public override bool IsSupported(string command) => true;
@@ -23,10 +23,10 @@ public sealed record DefaultCommandHandlerBase(IClipboard Clipboard) : CommandHa
     }
 }
 
-public sealed record QuitCommandHandlerBase(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
+public sealed record QuitCommandHandler(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } =
-        new() { Commands.Exit, Commands.Q, Commands.Quit };
+        ImmutableArray.Create(Commands.Exit, Commands.Q, Commands.Quit);
 
     public override bool IsSupported(string command) =>
         SupportedCommands.Any(supportedCommand => command.Equals(supportedCommand, StringComparison.OrdinalIgnoreCase));
@@ -52,10 +52,10 @@ public struct HelpOutputParser : IOutputParser
     }
 }
 
-public sealed record HelpCommandHandlerBase
+public sealed record HelpCommandHandler
     (IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandlerBase<HelpOutputLine, HelpOutputParser>(Clipboard)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = new() { Commands.Help };
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Help);
 
     public override bool IsSupported(string command) =>
         command.Equals(Commands.Help, StringComparison.OrdinalIgnoreCase);

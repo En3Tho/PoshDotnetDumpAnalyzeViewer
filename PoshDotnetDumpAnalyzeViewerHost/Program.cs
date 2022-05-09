@@ -2,11 +2,7 @@
 
 try
 {
-    var dotnetDump = await ProcessUtil.StartDotnetDumpAnalyze(@"C:\Users\RZRL\dump_20220506_140504.dmp");
-
-    UI.Run(dotnetDump);
-
-    dotnetDump.Kill(true);
+    await App.Run(@"C:\Users\RZRL\dump_20220506_140504.dmp");
 }
 catch (Exception exn)
 {

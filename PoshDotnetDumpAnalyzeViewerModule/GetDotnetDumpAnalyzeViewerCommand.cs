@@ -14,8 +14,7 @@ public class GetDotnetDumpAnalyzeViewerCommand : Cmdlet
     {
         try
         {
-            using var dotnetDump = ProcessUtil.StartDotnetDumpAnalyze(AnalyzeArgs).Result;
-            UI.Run(dotnetDump);
+            App.Run(AnalyzeArgs).GetAwaiter().GetResult();
         }
         finally
         {
