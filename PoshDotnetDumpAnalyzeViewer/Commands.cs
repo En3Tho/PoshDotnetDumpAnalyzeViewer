@@ -6,4 +6,5 @@ public static class Commands
     public const string Exit = "exit";
     public const string Q = "q";
     public const string Help = "help";
+    public const string DumpHeap = "dumpheap";
 }

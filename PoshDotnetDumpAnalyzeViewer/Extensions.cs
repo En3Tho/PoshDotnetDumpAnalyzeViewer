@@ -1,3 +1,4 @@
+using En3Tho.ValueTupleExtensions.Linq;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
@@ -111,6 +112,17 @@ public static class ListViewExtensions
     }
 }
 
+public static class StringExtensions
+{
+    public static Range FindColumnRange(this string header, string columnName, Range previousColumnRange = default, bool isLastColumn = false)
+    {
+        var rangeStart = previousColumnRange.End.Value == 0 ? 0 : previousColumnRange.End.Value + 1;
+        return isLastColumn
+            ? Range.StartAt(rangeStart)
+            : new(rangeStart, header.IndexOf(columnName, StringComparison.Ordinal) + columnName.Length);
+    }
+}
+
 public static class ViewExtensions
 {
     public static T With<T>(this T @this, View view, params View[] views) where T : View
@@ -150,6 +162,17 @@ public static class ArrayExtensions
         return indexOfValue + 1;
     }
 
+    public static int IndexAfter<T>(this T[] @this, Func<T, bool> finder)
+    {
+        // length - 1 because we don't need last element
+        for (var i = 0; i < @this.Length - 1; i++)
+        {
+            if (finder(@this[i])) return i + 1;
+        }
+
+        return -1;
+    }
+
     public static int IndexBefore<T>(this T[] @this, T value) where T : IEquatable<T>
     {
         var indexOfValue = @this.AsSpan().LastIndexOf(value);
@@ -157,11 +180,38 @@ public static class ArrayExtensions
         return indexOfValue - 1;
     }
 
+    public static int IndexBefore<T>(this T[] @this, Func<T, bool> finder)
+    {
+        for (var i = @this.Length -1; i > 1; i --)
+        {
+            if (finder(@this[i])) return i - 1;
+        }
+
+        return -1;
+    }
+
     public static T[] TakeAfter<T>(this T[] @this, T value) where T : IEquatable<T>
     {
         var start = @this.IndexAfter(value);
         if (start == -1) return Array.Empty<T>();
         return @this[start..];
+    }
+
+    public static T[] TakeAfter<T>(this T[] @this, Func<T, bool> finder) where T : IEquatable<T>
+    {
+        var start = @this.IndexAfter(finder);
+        if (start == -1) return Array.Empty<T>();
+        return @this[start..];
+    }
+
+    public static T[] TakeBetween<T>(this T[] @this, Func<T, bool> finder1, Func<T, bool> finder2) where T : IEquatable<T>
+    {
+        var start = @this.IndexAfter(finder1);
+        if (start == -1) return Array.Empty<T>();
+
+        var end = @this.IndexBefore(finder2);
+        if (end == -1 || end <= start) return Array.Empty<T>();
+        return @this[start..end];
     }
 
     public static T[] TakeBetween<T>(this T[] @this, T first, T last) where T : IEquatable<T>
@@ -190,11 +240,45 @@ public static class ArrayExtensions
         return result;
     }
 
-    public static TOut[] MapRange<TIn, TOut>(this TIn[] @this, RangeMapper<TIn, TOut> mapper1, RangeMapper<TIn, TOut> mapper2)
+    public static TOut[] MapRange<TIn, TOut>(this TIn[] @this, Func<TIn, TOut> defaultMapper, params RangeMapper<TIn, TOut>[] mappers)
     {
         var result = new TOut[@this.Length];
-        @this.AsSpan(mapper1.Range).Map(result.AsSpan(mapper1.Range), x => mapper1.Map(x));
-        @this.AsSpan(mapper2.Range).Map(result.AsSpan(mapper2.Range), x => mapper2.Map(x));
+
+        // sort ranges and filter empty ones
+        mappers = mappers.OrderBy(x => x.Range.Start.Value).Where(x => x.Range.GetOffsetAndLength(@this.Length).Length != 0).ToArray();
+
+        if (mappers.Length == 0)
+        {
+            @this.AsSpan().Map(result.AsSpan(), defaultMapper);
+        }
+        else
+        {
+            var startingRange = Range.EndAt(mappers[0].Range.Start);
+            @this.AsSpan(startingRange).Map(result.AsSpan(startingRange), defaultMapper);
+
+            if (mappers.Length == 1)
+            {
+                var mapper = mappers[0];
+                @this.AsSpan(mapper.Range).Map(result.AsSpan(mapper.Range), x => mapper.Map(x));
+            }
+            else
+            {
+                foreach (var (prev, current) in mappers.Pairwise())
+                {
+                    @this.AsSpan(prev.Range).Map(result.AsSpan(prev.Range), x => prev.Map(x));
+
+                    var betweenRange = new Range(prev.Range.End, current.Range.Start);
+                    @this.AsSpan(betweenRange).Map(result.AsSpan(betweenRange), defaultMapper);
+
+                    @this.AsSpan(current.Range).Map(result.AsSpan(current.Range), x => current.Map(x));
+                }
+            }
+
+            var endingRange = Range.StartAt(mappers[^1].Range.End);
+            @this.AsSpan(endingRange).Map(result.AsSpan(endingRange), defaultMapper);
+        }
+
+
         return result;
     }
 }

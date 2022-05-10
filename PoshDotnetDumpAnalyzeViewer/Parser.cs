@@ -18,4 +18,24 @@ public static class Parser
                 ).ToArray();
         }
     }
+
+    public static class DumpHeap
+    {
+        public static DumpHeapIndexes GetDumpHeapHeaderIndexes(string header)
+        {
+            var address = header.FindColumnRange("Address");
+            var mt = header.FindColumnRange("MT", address);
+            var size = header.FindColumnRange("Size", mt);
+            return new(address, mt, size);
+        }
+
+        public static DumpHeapStatisticsIndexes GetDumpHeapStatisticsHeaderIndexes(string header)
+        {
+            var mt = header.FindColumnRange("MT");
+            var count = header.FindColumnRange("Count", mt);
+            var totalSize = header.FindColumnRange("TotalSize", count);
+            var className = header.FindColumnRange("Class Name", totalSize, true);
+            return new(mt, count, totalSize, className);
+        }
+    }
 }

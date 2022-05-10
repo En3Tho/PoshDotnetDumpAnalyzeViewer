@@ -149,5 +149,5 @@ public class TabManager
         return false;
     }
 
-    public void SetSelected(TabView.Tab tab) => _tabView.SelectedTab = tab;
+    public void SetSelected(TabView.Tab tab) => _loop.Invoke(() => _tabView.SelectedTab = tab);
 }

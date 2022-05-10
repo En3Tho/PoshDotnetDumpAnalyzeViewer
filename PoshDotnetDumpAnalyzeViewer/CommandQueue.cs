@@ -34,7 +34,7 @@ public record CommandQueueWorker(
     }
 }
 
-public record CommandQueue()
+public record CommandQueue(Action<Exception> ExceptionHandler)
 {
     private readonly Channel<string> _channel = Channel.CreateUnbounded<string>(new() { SingleReader = true});
     public void SendCommand(string command)
@@ -47,7 +47,14 @@ public record CommandQueue()
         var reader = _channel.Reader;
         await foreach (var command in reader.ReadAllAsync(token))
         {
-            await worker.Process(command);
+            try
+            {
+                await worker.Process(command);
+            }
+            catch (Exception exn)
+            {
+                ExceptionHandler(exn);
+            }
         }
     }, token);
 }

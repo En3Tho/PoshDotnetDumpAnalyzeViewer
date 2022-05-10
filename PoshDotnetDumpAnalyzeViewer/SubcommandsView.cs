@@ -1,4 +1,5 @@
-﻿using Terminal.Gui;
+﻿using System.Diagnostics.CodeAnalysis;
+using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
@@ -9,22 +10,22 @@ public interface IOutputLine<T>
 
 public interface IThreadId
 {
-    Memory<char> TheadId { get; }
+    ReadOnlyMemory<char> TheadId { get; }
 }
 
 public interface IAddress
 {
-    Memory<char> Address { get; }
+    ReadOnlyMemory<char> Address { get; }
 }
 
 public interface IMethodTable
 {
-    Memory<char> MethodTable { get; }
+    ReadOnlyMemory<char> MethodTable { get; }
 }
 
 public interface ITypeName
 {
-    Memory<char> TypeName { get; }
+    ReadOnlyMemory<char> TypeName { get; }
 }
 
 public interface IHelpCommand
@@ -34,59 +35,79 @@ public interface IHelpCommand
 
 public static class SubcommandsView
 {
-    public static Dialog ForOutputLine<T>(IOutputLine<T> line, IClipboard clipboard, CommandQueue queue)
+    public static bool TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue queue, [NotNullWhen(true)] out Dialog? dialog)
     {
         // width is max commands width + padding
         // height is commands count + padding
 
-        var dialog = new Dialog("Available commands"); // to popup
+        var result = new Dialog("Available commands"); // to popup
 
-        Button MakeButton(string title, Action action)
+        // text
+        // onEnter
+        // onTab
+
+        var yAxis = 0;
+
+        Button MakeButton(string title, Action onClick)
         {
-            var button = new Button(title);
+            var button = new Button(0, yAxis++, title);
             button.Clicked += () =>
             {
-                Application.RequestStop(dialog);
-                action();
+                Application.RequestStop(result);
+                onClick();
             };
+
             return button;
         }
 
-        var buttons = new List<(int, Button)>();
+        Button MakeCommandButton(string command) => MakeButton(command, () => queue.SendCommand(command));
+
+        var buttonsWithPriorities = new List<(int Priority, Func<Button> Button)>();
 
         if (line is IAddress address)
         {
             var data = address.Address.ToString();
-            buttons.Add((1, MakeButton("Copy address", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((1, () => MakeButton("Copy address", () => clipboard.SetClipboardData(data))));
         }
 
         if (line is IMethodTable methodTable)
         {
             var data = methodTable.MethodTable.ToString();
-            buttons.Add((1, MakeButton("Copy method table", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((1, () => MakeButton("Copy method table", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((2, () => MakeCommandButton($"{Commands.DumpHeap} -mt {data}")));
         }
 
         if (line is ITypeName typeName)
         {
             var data = typeName.TypeName.ToString();
-            buttons.Add((1, MakeButton("Copy type name", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((1, () => MakeButton("Copy type name", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((2, () => MakeCommandButton($"{Commands.DumpHeap} -type {data}")));
         }
 
         if (line is IThreadId threadId)
         {
             var data = threadId.TheadId.ToString();
-            buttons.Add((1, MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((1, () => MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
         }
 
-        if (buttons.Count > 0)
+        if (buttonsWithPriorities.Count > 0)
         {
-            var width = buttons.MaxBy(values => values.Item2.Text).Item2.Text.Length;
-            var height = buttons.Count;
+            var buttons = buttonsWithPriorities.OrderBy(x => x.Priority).Select(x => x.Button()).ToArray();
 
-            dialog.Width = width;
-            dialog.Height = height;
+            var width = buttons.MaxBy(values => values.Text)!.Text.Length + 6;
+            var height = buttons.Length + 2;
+
+            foreach (var button in buttons)
+                result.AddButton(button);
+
+            result.Width = width;
+            result.Height = height;
+
+            dialog = result;
+            return true;
         }
 
-        return dialog;
+        dialog = null;
+        return false;
     }
 }

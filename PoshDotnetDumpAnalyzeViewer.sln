@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoshDotnetDumpAnalyzeViewer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoshDotnetDumpAnalyzeViewerModule", "PoshDotnetDumpAnalyzeViewerModule\PoshDotnetDumpAnalyzeViewerModule.csproj", "{74D49D04-36B2-4271-A435-8FC820907EF9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoshDotnetAnalyzerViewerTests", "PoshDotnetAnalyzerViewerTests\PoshDotnetAnalyzerViewerTests.csproj", "{B0DAA75C-E1F8-441F-BF6B-F533F1B1B704}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{74D49D04-36B2-4271-A435-8FC820907EF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74D49D04-36B2-4271-A435-8FC820907EF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74D49D04-36B2-4271-A435-8FC820907EF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0DAA75C-E1F8-441F-BF6B-F533F1B1B704}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0DAA75C-E1F8-441F-BF6B-F533F1B1B704}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0DAA75C-E1F8-441F-BF6B-F533F1B1B704}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0DAA75C-E1F8-441F-BF6B-F533F1B1B704}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

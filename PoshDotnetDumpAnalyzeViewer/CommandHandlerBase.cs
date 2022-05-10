@@ -15,8 +15,7 @@ public interface IOutputParser
     public CommandOutput<OutputLine> Parse(string command, string[] output, bool isOk);
 }
 
-public abstract record CommandHandlerBase<TOutputLine, TOutputParser>(IClipboard Clipboard) : ICommandHandler
-    where TOutputLine : IOutputLine<TOutputLine>
+public abstract record CommandHandlerBase<TOutputParser>(IClipboard Clipboard) : ICommandHandler
     where TOutputParser : IOutputParser, new()
 {
     public abstract ImmutableArray<string> SupportedCommands { get; }

@@ -11,7 +11,7 @@ public struct DefaultOutputParser : IOutputParser
     }
 }
 
-public sealed record DefaultCommandHandler(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
+public sealed record DefaultCommandHandler(IClipboard Clipboard) : CommandHandlerBase<DefaultOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = new();
     public override bool IsSupported(string command) => true;
@@ -23,7 +23,7 @@ public sealed record DefaultCommandHandler(IClipboard Clipboard) : CommandHandle
     }
 }
 
-public sealed record QuitCommandHandler(IClipboard Clipboard) : CommandHandlerBase<OutputLine, DefaultOutputParser>(Clipboard)
+public sealed record QuitCommandHandler(IClipboard Clipboard) : CommandHandlerBase<DefaultOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } =
         ImmutableArray.Create(Commands.Exit, Commands.Q, Commands.Quit);
@@ -43,17 +43,16 @@ public struct HelpOutputParser : IOutputParser
     public CommandOutput<OutputLine> Parse(string command, string[] output, bool isOk)
     {
         var commandStartIndex = output.IndexAfter("Commands:");
-        var defaultRange = ..commandStartIndex;
         var helpCommandsRange = commandStartIndex..;
 
-        return new(command, isOk, output.MapRange<string, OutputLine>(
-            new(defaultRange, x => new(x)),
-            new(helpCommandsRange, x => new HelpOutputLine(x))));
+        return new(command, isOk, output.MapRange(
+            x => new(x),
+            new RangeMapper<string, OutputLine>(helpCommandsRange, x => new HelpOutputLine(x))));
     }
 }
 
 public sealed record HelpCommandHandler
-    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandlerBase<HelpOutputLine, HelpOutputParser>(Clipboard)
+    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandlerBase<HelpOutputParser>(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Help);
 
@@ -73,6 +72,75 @@ public sealed record HelpCommandHandler
                 {
                     var command = line.Commands[0];
                     CommandQueue.SendCommand($"help {command}");
+                    args.Handled = true;
+                }
+            }
+        };
+
+        return Task.FromResult((View) window);
+    }
+}
+
+public struct DumpHeapOutputParser : IOutputParser
+{
+    public CommandOutput<OutputLine> Parse(string command, string[] output, bool isOk)
+    {
+        var mainIndexesStart =
+            output.IndexAfter(x => x.Contains(" Address ") && x.Contains(" MT ") && x.Contains(" Size"));
+
+        var statisticsStart = output.IndexAfter("Statistics:");
+        // skip statistics header if statistics are present
+        if (statisticsStart > 0) statisticsStart++;
+
+        var statisticsEnd = output.IndexBefore(x => x.Contains("Total ") && x.Contains(" objects"));
+
+        var foundSectionEnd = output.IndexBefore(x => x.Contains("Found ") && x.Contains(" objects"));
+
+        // there are 4 lines between main section data and statistics data
+        var mainIndexesEnd =
+            statisticsStart == -1
+                ? foundSectionEnd
+                : statisticsStart - 4;
+
+        var (mainRange, mainIndexes) =
+            mainIndexesEnd == -1
+                ? default
+                : (new Range(mainIndexesStart, mainIndexesEnd),
+                    Parser.DumpHeap.GetDumpHeapHeaderIndexes(output[mainIndexesStart - 1]));
+
+
+        var (statisticsRange, statisticsIndexes) =
+            statisticsEnd == -1
+                ? default
+                : (new Range(statisticsStart + 1, statisticsEnd),
+                    Parser.DumpHeap.GetDumpHeapStatisticsHeaderIndexes(output[statisticsStart - 1]));
+
+        return new(command, isOk, output.MapRange(
+            x => new(x),
+            new RangeMapper<string, OutputLine>(mainRange, x => new DumpHeapOutputLine(x, mainIndexes)),
+            new RangeMapper<string, OutputLine>(statisticsRange, x => new DumpHeapStatisticsOutputLine(x, statisticsIndexes))
+        ));
+    }
+}
+
+public sealed record DumpHeapCommandHandler
+    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandlerBase<DumpHeapOutputParser>(Clipboard)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpHeap);
+
+    protected override Task<View> ProcessOutput(CommandOutput<OutputLine> output)
+    {
+        var (window, listView, _) = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
+
+        listView.KeyPress += args =>
+        {
+            if (args.KeyEvent.Key == Key.Enter)
+            {
+                if (listView.GetSelectedOutput<OutputLine>() is { } line)
+                {
+                    if (SubcommandsView.TryGetSubcommandsDialog(line, Clipboard, CommandQueue, out var dialog))
+                        Application.Run(dialog);
+
                     args.Handled = true;
                 }
             }
