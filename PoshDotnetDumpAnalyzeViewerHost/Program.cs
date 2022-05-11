@@ -1,8 +1,15 @@
 ﻿using PoshDotnetDumpAnalyzeViewer;
 
+if (args.Length == 0)
+{
+    Console.WriteLine("PoshDotnetDumpAnalyzeViewerHost <dump_file>");
+    Console.WriteLine("Please specify path to dump");
+    return;
+}
+
 try
 {
-    await App.Run(@"C:\Users\RZRL\dump_20220506_140504.dmp");
+    await App.Run(args[0]);
 }
 catch (Exception exn)
 {
