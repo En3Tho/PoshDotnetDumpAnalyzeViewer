@@ -16,6 +16,7 @@ public static class Parser
 
         public static string[] GetCommandsFromLine(string line)
         {
+            // usually there is 42 lines for commands column, next is description column
             return line[..42].Split(",", StringSplitOptions.TrimEntries)
                 .Select(part =>
                     {
@@ -54,14 +55,14 @@ public static class Parser
                 mainIndexesStart == -1
                     ? default
                     : (new Range(mainIndexesStart, mainIndexesEnd + 1),
-                        Parser.DumpHeap.GetDumpHeapHeaderIndices(output[mainIndexesStart - 1]));
+                        GetDumpHeapHeaderIndices(output[mainIndexesStart - 1]));
 
 
             var (statisticsRange, statisticsIndexes) =
                 statisticsStart == -1
                     ? default
                     : (new Range(statisticsStart, statisticsEnd + 1),
-                        Parser.DumpHeap.GetDumpHeapStatisticsHeaderIndexes(output[statisticsStart - 1]));
+                        GetDumpHeapStatisticsHeaderIndexes(output[statisticsStart - 1]));
 
             return new(command, isOk, output.MapRange(
                 x => new(x),
