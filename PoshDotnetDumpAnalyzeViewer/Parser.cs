@@ -21,7 +21,7 @@ public static class Parser
 
     public static class DumpHeap
     {
-        public static DumpHeapIndexes GetDumpHeapHeaderIndexes(string header)
+        public static DumpHeapIndexes GetDumpHeapHeaderIndices(string header)
         {
             var address = header.FindColumnRange("Address");
             var mt = header.FindColumnRange("MT", address);

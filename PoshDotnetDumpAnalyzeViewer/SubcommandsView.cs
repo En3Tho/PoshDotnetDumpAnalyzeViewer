@@ -35,17 +35,14 @@ public interface IHelpCommand
 
 public static class SubcommandsView
 {
+    public const int CopyPriority = 0;
+    public const int DumpHeapPriority = 1;
+    public const int DumpMethodTablePriority = 1;
+    public const int GcRootPriority = 2;
+
     public static bool TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue queue, [NotNullWhen(true)] out Dialog? dialog)
     {
-        // width is max commands width + padding
-        // height is commands count + padding
-
-        var result = new Dialog("Available commands"); // to popup
-
-        // text
-        // onEnter
-        // onTab
-
+        var result = new Dialog("Available commands");
         var yAxis = 0;
 
         Button MakeButton(string title, Action onClick)
@@ -67,27 +64,29 @@ public static class SubcommandsView
         if (line is IAddress address)
         {
             var data = address.Address.ToString();
-            buttonsWithPriorities.Add((1, () => MakeButton("Copy address", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy address", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((GcRootPriority, () => MakeCommandButton($"{Commands.GcRoot} {data}")));
         }
 
         if (line is IMethodTable methodTable)
         {
             var data = methodTable.MethodTable.ToString();
-            buttonsWithPriorities.Add((1, () => MakeButton("Copy method table", () => clipboard.SetClipboardData(data))));
-            buttonsWithPriorities.Add((2, () => MakeCommandButton($"{Commands.DumpHeap} -mt {data}")));
+            buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy method table", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((DumpHeapPriority, () => MakeCommandButton($"{Commands.DumpHeap} -mt {data}")));
+            buttonsWithPriorities.Add((DumpMethodTablePriority, () => MakeCommandButton($"{Commands.DumpMethodTable} {data}")));
         }
 
         if (line is ITypeName typeName)
         {
             var data = typeName.TypeName.ToString();
-            buttonsWithPriorities.Add((1, () => MakeButton("Copy type name", () => clipboard.SetClipboardData(data))));
-            buttonsWithPriorities.Add((2, () => MakeCommandButton($"{Commands.DumpHeap} -type {data}")));
+            buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy type name", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((DumpHeapPriority, () => MakeCommandButton($"{Commands.DumpHeap} -type {data}")));
         }
 
         if (line is IThreadId threadId)
         {
             var data = threadId.TheadId.ToString();
-            buttonsWithPriorities.Add((1, () => MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
         }
 
         if (buttonsWithPriorities.Count > 0)

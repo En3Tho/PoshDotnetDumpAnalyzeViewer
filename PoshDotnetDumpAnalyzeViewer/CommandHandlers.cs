@@ -86,7 +86,7 @@ public struct DumpHeapOutputParser : IOutputParser
     public CommandOutput<OutputLine> Parse(string command, string[] output, bool isOk)
     {
         var mainIndexesStart =
-            output.IndexAfter(x => x.Contains(" Address ") && x.Contains(" MT ") && x.Contains(" Size"));
+            output.IndexAfter(x => x.Contains("Address ") && x.Contains(" MT ") && x.Contains(" Size"));
 
         var statisticsStart = output.IndexAfter("Statistics:");
         // skip statistics header if statistics are present
@@ -103,16 +103,16 @@ public struct DumpHeapOutputParser : IOutputParser
                 : statisticsStart - 4;
 
         var (mainRange, mainIndexes) =
-            mainIndexesEnd == -1
+            mainIndexesStart == -1
                 ? default
-                : (new Range(mainIndexesStart, mainIndexesEnd),
-                    Parser.DumpHeap.GetDumpHeapHeaderIndexes(output[mainIndexesStart - 1]));
+                : (new Range(mainIndexesStart, mainIndexesEnd + 1),
+                    Parser.DumpHeap.GetDumpHeapHeaderIndices(output[mainIndexesStart - 1]));
 
 
         var (statisticsRange, statisticsIndexes) =
-            statisticsEnd == -1
+            statisticsStart == -1
                 ? default
-                : (new Range(statisticsStart + 1, statisticsEnd),
+                : (new Range(statisticsStart, statisticsEnd + 1),
                     Parser.DumpHeap.GetDumpHeapStatisticsHeaderIndexes(output[statisticsStart - 1]));
 
         return new(command, isOk, output.MapRange(
