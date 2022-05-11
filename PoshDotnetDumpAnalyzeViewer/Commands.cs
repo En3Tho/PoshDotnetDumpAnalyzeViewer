@@ -9,4 +9,19 @@ public static class Commands
     public const string DumpHeap = "dumpheap";
     public const string DumpMethodTable = "dumpmt";
     public const string GcRoot = "gcroot";
+
+    public const string DumpObject = "do";
+    public const string DumpArray = "dumparray";
+    public const string DumpConcurrentDictionary = "dumparray";
+    public const string DumpConcurrentQueue = "dumparray";
+
+    public const string DumpMemory = "d";
+    public const string DumpMemoryAsBytes = "db";
+    public const string DumpMemoryAsChars = "dc";
+    public const string DumpMemoryAsByteString = "da";
+    public const string DumpMemoryAsCharString = "du";
+    public const string DumpMemoryAsWords = "dw";
+    public const string DumpMemoryAsDoubleWords = "dd";
+    public const string DumpMemoryAsPointers = "dp";
+    public const string DumpMemoryAsQuadWords = "dq";
 }

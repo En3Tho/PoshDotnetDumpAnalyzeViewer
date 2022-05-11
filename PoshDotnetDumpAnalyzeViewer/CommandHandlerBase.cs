@@ -52,7 +52,7 @@ public abstract record DefaultViewsHandlerBase<TParser>(IClipboard Clipboard, Co
             {
                 if (listView.GetSelectedOutput<OutputLine>() is { } line)
                 {
-                    if (SubcommandsView.TryGetSubcommandsDialog(line, Clipboard, CommandQueue, out var dialog))
+                    if (SubcommandsView.TryGetSubcommandsDialog(line, Clipboard, CommandQueue) is {} dialog)
                         Application.Run(dialog);
 
                     args.Handled = true;

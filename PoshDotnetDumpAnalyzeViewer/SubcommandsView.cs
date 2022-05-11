@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Terminal.Gui;
+﻿using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
@@ -37,12 +36,14 @@ public static class SubcommandsView
 {
     private const int CopyPriority = 0;
     private const int DumpHeapPriority = 1;
-    private const int DumpMethodTablePriority = 1;
     private const int GcRootPriority = 2;
+    private const int DumpObjectsPriority = 3;
+    private const int DumpMethodTablePriority = 4;
+    private const int DumpMemoryPriority = 10; // let them have the lowest priority for now because there are lot of them
 
-    public static bool TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue queue, [NotNullWhen(true)] out Dialog? dialog)
+    public static Dialog? TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue queue)
     {
-        var result = new Dialog("Available commands");
+        var dialog = new Dialog("Available commands");
         var yAxis = 0;
 
         Button MakeButton(string title, Action onClick)
@@ -50,14 +51,15 @@ public static class SubcommandsView
             var button = new Button(0, yAxis++, title);
             button.Clicked += () =>
             {
-                Application.RequestStop(result);
+                Application.RequestStop(dialog);
                 onClick();
             };
 
             return button;
         }
 
-        Button MakeCommandButton(string command) => MakeButton(command, () => queue.SendCommand(command));
+        Button MakeCommandButton(string title, string command) =>
+            MakeButton(title, () => queue.SendCommand(command));
 
         var buttonsWithPriorities = new List<(int Priority, Func<Button> Button)>();
 
@@ -65,22 +67,32 @@ public static class SubcommandsView
         {
             var data = address.Address.ToString();
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy address", () => clipboard.SetClipboardData(data))));
-            buttonsWithPriorities.Add((GcRootPriority, () => MakeCommandButton($"{Commands.GcRoot} {data}")));
+            buttonsWithPriorities.Add((GcRootPriority, () => MakeCommandButton("Find GC root", $"{Commands.GcRoot} {data}")));
+
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory", $"{Commands.DumpMemory} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as bytes", $"{Commands.DumpMemoryAsBytes} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as chars", $"{Commands.DumpMemoryAsChars} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as byte string", $"{Commands.DumpMemoryAsByteString} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as char string", $"{Commands.DumpMemoryAsCharString} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as native ints", $"{Commands.DumpMemoryAsPointers} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as shorts", $"{Commands.DumpMemoryAsWords} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as int", $"{Commands.DumpMemoryAsDoubleWords} {data}")));
+            buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as longs", $"{Commands.DumpMemoryAsQuadWords} {data}")));
         }
 
         if (line is IMethodTable methodTable)
         {
             var data = methodTable.MethodTable.ToString();
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy method table", () => clipboard.SetClipboardData(data))));
-            buttonsWithPriorities.Add((DumpHeapPriority, () => MakeCommandButton($"{Commands.DumpHeap} -mt {data}")));
-            buttonsWithPriorities.Add((DumpMethodTablePriority, () => MakeCommandButton($"{Commands.DumpMethodTable} {data}")));
+            buttonsWithPriorities.Add((DumpHeapPriority, () => MakeCommandButton("Dump heap (method table)", $"{Commands.DumpHeap} -mt {data}")));
+            buttonsWithPriorities.Add((DumpMethodTablePriority, () => MakeCommandButton("Dump method table", $"{Commands.DumpMethodTable} {data}")));
         }
 
         if (line is ITypeName typeName)
         {
             var data = typeName.TypeName.ToString();
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy type name", () => clipboard.SetClipboardData(data))));
-            buttonsWithPriorities.Add((DumpHeapPriority, () => MakeCommandButton($"{Commands.DumpHeap} -type {data}")));
+            buttonsWithPriorities.Add((DumpHeapPriority, () => MakeCommandButton("Dump heap (type)", $"{Commands.DumpHeap} -type {data}")));
         }
 
         if (line is IThreadId threadId)
@@ -88,6 +100,8 @@ public static class SubcommandsView
             var data = threadId.TheadId.ToString();
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
         }
+
+        // todo: action on tab.
 
         if (buttonsWithPriorities.Count > 0)
         {
@@ -97,16 +111,14 @@ public static class SubcommandsView
             var height = buttons.Length + 2;
 
             foreach (var button in buttons)
-                result.AddButton(button);
+                dialog.AddButton(button);
 
-            result.Width = width;
-            result.Height = height;
+            dialog.Width = width;
+            dialog.Height = height;
 
-            dialog = result;
-            return true;
+            return dialog;
         }
 
-        dialog = null;
-        return false;
+        return null;
     }
 }
