@@ -69,6 +69,8 @@ public static class SubcommandsView
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy address", () => clipboard.SetClipboardData(data))));
             buttonsWithPriorities.Add((GcRootPriority, () => MakeCommandButton("Find GC root", $"{Commands.GcRoot} {data}")));
 
+            buttonsWithPriorities.Add((DumpObjectsPriority, () => MakeCommandButton("Dump object", $"{Commands.DumpObject} {data}")));
+
             buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory", $"{Commands.DumpMemory} {data}")));
             buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as bytes", $"{Commands.DumpMemoryAsBytes} {data}")));
             buttonsWithPriorities.Add((DumpMemoryPriority, () => MakeCommandButton("Dump memory as chars", $"{Commands.DumpMemoryAsChars} {data}")));

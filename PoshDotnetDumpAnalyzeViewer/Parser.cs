@@ -11,7 +11,12 @@ public static class Parser
 
             return new(command, isOk, output.MapRange(
                 x => new(x),
-                new RangeMapper<string, OutputLine>(helpCommandsRange, x => new HelpOutputLine(x))));
+                new RangeMapper<string, OutputLine>(helpCommandsRange, x =>
+                {
+                    if (string.IsNullOrWhiteSpace(x) || x.AsSpan()[..42].IsWhiteSpace())
+                        return new(x);
+                    return new HelpOutputLine(x);
+                })));
         }
 
         public static string[] GetCommandsFromLine(string line)

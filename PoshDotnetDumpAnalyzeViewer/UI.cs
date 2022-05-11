@@ -75,19 +75,6 @@ public static class CommandViewsExtensions
 
         return @this;
     }
-
-    public static TabView.Tab AddTabClosing(this TabView.Tab @this, TabManager tabManager)
-    {
-        @this.View.KeyPress += args =>
-        {
-            if (args.KeyEvent.Key != (Key.CtrlMask | Key.W)) return;
-            if (!@this.View.HasFocus) return;
-
-            tabManager.RemoveTab(@this);
-            args.Handled = true;
-        };
-        return @this;
-    }
 }
 
 public static class ViewsExtensions
@@ -138,8 +125,7 @@ public class UI
                     .SetupLogic(clipboard, errorSource);
 
             var tab =
-                new TabView.Tab("Unhandled exception", commandViews.Window)
-                    .AddTabClosing(tabManager);
+                new TabView.Tab("Unhandled exception", commandViews.Window);
 
             tabManager.SetTab(exn.Message, tab);
             return true;
