@@ -76,11 +76,6 @@ public class HistoryList<T>
 
 public record struct RangeMapper<TIn, TOut>(Range Range, Func<TIn, TOut> Map);
 
-public interface IViewWithTab
-{
-    public TabView.Tab Tab { get; }
-}
-
 public class TabManager
 {
     private readonly Dictionary<string, TabView.Tab> _tabMap =

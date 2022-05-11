@@ -38,3 +38,28 @@ public abstract record CommandHandlerBase<TOutputParser>(IClipboard Clipboard) :
 
     protected abstract Task<View> ProcessOutput(CommandOutput<OutputLine> output);
 }
+
+public abstract record DefaultViewsHandlerBase<TParser>(IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandlerBase<TParser>(Clipboard)
+    where TParser : IOutputParser, new()
+{
+    protected override Task<View> ProcessOutput(CommandOutput<OutputLine> output)
+    {
+        var (window, listView, _) = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
+
+        listView.KeyPress += args =>
+        {
+            if (args.KeyEvent.Key == Key.Enter)
+            {
+                if (listView.GetSelectedOutput<OutputLine>() is { } line)
+                {
+                    if (SubcommandsView.TryGetSubcommandsDialog(line, Clipboard, CommandQueue, out var dialog))
+                        Application.Run(dialog);
+
+                    args.Handled = true;
+                }
+            }
+        };
+
+        return Task.FromResult((View) window);
+    }
+}

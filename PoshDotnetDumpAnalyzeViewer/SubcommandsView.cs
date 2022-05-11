@@ -3,7 +3,7 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public interface IOutputLine<T>
+public interface IOutputLine
 {
     string Line { get; }
 }
@@ -35,10 +35,10 @@ public interface IHelpCommand
 
 public static class SubcommandsView
 {
-    public const int CopyPriority = 0;
-    public const int DumpHeapPriority = 1;
-    public const int DumpMethodTablePriority = 1;
-    public const int GcRootPriority = 2;
+    private const int CopyPriority = 0;
+    private const int DumpHeapPriority = 1;
+    private const int DumpMethodTablePriority = 1;
+    private const int GcRootPriority = 2;
 
     public static bool TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue queue, [NotNullWhen(true)] out Dialog? dialog)
     {
@@ -93,7 +93,7 @@ public static class SubcommandsView
         {
             var buttons = buttonsWithPriorities.OrderBy(x => x.Priority).Select(x => x.Button()).ToArray();
 
-            var width = buttons.MaxBy(values => values.Text)!.Text.Length + 6;
+            var width = buttons.MaxBy(values => values.Text.Length)!.Text.Length + 6;
             var height = buttons.Length + 2;
 
             foreach (var button in buttons)

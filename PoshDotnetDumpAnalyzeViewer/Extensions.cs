@@ -3,21 +3,6 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public static class TaskExtensions
-{
-    public static async Task WithErrorHandler(this Task @this, Action<Exception> errorHandler)
-    {
-        try
-        {
-            await @this;
-        }
-        catch (Exception exn)
-        {
-            errorHandler(exn);
-        }
-    }
-}
-
 public static class TextFieldExtensions
 {
     public static TextField AddClipboard(this TextField @this, IClipboard clipboard,
@@ -137,22 +122,6 @@ public static class ViewExtensions
     }
 }
 
-public static class SemaphoreSlimExtensions
-{
-    public static async Task RunTask(this SemaphoreSlim @this, Task task)
-    {
-        await @this.WaitAsync();
-        try
-        {
-            await task;
-        }
-        finally
-        {
-            @this.Release();
-        }
-    }
-}
-
 public static class ArrayExtensions
 {
     public static int IndexAfter<T>(this T[] @this, T value) where T : IEquatable<T>
@@ -182,46 +151,13 @@ public static class ArrayExtensions
 
     public static int IndexBefore<T>(this T[] @this, Func<T, bool> finder)
     {
-        for (var i = @this.Length -1; i > 1; i --)
+        // length - 1 because we don't need first element
+        for (var i = @this.Length -1; i > 1; i--)
         {
             if (finder(@this[i])) return i - 1;
         }
 
         return -1;
-    }
-
-    public static T[] TakeAfter<T>(this T[] @this, T value) where T : IEquatable<T>
-    {
-        var start = @this.IndexAfter(value);
-        if (start == -1) return Array.Empty<T>();
-        return @this[start..];
-    }
-
-    public static T[] TakeAfter<T>(this T[] @this, Func<T, bool> finder) where T : IEquatable<T>
-    {
-        var start = @this.IndexAfter(finder);
-        if (start == -1) return Array.Empty<T>();
-        return @this[start..];
-    }
-
-    public static T[] TakeBetween<T>(this T[] @this, Func<T, bool> finder1, Func<T, bool> finder2) where T : IEquatable<T>
-    {
-        var start = @this.IndexAfter(finder1);
-        if (start == -1) return Array.Empty<T>();
-
-        var end = @this.IndexBefore(finder2);
-        if (end == -1 || end <= start) return Array.Empty<T>();
-        return @this[start..end];
-    }
-
-    public static T[] TakeBetween<T>(this T[] @this, T first, T last) where T : IEquatable<T>
-    {
-        var start = @this.IndexAfter(first);
-        if (start == -1) return Array.Empty<T>();
-
-        var end = @this.IndexBefore(last);
-        if (end == -1 || end <= start) return Array.Empty<T>();
-        return @this[start..end];
     }
 
     private static void Map<TIn, TOut>(this Span<TIn> @this, Span<TOut> result, Func<TIn, TOut> mapper)
@@ -281,10 +217,4 @@ public static class ArrayExtensions
 
         return result;
     }
-}
-
-public static class EnumerableExtensions
-{
-    public static IEnumerable<T> TakeAfter<T>(this IEnumerable<T> @this, T value) where T : IEquatable<T>
-        => @this.SkipWhile(element => !value.Equals(element)).Skip(1);
 }

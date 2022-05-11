@@ -17,7 +17,8 @@ public record DefaultCommandViews(
 
 public static class CommandViewsExtensions
 {
-    public static DefaultCommandViews SetupLogic<T>(this DefaultCommandViews @this, IClipboard clipboard, T[] initialSource) where T : IOutputLine<T>
+    public static DefaultCommandViews SetupLogic<T>(this DefaultCommandViews @this, IClipboard clipboard, T[] initialSource)
+        where T : IOutputLine
     {
         var lastFilter = "";
 
