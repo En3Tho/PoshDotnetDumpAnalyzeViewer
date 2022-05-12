@@ -32,6 +32,14 @@ public static class CommandViewsExtensions
                     clipboard.SetClipboardData(@this.OutputListView.Source.ToList()[@this.OutputListView.SelectedItem]?.ToString());
                     args.Handled = true;
                     break;
+
+                case Key.CtrlMask | Key.ShiftMask | Key.C:
+                    if (@this.OutputListView.GetSource<IList<object>>() is { } source)
+                    {
+                        clipboard.SetClipboardData(string.Join(Environment.NewLine, source.Select(x => x.ToString())));
+                        args.Handled = true;
+                    }
+                    break;
             }
         };
 
@@ -127,7 +135,7 @@ public class UI
             var tab =
                 new TabView.Tab("Unhandled exception", commandViews.Window);
 
-            tabManager.SetTab(exn.Message, tab);
+            tabManager.AddTab(exn.Message, tab);
             return true;
         };
     }

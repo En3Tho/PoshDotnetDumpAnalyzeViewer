@@ -125,7 +125,7 @@ public class TabManager
         _tabMap.Remove(command);
     }
 
-    public void SetTab(string command, TabView.Tab result)
+    public void AddTab(string command, TabView.Tab result)
     {
         RemoveTab(command);
 

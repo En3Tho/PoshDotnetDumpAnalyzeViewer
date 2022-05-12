@@ -11,9 +11,10 @@ public record CommandQueueWorker(
     TabManager TabManager,
     IEnumerable<ICommandHandler> Handlers)
 {
-    public async Task Process(string command)
+    // TODO: rewrite this to di based commands ?
+    public async Task Process(string command, bool forceCommand = false, bool ignoreOutput = false)
     {
-        if (TabManager.TrySetSelectedExistingTab(command))
+        if (!forceCommand && TabManager.TrySetSelectedExistingTab(command))
             return;
         try
         {
@@ -22,9 +23,21 @@ public record CommandQueueWorker(
 
             var handler = Handlers.First(x => x.IsSupported(command));
             var view = await handler.HandleCommand(DotnetDump, command);
-            var tab = new TabView.Tab(command, view);
+
+            if (ignoreOutput)
+                return;
+
             CommandHistory.AddCommand(command);
-            TabManager.SetTab(command, tab);
+
+            if (TabManager.TryGetTab(command) is { } existingTab)
+            {
+                existingTab.View = view;
+            }
+            else
+            {
+                var newTab = new TabView.Tab(command, view);
+                TabManager.AddTab(command, newTab);
+            }
         }
         finally
         {

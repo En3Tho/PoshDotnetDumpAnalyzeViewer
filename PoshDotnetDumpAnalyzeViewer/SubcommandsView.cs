@@ -7,9 +7,9 @@ public interface IOutputLine
     string Line { get; }
 }
 
-public interface IThreadId
+public interface IClrThreadId
 {
-    ReadOnlyMemory<char> TheadId { get; }
+    ReadOnlyMemory<char> ClrThreadId { get; }
 }
 
 public interface IAddress
@@ -32,6 +32,11 @@ public interface IHelpCommand
     string[] Commands { get; }
 }
 
+public interface IOsThreadId
+{
+    ReadOnlyMemory<char> OsThreadId { get; }
+}
+
 public static class SubcommandsView
 {
     private const int CopyPriority = 0;
@@ -39,6 +44,7 @@ public static class SubcommandsView
     private const int GcRootPriority = 2;
     private const int DumpObjectsPriority = 3;
     private const int DumpMethodTablePriority = 4;
+    private const int PStacksPriority = 5;
     private const int DumpMemoryPriority = 10; // let them have the lowest priority for now because there are lot of them
 
     public static Dialog? TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue queue)
@@ -108,10 +114,23 @@ public static class SubcommandsView
             buttonsWithPriorities.Add((DumpHeapPriority, () => MakeCommandButton("Dump heap (type)", $"{Commands.DumpHeap} -type {data}")));
         }
 
-        if (line is IThreadId threadId)
+        // TODO: not sure if clr thread id is any useful
+        if (line is IClrThreadId clrThreadId)
         {
-            var data = threadId.TheadId.ToString();
+            var data = clrThreadId.ClrThreadId.ToString();
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
+        }
+
+        // TODO:
+        if (line is IOsThreadId osThreadId)
+        {
+            var data = osThreadId.OsThreadId.ToString();
+            buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy OS thread id", () => clipboard.SetClipboardData(data))));
+
+            // TODO:
+            // Find thread in parallel stacks .. p statcks + set selected value
+            // Set as current thread // parse native thread id as hex and call setthread -p int
+            // Set as current thread and display call stack // command above + clrstack optionally with new dedicated tab ?
         }
 
         // todo: action on tab.
