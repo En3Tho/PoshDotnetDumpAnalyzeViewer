@@ -49,6 +49,17 @@ public static class SubcommandsView
         Button MakeButton(string title, Action onClick)
         {
             var button = new Button(0, yAxis++, title);
+
+            button.KeyPress += args =>
+            {
+                if (args.KeyEvent.Key == Key.Tab)
+                {
+                    // add text to command view's text
+                    //
+                    args.Handled = true;
+                }
+            };
+
             button.Clicked += () =>
             {
                 Application.RequestStop(dialog);
