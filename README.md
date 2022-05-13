@@ -6,20 +6,20 @@ It's able to list output of all supported SOS commands and additionally custom p
 ![img.png](img.png)
 
 Command field:
-Enter -> invoke command or get already existing tab
-Ctrl + Enter -> invoke command and refresh existing tab (if it exist) 
+- Enter -> invoke command or get already existing tab
+- Ctrl + Enter -> invoke command and refresh existing tab (if it exist) 
 
 Tabs:
-Ctrl+W to close tab (help is not closeable)
-Ctrl+R to refresh tab (invoke command again, failed commands are not refreshable)
+- Ctrl+W to close tab (help is not closeable)
+- Ctrl+R to refresh tab (invoke command again, failed commands are not refreshable)
 
 List view:
-Enter -> invoke custom action or get subcommands view
-Tab -> find next item using text from filter field
+- Enter -> invoke custom action or get subcommands view
+- Tab -> find next item using text from filter field
 
 Filter field:
-Enter: filter items in list view 
-Tab: find next item in list view and focus it
+- Enter: filter items in list view 
+- Tab: find next item in list view and focus it
 
 Currently implemented custom parsers:
 
