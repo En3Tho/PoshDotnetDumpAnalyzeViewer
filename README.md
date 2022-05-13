@@ -5,10 +5,21 @@ It's able to list output of all supported SOS commands and additionally custom p
 
 ![img.png](img.png)
 
-Ctrl+W to close tab (help is not closeable)
-Press enter on list view item to get custom action or subcommands view 
+Command field:
+Enter -> invoke command or get already existing tab
+Ctrl + Enter -> invoke command and refresh existing tab (if it exist) 
 
-Supports filtering results via String.ContainsOrdinalIgnoreCase on pressing enter in filter field
+Tabs:
+Ctrl+W to close tab (help is not closeable)
+Ctrl+R to refresh tab (invoke command again, failed commands are not refreshable)
+
+List view:
+Enter -> invoke custom action or get subcommands view
+Tab -> find next item using text from filter field
+
+Filter field:
+Enter: filter items in list view 
+Tab: find next item in list view and focus it
 
 Currently implemented custom parsers:
 
