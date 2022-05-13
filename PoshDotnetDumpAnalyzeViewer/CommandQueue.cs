@@ -14,14 +14,19 @@ public record CommandQueueWorker(
 {
     private readonly Func<CommandOutputViews, CommandOutputViews> DoNothing = x => x;
 
-    void UpdateCommandViews(TabView.Tab tabToUpdate, CommandOutputViews views, Func<CommandOutputViews, CommandOutputViews>? customAction)
+    void UpdateCommandViews(TabView.Tab tabToUpdate, CommandOutputViews views, bool ignoreOutput, Func<CommandOutputViews, CommandOutputViews>? customAction)
     {
+        // in case we need something from resulting view
         var updatedView = customAction is { } ? customAction(views) : views;
+        if (ignoreOutput)
+            return;
+
         tabToUpdate.View = updatedView.Window;
         TabManager.SetSelected(tabToUpdate);
     }
 
-    // TODO: rewrite this to di based commands ?
+    // TODO: rewrite this to di based commands maybe ?
+    // TODO: too many booleans? -_-
     public async Task Process(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
         try
@@ -31,7 +36,7 @@ public record CommandQueueWorker(
 
             if (!forceRefresh && TabManager.TryGetTab(command) is { } tabToUpdate)
             {
-                UpdateCommandViews(tabToUpdate.Tab, tabToUpdate.Views, customAction);
+                UpdateCommandViews(tabToUpdate.Tab, tabToUpdate.Views, ignoreOutput, customAction);
                 return;
             }
 
@@ -39,13 +44,17 @@ public record CommandQueueWorker(
 
             var result = await DotnetDump.PerformCommand(command);
 
-            if (ignoreOutput && result.IsOk)
-                return;
-
             var views =
                 result.IsOk
                     ? viewFactory.HandleOutput(command, result.Output)
                     : UI.MakeDefaultCommandViews().SetupLogic(Clipboard, result.Output.Map(x => new OutputLine(x)));
+
+            if (ignoreOutput && result.IsOk)
+            {
+                // in case we need something from resulting view
+                customAction?.Invoke(views);
+                return;
+            }
 
             CommandHistory.Add(command);
 
@@ -65,7 +74,7 @@ public record CommandQueueWorker(
 
             // wait for ui to initialize
             if (result.IsOk)
-                UpdateCommandViews(tab, views, customAction);
+                UpdateCommandViews(tab, views, ignoreOutput, customAction);
         }
         finally
         {

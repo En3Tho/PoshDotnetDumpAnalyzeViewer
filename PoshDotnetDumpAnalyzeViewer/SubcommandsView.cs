@@ -154,7 +154,18 @@ public static class SubcommandsView
                 commandQueue.SendCommand($"{Commands.ParallelStacks} -a", customAction: views =>
                 {
                     views.FilterTextField.Text = normalizedOsId;
-                    views.OutputListView.TryFindItemAndSetSelected(x => x.Contains("~~~~") && x.Contains(normalizedOsId, StringComparison.OrdinalIgnoreCase));
+                    views.OutputListView.TryFindItemAndSetSelected(x =>
+                    {
+                        const string ThreadAnchor = "~~~~ ";
+                        if (x.IndexOf(ThreadAnchor, StringComparison.Ordinal) is not -1 and var index)
+                        {
+                            var values = x[(index + ThreadAnchor.Length)..]
+                                .Split(",", StringSplitOptions.TrimEntries);
+                            return values.AsSpan().Contains(normalizedOsId);
+                        }
+
+                        return false;
+                    });
                     return views;
                 });
             })));
