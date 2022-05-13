@@ -79,11 +79,8 @@ public class DotnetDumpAnalyzeBridge
         _cancellationToken = cancellationToken;
     }
 
-    public async Task<CommandOutput<OutputLine>> PerformCommand<TOutputParser>(string command)
-        where TOutputParser : IOutputParser, new()
+    public async Task<(string[] Output, bool IsOk)> PerformCommand(string command)
     {
-        var parser = new TOutputParser();
-
         List<string> values = new(256);
 
         await _dotnetDump.StandardInput.WriteLineAsync(command);
@@ -98,7 +95,7 @@ public class DotnetDumpAnalyzeBridge
                     values.Add(error);
                 }
 
-                return parser.Parse(command, values.ToArray(), false);
+                return (values.ToArray(), false);
             }
 
             if (line is null or Constants.EndCommandOutputAnchor)
@@ -107,9 +104,9 @@ public class DotnetDumpAnalyzeBridge
             values.Add(line);
         }
 
-        return parser.Parse(command, values.ToArray(), true);
+        return (values.ToArray(), true);
     }
 }
 
-public record struct CommandOutput<T>(string Command, bool IsOk, T[] Lines)
+public record struct CommandOutput<T>(string Command, T[] Lines)
     where T : IOutputLine;

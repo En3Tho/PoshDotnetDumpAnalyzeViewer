@@ -33,13 +33,13 @@ public static class TextFieldExtensions
         {
             if (args.KeyEvent.Key == previousCommandKey)
             {
-                if (historyList.PreviousCommand() is { } previousCommand)
+                if (historyList.Previous() is { } previousCommand)
                     @this.Text = previousCommand;
                 args.Handled = true;
             }
             else if (args.KeyEvent.Key == nextCommandKey)
             {
-                @this.Text = historyList.NextCommand() ?? "";
+                @this.Text = historyList.Next() ?? "";
                 args.Handled = true;
             }
         };

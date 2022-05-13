@@ -42,7 +42,7 @@ public class DumpHeapParsing
             "Total 3 objects"
         };
 
-        var parseResult = new DumpHeapOutputParser().Parse("", output, true);
+        var parseResult = new DumpHeapOutputParser().Parse("", output);
         var lines = parseResult.Lines;
 
         var idx = 0;
@@ -74,7 +74,7 @@ public class DumpHeapParsing
             "Total 3 objects"
         };
 
-        var parseResult = new DumpHeapOutputParser().Parse("", output, true);
+        var parseResult = new DumpHeapOutputParser().Parse("", output);
         var lines = parseResult.Lines;
 
         var idx = 0;

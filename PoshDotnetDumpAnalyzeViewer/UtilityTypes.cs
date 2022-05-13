@@ -40,37 +40,37 @@ public class HistoryList<T>
     private readonly List<T> _items = new();
     private int _currentIndex;
 
-    private void RemoveCommand(T item)
+    private void Remove(T item)
     {
         if (_items.IndexOf(item) is >= 0 and var idx)
             _items.RemoveAt(idx);
     }
 
-    private T? GetCurrentCommand()
+    private T? GetCurrent()
     {
         if (_currentIndex >= 0 && _currentIndex < _items.Count)
             return _items[_currentIndex];
         return default;
     }
 
-    public void AddCommand(T command)
+    public void Add(T command)
     {
-        RemoveCommand(command);
+        Remove(command);
 
         _items.Add(command);
         _currentIndex = _items.Count;
     }
 
-    public T? PreviousCommand()
+    public T? Previous()
     {
         _currentIndex = Math.Max(0, _currentIndex - 1);
-        return GetCurrentCommand();
+        return GetCurrent();
     }
 
-    public T? NextCommand()
+    public T? Next()
     {
         _currentIndex = Math.Min(_currentIndex + 1, _items.Count);
-        return GetCurrentCommand();
+        return GetCurrent();
     }
 }
 
@@ -78,7 +78,7 @@ public record struct RangeMapper<TIn, TOut>(Range Range, Func<TIn, TOut> Map);
 
 public class TabManager
 {
-    private readonly Dictionary<string, TabView.Tab> _tabMap =
+    private readonly Dictionary<string, (TabView.Tab Tab, bool IsOk)> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
     private readonly MainLoop _loop;
@@ -90,7 +90,7 @@ public class TabManager
         _tabView = tabView;
     }
 
-    public TabView.Tab? TryGetTab(string command)
+    public (TabView.Tab Tab, bool IsOk)? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
         return default;
@@ -100,7 +100,7 @@ public class TabManager
     {
         foreach (var commandsAndKeys in _tabMap)
         {
-            if (ReferenceEquals(commandsAndKeys.Value, tab))
+            if (ReferenceEquals(commandsAndKeys.Value.Tab, tab))
                 return commandsAndKeys.Key;
         }
 
@@ -119,25 +119,25 @@ public class TabManager
     {
         if (_tabMap.TryGetValue(command, out var result))
         {
-            _loop.Invoke(() => { _tabView.RemoveTab(result); });
+            _loop.Invoke(() => { _tabView.RemoveTab(result.Tab); });
         }
 
         _tabMap.Remove(command);
     }
 
-    public void AddTab(string command, TabView.Tab result)
+    public void AddTab(string command, TabView.Tab tab, bool isOk)
     {
         RemoveTab(command);
 
-        _tabMap[command] = result;
-        _loop.Invoke(() => { _tabView.AddTab(result, true); });
+        _tabMap[command] = (tab, isOk);
+        _loop.Invoke(() => { _tabView.AddTab(tab, true); });
     }
 
     public bool TrySetSelectedExistingTab(string command)
     {
         if (TryGetTab(command) is { } existingTab)
         {
-            SetSelected(existingTab);
+            SetSelected(existingTab.Tab);
             return true;
         }
 

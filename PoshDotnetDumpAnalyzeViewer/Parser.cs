@@ -4,12 +4,12 @@ public static class Parser
 {
     public static class Help
     {
-        public static CommandOutput<OutputLine> Parse(string command, string[] output, bool isOk)
+        public static CommandOutput<OutputLine> Parse(string command, string[] output)
         {
             var commandStartIndex = output.IndexAfter("Commands:");
             var helpCommandsRange = commandStartIndex..;
 
-            return new(command, isOk, output.MapRange(
+            return new(command, output.MapRange(
                 x => new(x),
                 new RangeMapper<string, OutputLine>(helpCommandsRange, x =>
                 {
@@ -37,7 +37,7 @@ public static class Parser
 
     public static class DumpHeap
     {
-        public static CommandOutput<OutputLine> Parse(string command, string[] output, bool isOk)
+        public static CommandOutput<OutputLine> Parse(string command, string[] output)
         {
             var mainIndexesStart =
                 output.IndexAfter(x => x.Contains("Address ") && x.Contains(" MT ") && x.Contains(" Size"));
@@ -69,7 +69,7 @@ public static class Parser
                     : (new Range(statisticsStart, statisticsEnd + 1),
                         GetDumpHeapStatisticsHeaderIndexes(output[statisticsStart - 1]));
 
-            return new(command, isOk, output.MapRange(
+            return new(command, output.MapRange(
                 x => new(x),
                 new RangeMapper<string, OutputLine>(mainRange, x => new DumpHeapOutputLine(x, mainIndexes)),
                 new RangeMapper<string, OutputLine>(statisticsRange, x => new DumpHeapStatisticsOutputLine(x, statisticsIndexes))

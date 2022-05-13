@@ -3,19 +3,19 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public interface ICommandHandler
+public interface ICommandOutputViewFactory
 {
-    Task<View> HandleCommand(DotnetDumpAnalyzeBridge dotnetDump, string command);
+    Task<View> HandleOutput(string command, string[] output);
     ImmutableArray<string> SupportedCommands { get; }
     bool IsSupported(string command);
 }
 
 public interface IOutputParser
 {
-    public CommandOutput<OutputLine> Parse(string command, string[] output, bool isOk);
+    public CommandOutput<OutputLine> Parse(string command, string[] output);
 }
 
-public abstract record CommandHandlerBase<TOutputParser>(IClipboard Clipboard) : ICommandHandler
+public abstract record CommandOutputViewFactoryBase<TOutputParser>(IClipboard Clipboard) : ICommandOutputViewFactory
     where TOutputParser : IOutputParser, new()
 {
     public abstract ImmutableArray<string> SupportedCommands { get; }
@@ -23,26 +23,23 @@ public abstract record CommandHandlerBase<TOutputParser>(IClipboard Clipboard) :
     public virtual bool IsSupported(string command) => SupportedCommands.Any(supportedCommand =>
         command.StartsWith(supportedCommand, StringComparison.OrdinalIgnoreCase));
 
-    public async Task<View> HandleCommand(DotnetDumpAnalyzeBridge dotnetDump, string command)
+    public async Task<View> HandleOutput(string command, string[] output)
     {
         if (!IsSupported(command))
             throw new NotSupportedException($"{GetType().FullName} does not support command {command}");
 
-        var output = await dotnetDump.PerformCommand<TOutputParser>(command);
+        var commandOutput = new TOutputParser().Parse(command, output);
 
-        if (!output.IsOk)
-            return UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines).Window;
-
-        return await ProcessOutput(output);
+        return await CreateView(commandOutput);
     }
 
-    protected abstract Task<View> ProcessOutput(CommandOutput<OutputLine> output);
+    protected abstract Task<View> CreateView(CommandOutput<OutputLine> output);
 }
 
-public abstract record DefaultViewsHandlerBase<TParser>(IClipboard Clipboard, CommandQueue CommandQueue) : CommandHandlerBase<TParser>(Clipboard)
+public abstract record DefaultViewsOutputViewFactoryBase<TParser>(IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase<TParser>(Clipboard)
     where TParser : IOutputParser, new()
 {
-    protected override Task<View> ProcessOutput(CommandOutput<OutputLine> output)
+    protected override Task<View> CreateView(CommandOutput<OutputLine> output)
     {
         var (window, listView, _) = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
 

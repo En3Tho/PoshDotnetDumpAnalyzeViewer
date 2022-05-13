@@ -23,30 +23,20 @@ public static class App
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
         var historyList = new HistoryList<string>();
 
-        topLevelViews.TabView.KeyPress += args =>
-        {
-            if (args.KeyEvent.Key == (Key.CtrlMask | Key.W))
-            {
-                // special case help
-                if (topLevelViews.TabView is { SelectedTab: {} selectedTab} && selectedTab.Text.ToString() != "help")
-                    tabManager.RemoveTab(selectedTab);
-            }
-        };
-
         var exceptionHandler = UI.MakeExceptionHandler(tabManager, clipboard);
         var commandQueue = new CommandQueue(exn => exceptionHandler(exn));
 
-        var handlers = new ICommandHandler[]
+        var viewFactories = new ICommandOutputViewFactory[]
         {
-            new QuitCommandHandler(clipboard),
-            new HelpCommandHandler(clipboard, commandQueue),
-            new DumpHeapCommandHandler(clipboard, commandQueue),
-            new DefaultCommandHandler(clipboard)
+            new QuitCommandOutputViewFactory(clipboard),
+            new HelpCommandOutputViewFactory(clipboard, commandQueue),
+            new DumpHeapCommandOutputViewFactory(clipboard, commandQueue),
+            new DefaultCommandOutputViewFactory(clipboard)
         };
 
-        var commandQueueWorker = new CommandQueueWorker(bridge, topLevelViews, historyList, tabManager, handlers);
+        var commandQueueWorker = new CommandQueueWorker(clipboard, bridge, topLevelViews, historyList, tabManager, viewFactories);
 
-        topLevelViews.SetupLogic(commandQueue, clipboard, historyList);
+        topLevelViews.SetupLogic(tabManager, commandQueue, clipboard, historyList);
 
         commandQueue.Start(commandQueueWorker, source.Token);
 
