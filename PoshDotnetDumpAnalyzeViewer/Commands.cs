@@ -10,6 +10,11 @@ public static class Commands
     public const string DumpMethodTable = "dumpmt";
     public const string GcRoot = "gcroot";
 
+    public const string SetThread = "setthread";
+    public const string Threads = "threads";
+    public const string ClrStack = "clrstack";
+    public const string ParallelStacks = "pstacks";
+
     public const string DumpObject = "do";
     public const string DumpArray = "dumparray";
     public const string DumpConcurrentDictionary = "dumparray";

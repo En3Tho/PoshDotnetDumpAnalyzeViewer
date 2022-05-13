@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using NStack;
+﻿using NStack;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
@@ -10,14 +9,14 @@ public record TopLevelViews(
     TabView TabView,
     TextField CommandInput);
 
-public record DefaultCommandViews(
+public record CommandOutputViews(
     Window Window,
     ListView OutputListView,
     TextField FilterTextField);
 
 public static class CommandViewsExtensions
 {
-    public static DefaultCommandViews SetupLogic<T>(this DefaultCommandViews @this, IClipboard clipboard,
+    public static CommandOutputViews SetupLogic<T>(this CommandOutputViews @this, IClipboard clipboard,
         T[] initialSource)
         where T : IOutputLine
     {
@@ -36,7 +35,7 @@ public static class CommandViewsExtensions
                     break;
 
                 case Key.CtrlMask | Key.ShiftMask | Key.C:
-                    if (@this.OutputListView.GetSource<IList<object>>() is { } source)
+                    if (@this.OutputListView.GetSource<IList<OutputLine>>() is { } source)
                     {
                         clipboard.SetClipboardData(string.Join(Environment.NewLine, source.Select(x => x.ToString())));
                         args.Handled = true;
@@ -54,41 +53,11 @@ public static class CommandViewsExtensions
         void ProcessTabKey()
         {
             var filter = (@this.FilterTextField.Text ?? ustring.Empty).ToString()!;
-            if (string.IsNullOrEmpty(filter))
+
+            if (string.IsNullOrWhiteSpace(filter))
                 return;
 
-            if (@this.OutputListView.GetSource<IList<object>>() is { Count: > 0 } source)
-            {
-                bool SetSelectedItem(int index)
-                {
-                    while (index < source!.Count)
-                    {
-                        if (source[index].ToString()!.Contains(filter!, StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (!@this.OutputListView.HasFocus)
-                                @this.OutputListView.SetFocus();
-                            // display this item in the middle of the list if there is enough space left
-                            var linesInList = @this.OutputListView.Bounds.Height;
-                            var topItemIndex =
-                                index < linesInList
-                                    ? 0
-                                    : index - linesInList / 2;
-
-                            @this.OutputListView.TopItem = topItemIndex;
-                            @this.OutputListView.SelectedItem = index;
-                            return true;
-                        }
-
-                        index++;
-                    }
-
-                    return false;
-                }
-
-                var index = @this.OutputListView.SelectedItem + 1;
-                if (!SetSelectedItem(index))
-                    SetSelectedItem(0);
-            }
+            @this.OutputListView.TryFindItemAndSetSelected(x => x.Contains(filter, StringComparison.OrdinalIgnoreCase));
         }
 
         void ProcessEnterKey()
@@ -222,12 +191,12 @@ public class UI
             var tab =
                 new TabView.Tab("Unhandled exception", commandViews.Window);
 
-            tabManager.AddTab(exn.Message, tab, false);
+            tabManager.AddTab(exn.Message, commandViews, tab, false);
             return true;
         };
     }
 
-    public static DefaultCommandViews MakeDefaultCommandViews()
+    public static CommandOutputViews MakeDefaultCommandViews()
     {
         var window = new Window
         {

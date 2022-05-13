@@ -5,7 +5,7 @@ namespace PoshDotnetDumpAnalyzeViewer;
 
 public struct DefaultOutputParser : IOutputParser
 {
-    public CommandOutput<OutputLine> Parse(string command, string[] output)
+    public CommandOutput Parse(string command, string[] output)
     {
         return new(command, output.Map(x => new OutputLine(x)));
     }
@@ -16,10 +16,10 @@ public sealed record DefaultCommandOutputViewFactory(IClipboard Clipboard) : Com
     public override ImmutableArray<string> SupportedCommands { get; } = new();
     public override bool IsSupported(string command) => true;
 
-    protected override Task<View> CreateView(CommandOutput<OutputLine> output)
+    protected override CommandOutputViews CreateView(CommandOutput output)
     {
         var views = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
-        return Task.FromResult((View) views.Window);
+        return views;
     }
 }
 
@@ -31,16 +31,16 @@ public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : Comman
     public override bool IsSupported(string command) =>
         SupportedCommands.Any(supportedCommand => command.Equals(supportedCommand, StringComparison.OrdinalIgnoreCase));
 
-    protected override Task<View> CreateView(CommandOutput<OutputLine> output)
+    protected override CommandOutputViews CreateView(CommandOutput output)
     {
         Environment.Exit(0);
-        return Task.FromResult<View>(null);
+        return null;
     }
 }
 
 public struct HelpOutputParser : IOutputParser
 {
-    public CommandOutput<OutputLine> Parse(string command, string[] output)
+    public CommandOutput Parse(string command, string[] output)
         => Parser.Help.Parse(command, output);
 }
 
@@ -52,16 +52,16 @@ public sealed record HelpCommandOutputViewFactory
     public override bool IsSupported(string command) =>
         command.Equals(Commands.Help, StringComparison.OrdinalIgnoreCase);
 
-    protected override Task<View> CreateView(CommandOutput<OutputLine> output)
+    protected override CommandOutputViews CreateView(CommandOutput output)
     {
-        var (window, listView, _) = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
+        var views = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
 
-        listView.KeyPress += args =>
+        views.OutputListView.KeyPress += args =>
         {
             // To function ?
             if (args.KeyEvent.Key == Key.Enter)
             {
-                if (listView.GetSelectedOutput<IHelpCommand>() is { } line)
+                if (views.OutputListView.GetSelectedOutput<IHelpCommand>() is { } line)
                 {
                     var command = line.Commands[0];
                     CommandQueue.SendCommand($"help {command}");
@@ -70,13 +70,13 @@ public sealed record HelpCommandOutputViewFactory
             }
         };
 
-        return Task.FromResult((View) window);
+        return views;
     }
 }
 
 public struct DumpHeapOutputParser : IOutputParser
 {
-    public CommandOutput<OutputLine> Parse(string command, string[] output) =>
+    public CommandOutput Parse(string command, string[] output) =>
         Parser.DumpHeap.Parse(command, output);
 }
 
@@ -85,4 +85,17 @@ public sealed record DumpHeapCommandOutputViewFactory
         Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpHeap);
+}
+
+public struct SetThreadOutputParser : IOutputParser
+{
+    public CommandOutput Parse(string command, string[] output) =>
+        Parser.SetThread.Parse(command, output);
+}
+
+public sealed record SetThreadCommandOutputViewFactory
+    (IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SetThreadOutputParser>(
+        Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SetThread, Commands.Threads);
 }

@@ -78,7 +78,7 @@ public record struct RangeMapper<TIn, TOut>(Range Range, Func<TIn, TOut> Map);
 
 public class TabManager
 {
-    private readonly Dictionary<string, (TabView.Tab Tab, bool IsOk)> _tabMap =
+    private readonly Dictionary<string, (TabView.Tab Tab, CommandOutputViews Views, bool IsOk)> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
     private readonly MainLoop _loop;
@@ -90,7 +90,7 @@ public class TabManager
         _tabView = tabView;
     }
 
-    public (TabView.Tab Tab, bool IsOk)? TryGetTab(string command)
+    public (TabView.Tab Tab, CommandOutputViews Views, bool IsOk)? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
         return default;
@@ -125,11 +125,11 @@ public class TabManager
         _tabMap.Remove(command);
     }
 
-    public void AddTab(string command, TabView.Tab tab, bool isOk)
+    public void AddTab(string command, CommandOutputViews views, TabView.Tab tab, bool isOk)
     {
         RemoveTab(command);
 
-        _tabMap[command] = (tab, isOk);
+        _tabMap[command] = (tab, views, isOk);
         _loop.Invoke(() => { _tabView.AddTab(tab, true); });
     }
 

@@ -28,3 +28,9 @@ public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatistic
     public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Indexes.MethodTable);
     public ReadOnlyMemory<char> TypeName => Line.AsMemory(Indexes.ClassName);
 }
+
+public sealed record SetThreadOutputLine(string Line) : OutputLine(Line), IOsThreadId
+{
+    public override string ToString() => Line;
+    public ReadOnlyMemory<char> OsThreadId => Parser.SetThread.GetOsIDFromSetThreadLine(Line);
+}

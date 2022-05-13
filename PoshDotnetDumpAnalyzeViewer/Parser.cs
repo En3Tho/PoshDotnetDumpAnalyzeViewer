@@ -1,10 +1,12 @@
-﻿namespace PoshDotnetDumpAnalyzeViewer;
+﻿using System.Text.RegularExpressions;
+
+namespace PoshDotnetDumpAnalyzeViewer;
 
 public static class Parser
 {
     public static class Help
     {
-        public static CommandOutput<OutputLine> Parse(string command, string[] output)
+        public static CommandOutput Parse(string command, string[] output)
         {
             var commandStartIndex = output.IndexAfter("Commands:");
             var helpCommandsRange = commandStartIndex..;
@@ -37,7 +39,7 @@ public static class Parser
 
     public static class DumpHeap
     {
-        public static CommandOutput<OutputLine> Parse(string command, string[] output)
+        public static CommandOutput Parse(string command, string[] output)
         {
             var mainIndexesStart =
                 output.IndexAfter(x => x.Contains("Address ") && x.Contains(" MT ") && x.Contains(" Size"));
@@ -72,7 +74,8 @@ public static class Parser
             return new(command, output.MapRange(
                 x => new(x),
                 new RangeMapper<string, OutputLine>(mainRange, x => new DumpHeapOutputLine(x, mainIndexes)),
-                new RangeMapper<string, OutputLine>(statisticsRange, x => new DumpHeapStatisticsOutputLine(x, statisticsIndexes))
+                new RangeMapper<string, OutputLine>(statisticsRange,
+                    x => new DumpHeapStatisticsOutputLine(x, statisticsIndexes))
             ));
         }
 
@@ -91,6 +94,31 @@ public static class Parser
             var totalSize = header.FindColumnRange("TotalSize", count);
             var className = header.FindColumnRange("Class Name", totalSize, true);
             return new(mt, count, totalSize, className);
+        }
+    }
+
+    public static class SetThread
+    {
+        public static readonly Regex IndexParser = new(@"[\*|\s]+\d+\s+(0x.+)\s*\(\d+\)");
+
+        public static ReadOnlyMemory<char> GetOsIDFromSetThreadLine(string lineWithOsId)
+        {
+            var group = IndexParser.Match(lineWithOsId).Groups[1];
+            // ToExtension
+            var osIdRange = new Range(group.Index, group.Length + group.Index - 1);
+            return lineWithOsId.AsMemory()[osIdRange];
+        }
+
+        public static CommandOutput Parse(string command, string[] output)
+        {
+            var threadsIndexesStart = output.IndexAfter(x => x.StartsWith(">"));
+            return new(command, output.Map(x =>
+            {
+                if (IndexParser.IsMatch(x))
+                    return new SetThreadOutputLine(x);
+
+                return new OutputLine(x);
+            }));
         }
     }
 }

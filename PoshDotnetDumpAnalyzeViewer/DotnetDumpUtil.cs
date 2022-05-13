@@ -108,5 +108,4 @@ public class DotnetDumpAnalyzeBridge
     }
 }
 
-public record struct CommandOutput<T>(string Command, T[] Lines)
-    where T : IOutputLine;
+public record struct CommandOutput(string Command, OutputLine[] Lines);

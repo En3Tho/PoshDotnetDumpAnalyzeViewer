@@ -17,7 +17,7 @@ public static class TextFieldExtensions
             }
             else if (args.KeyEvent.Key == pasteKey)
             {
-                if (clipboard.GetClipboardData() is {} clipboardData)
+                if (clipboard.GetClipboardData() is { } clipboardData)
                     @this.Paste(clipboardData);
                 args.Handled = true;
             }
@@ -95,11 +95,48 @@ public static class ListViewExtensions
 
         return default;
     }
+
+    public static void TryFindItemAndSetSelected(this ListView @this, Func<string, bool> filter)
+    {
+        if (@this.GetSource<IList<OutputLine>>() is not { Count: > 0 } source)
+            return;
+
+        bool SetSelectedItem(int index)
+        {
+            while (index < source!.Count)
+            {
+                if (filter(source[index].ToString()))
+                {
+                    if (!@this.HasFocus)
+                        @this.SetFocus();
+                    // display this item in the middle of the list if there is enough space left
+                    var linesInList = @this.Bounds.Height;
+                    var topItemIndex =
+                        index < linesInList - 1
+                            ? 0
+                            : index - linesInList / 2;
+
+                    @this.TopItem = topItemIndex;
+                    @this.SelectedItem = index;
+                    return true;
+                }
+
+                index++;
+            }
+
+            return false;
+        }
+
+        var index = @this.SelectedItem + 1;
+        if (!SetSelectedItem(index))
+            SetSelectedItem(0);
+    }
 }
 
 public static class StringExtensions
 {
-    public static Range FindColumnRange(this string header, string columnName, Range previousColumnRange = default, bool isLastColumn = false)
+    public static Range FindColumnRange(this string header, string columnName, Range previousColumnRange = default,
+        bool isLastColumn = false)
     {
         var rangeStart = previousColumnRange.End.Value == 0 ? 0 : previousColumnRange.End.Value + 1;
         return isLastColumn
@@ -152,7 +189,7 @@ public static class ArrayExtensions
     public static int IndexBefore<T>(this T[] @this, Func<T, bool> finder)
     {
         // length - 1 because we don't need first element
-        for (var i = @this.Length -1; i > 1; i--)
+        for (var i = @this.Length - 1; i > 1; i--)
         {
             if (finder(@this[i])) return i - 1;
         }
@@ -176,12 +213,14 @@ public static class ArrayExtensions
         return result;
     }
 
-    public static TOut[] MapRange<TIn, TOut>(this TIn[] @this, Func<TIn, TOut> defaultMapper, params RangeMapper<TIn, TOut>[] mappers)
+    public static TOut[] MapRange<TIn, TOut>(this TIn[] @this, Func<TIn, TOut> defaultMapper,
+        params RangeMapper<TIn, TOut>[] mappers)
     {
         var result = new TOut[@this.Length];
 
         // sort ranges and filter empty ones
-        mappers = mappers.OrderBy(x => x.Range.Start.Value).Where(x => x.Range.GetOffsetAndLength(@this.Length).Length != 0).ToArray();
+        mappers = mappers.OrderBy(x => x.Range.Start.Value)
+            .Where(x => x.Range.GetOffsetAndLength(@this.Length).Length != 0).ToArray();
 
         if (mappers.Length == 0)
         {

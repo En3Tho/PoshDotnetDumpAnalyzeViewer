@@ -1,23 +1,54 @@
-﻿namespace PoshDotnetAnalyzerViewerTests;
+﻿using PoshDotnetDumpAnalyzeViewer;
+using Xunit;
+
+namespace PoshDotnetAnalyzerViewerTests;
 
 public class SetThreadParsing
 {
-    public void Test()
+    [Fact]
+    public void TestThatOsIdIsParsedCorrectly()
     {
-        var setThreadOutput = new[]
+        Assert.Matches(Parser.SetThread.IndexParser, "*0 0x0001 (1)");
+        Assert.Matches(Parser.SetThread.IndexParser, " 1 0x000A (10)");
+        Assert.Matches(Parser.SetThread.IndexParser, " 50 0x025C (604)");
+
+        var line1 = new SetThreadOutputLine("*0 0x0001 (1)");
+        Assert.Equal("0x0001", line1.OsThreadId.ToString());
+        var line2 = new SetThreadOutputLine(" 1 0x000A (10)");
+        Assert.Equal("0x000A", line2.OsThreadId.ToString());
+        var line3 = new SetThreadOutputLine(" 50 0x025C (604)");
+        Assert.Equal("0x025C", line3.OsThreadId.ToString());
+    }
+
+    [Fact]
+    public void TestThatSetThreadWithTFlagOutputIsParsedCorrectly()
+    {
+        var output = new[]
         {
             "> setthread -t", // or just setthread
-            "*0 0x0001 (1)",
+            "*0 0x0001 (1)", // get hex and convert it to int if needed?
             " 1 0x0008 (8)",
             " 2 0x0009 (9)",
             " 3 0x000A (10)",
             " 4 0x000B (11)"
         };
+
+        var parseResult = new SetThreadOutputParser().Parse("", output);
+        var lines = parseResult.Lines;
+
+        var idx = 0;
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
     }
 
-    public void Test2()
+    [Fact]
+    public void TestThatSetThreadWithVFlagOutputIsParsedCorrectly()
     {
-        var setThreadVOutput = new[]
+        var output = new[]
         {
             "> setthread -v",
             "*0 0x0001 (1)", // parse only these using regex?
@@ -36,5 +67,29 @@ public class SetThreadParsing
             "   FP  0x00007FCD25930530",
             "   TEB 0x0000000000000000"
         };
+
+        var parseResult = new SetThreadOutputParser().Parse("", output);
+        var lines = parseResult.Lines;
+
+        var idx = 0;
+        Assert.IsType<OutputLine>(lines[idx++]);
+
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+
+        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.IsType<OutputLine>(lines[idx++]);
     }
 }

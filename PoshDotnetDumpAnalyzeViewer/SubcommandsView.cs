@@ -45,9 +45,10 @@ public static class SubcommandsView
     private const int DumpObjectsPriority = 3;
     private const int DumpMethodTablePriority = 4;
     private const int PStacksPriority = 5;
+    private const int SetThreadPriority = 5;
     private const int DumpMemoryPriority = 10; // let them have the lowest priority for now because there are lot of them
 
-    public static Dialog? TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue queue)
+    public static Dialog? TryGetSubcommandsDialog(OutputLine line, IClipboard clipboard, CommandQueue commandQueue)
     {
         var dialog = new Dialog("Available commands");
         var yAxis = 0;
@@ -76,7 +77,7 @@ public static class SubcommandsView
         }
 
         Button MakeCommandButton(string title, string command) =>
-            MakeButton(title, () => queue.SendCommand(command));
+            MakeButton(title, () => commandQueue.SendCommand(command));
 
         var buttonsWithPriorities = new List<(int Priority, Func<Button> Button)>();
 
@@ -121,19 +122,43 @@ public static class SubcommandsView
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
         }
 
-        // TODO:
         if (line is IOsThreadId osThreadId)
         {
             var data = osThreadId.OsThreadId.ToString();
             buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy OS thread id", () => clipboard.SetClipboardData(data))));
 
-            // TODO:
-            // Find thread in parallel stacks .. p statcks + set selected value
-            // Set as current thread // parse native thread id as hex and call setthread -p int
-            // Set as current thread and display call stack // command above + clrstack optionally with new dedicated tab ?
-        }
+            buttonsWithPriorities.Add((SetThreadPriority, () => MakeButton("Set as current thread", () =>
+            {
+                var idAsInt = Convert.ToInt32(data, 16);
+                commandQueue.SendCommand($"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true);
+            })));
 
-        // todo: action on tab.
+            buttonsWithPriorities.Add((SetThreadPriority, () => MakeButton("Set as current thread and display call stack", () =>
+            {
+                var idAsInt = Convert.ToInt32(data, 16);
+                commandQueue.SendCommand($"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true);
+                commandQueue.SendCommand($"{Commands.ClrStack}", forceRefresh: true);
+            })));
+
+            buttonsWithPriorities.Add((SetThreadPriority, () => MakeButton("Set as current thread and display call stack (full info)", () =>
+            {
+                var idAsInt = Convert.ToInt32(data, 16);
+                commandQueue.SendCommand($"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true);
+                commandQueue.SendCommand($"{Commands.ClrStack} -a", forceRefresh: true);
+            })));
+
+            buttonsWithPriorities.Add((PStacksPriority, () => MakeButton("Find thread in parallel stacks", () =>
+            {
+                var idAsInt = Convert.ToInt32(data, 16);
+                var normalizedOsId = Convert.ToString(idAsInt, 16);
+                commandQueue.SendCommand($"{Commands.ParallelStacks} -a", customAction: views =>
+                {
+                    views.FilterTextField.Text = normalizedOsId;
+                    views.OutputListView.TryFindItemAndSetSelected(x => x.Contains("~~~~") && x.Contains(normalizedOsId, StringComparison.OrdinalIgnoreCase));
+                    return views;
+                });
+            })));
+        }
 
         if (buttonsWithPriorities.Count > 0)
         {

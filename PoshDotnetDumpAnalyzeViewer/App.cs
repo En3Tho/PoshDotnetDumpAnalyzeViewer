@@ -31,6 +31,7 @@ public static class App
             new QuitCommandOutputViewFactory(clipboard),
             new HelpCommandOutputViewFactory(clipboard, commandQueue),
             new DumpHeapCommandOutputViewFactory(clipboard, commandQueue),
+            new SetThreadCommandOutputViewFactory(clipboard, commandQueue),
             new DefaultCommandOutputViewFactory(clipboard)
         };
 

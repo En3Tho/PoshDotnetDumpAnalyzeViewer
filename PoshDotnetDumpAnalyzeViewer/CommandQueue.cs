@@ -12,42 +12,60 @@ public record CommandQueueWorker(
     TabManager TabManager,
     IEnumerable<ICommandOutputViewFactory> ViewFactories)
 {
+    private readonly Func<CommandOutputViews, CommandOutputViews> DoNothing = x => x;
+
+    void UpdateCommandViews(TabView.Tab tabToUpdate, CommandOutputViews views, Func<CommandOutputViews, CommandOutputViews>? customAction)
+    {
+        var updatedView = customAction is { } ? customAction(views) : views;
+        tabToUpdate.View = updatedView.Window;
+        TabManager.SetSelected(tabToUpdate);
+    }
+
     // TODO: rewrite this to di based commands ?
-    public async Task Process(string command, bool forceRefresh = false, bool ignoreOutput = false)
+    public async Task Process(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
         try
         {
             TopLevelViews.CommandInput.Text = command;
             TopLevelViews.CommandInput.ReadOnly = true;
 
-            if (!forceRefresh && TabManager.TrySetSelectedExistingTab(command))
+            if (!forceRefresh && TabManager.TryGetTab(command) is { } tabToUpdate)
+            {
+                UpdateCommandViews(tabToUpdate.Tab, tabToUpdate.Views, customAction);
                 return;
+            }
 
             var viewFactory = ViewFactories.First(x => x.IsSupported(command));
-
 
             var result = await DotnetDump.PerformCommand(command);
 
             if (ignoreOutput && result.IsOk)
                 return;
 
-            var view =
+            var views =
                 result.IsOk
-                    ? await viewFactory.HandleOutput(command, result.Output)
-                    : UI.MakeDefaultCommandViews().SetupLogic(Clipboard, result.Output.Map(x => new OutputLine(x))).Window;
+                    ? viewFactory.HandleOutput(command, result.Output)
+                    : UI.MakeDefaultCommandViews().SetupLogic(Clipboard, result.Output.Map(x => new OutputLine(x)));
 
             CommandHistory.Add(command);
 
-            if (TabManager.TryGetTab(command) is { } existingTab)
+            TabView.Tab tab;
+            if (TabManager.TryGetTab(command) is { } tabToUpgrade)
             {
-                existingTab.Tab.View = view;
-                TabManager.SetSelected(existingTab.Tab);
+                tabToUpgrade.Tab.View = views.Window;
+                TabManager.SetSelected(tabToUpgrade.Tab);
+                tab = tabToUpgrade.Tab;
             }
             else
             {
-                var newTab = new TabView.Tab(command, view);
-                TabManager.AddTab(command, newTab, true);
+                var newTab = new TabView.Tab(command, views.Window);
+                TabManager.AddTab(command, views, newTab,  true);
+                tab = newTab;
             }
+
+            // wait for ui to initialize
+            if (result.IsOk)
+                UpdateCommandViews(tab, views, customAction);
         }
         finally
         {
@@ -59,20 +77,20 @@ public record CommandQueueWorker(
 
 public record CommandQueue(Action<Exception> ExceptionHandler)
 {
-    private readonly Channel<(string, bool, bool)> _channel = Channel.CreateUnbounded<(string, bool, bool)>(new() { SingleReader = true});
-    public void SendCommand(string command,  bool forceRefresh = false, bool ignoreOutput = false)
+    private readonly Channel<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)> _channel = Channel.CreateUnbounded<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)>(new() { SingleReader = true});
+    public void SendCommand(string command,  bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
-        _channel.Writer.TryWrite((command, forceRefresh, ignoreOutput));
+        _channel.Writer.TryWrite((command, forceRefresh, ignoreOutput, customAction));
     }
 
     public void Start(CommandQueueWorker worker, CancellationToken token) => Task.Run(async () =>
     {
         var reader = _channel.Reader;
-        await foreach (var (command, forceRefresh, ignoreOutput) in reader.ReadAllAsync(token))
+        await foreach (var (command, forceRefresh, ignoreOutput, customAction) in reader.ReadAllAsync(token))
         {
             try
             {
-                await worker.Process(command, forceRefresh, ignoreOutput);
+                await worker.Process(command, forceRefresh, ignoreOutput, customAction);
             }
             catch (Exception exn)
             {
