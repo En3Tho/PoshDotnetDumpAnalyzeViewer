@@ -25,6 +25,7 @@ Currently implemented custom parsers:
 
 - [x] dumpheap <arguments>                       Displays info about the garbage-collected heap and collection statistics about objects.
 - [x] help <command>                             Display help for a command.
+- [x] setthread, threads <thread>                Displays threads or sets the current thread.
 - [x] exit, q, quit                              Exit interactive mode.
 
 There are many other commands that might have contextual subcommands so need to make more parsers. Any help is welcome!
@@ -52,7 +53,6 @@ setsymbolserver, logging
 - [] runtimes                                   List the runtimes in the target or change the default runtime.
 - [] setclrpath <path>                          Set the path to load coreclr DAC/DBI files.
 - [] sosstatus                                  Display internal status or reset the internal cached state.
-- [] setthread, threads <thread>                Displays threads or sets the current thread.
 - [] parallelstacks, pstacks                    Display merged threads stack a la Visual Studio 'Parallel Stacks' panel.
 - [] taskstate, tks <address>                   Display a Task state in a human readable format.
 - [] threadpoolqueue, tpq                       Display queued ThreadPool work items.
