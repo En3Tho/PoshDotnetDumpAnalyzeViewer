@@ -119,7 +119,7 @@ public static class SubcommandsView
         if (line is IClrThreadId clrThreadId)
         {
             var data = clrThreadId.ClrThreadId.ToString();
-            buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy thread id", () => clipboard.SetClipboardData(data))));
+            buttonsWithPriorities.Add((CopyPriority, () => MakeButton("Copy CLR thread id", () => clipboard.SetClipboardData(data))));
         }
 
         if (line is IOsThreadId osThreadId)

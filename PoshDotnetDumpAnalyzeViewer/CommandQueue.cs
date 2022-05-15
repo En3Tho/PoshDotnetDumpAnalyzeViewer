@@ -12,8 +12,6 @@ public record CommandQueueWorker(
     TabManager TabManager,
     IEnumerable<ICommandOutputViewFactory> ViewFactories)
 {
-    private readonly Func<CommandOutputViews, CommandOutputViews> DoNothing = x => x;
-
     void UpdateCommandViews(TabView.Tab tabToUpdate, CommandOutputViews views, bool ignoreOutput, Func<CommandOutputViews, CommandOutputViews>? customAction)
     {
         // in case we need something from resulting view

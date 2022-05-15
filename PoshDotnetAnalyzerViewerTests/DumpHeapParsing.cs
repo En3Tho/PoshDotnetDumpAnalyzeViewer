@@ -6,19 +6,19 @@ namespace PoshDotnetAnalyzerViewerTests;
 public class DumpHeapParsing
 {
     [Fact]
-    public void TestThatDumpHeapIndicesAreParsedCorrectly()
+    public void TestThatDumpHeapRangesAreParsedCorrectly()
     {
-        var indices = Parser.DumpHeap.GetDumpHeapHeaderIndices("         Address               MT     Size");
-        var line = new DumpHeapOutputLine("000002a724541000 000002a722993230       24 Free", indices);
+        var ranges = Parser.DumpHeap.GetDumpHeapHeaderRanges("         Address               MT     Size");
+        var line = new DumpHeapOutputLine("000002a724541000 000002a722993230       24 Free", ranges);
         Assert.Equal("000002a724541000", line.Address.ToString());
         Assert.Equal("000002a722993230", line.MethodTable.ToString());
     }
 
     [Fact]
-    public void TestThatDumpHeapStatisticsIndicesAreParsedCorrectly()
+    public void TestThatDumpHeapStatisticsRangesAreParsedCorrectly()
     {
-        var indices = Parser.DumpHeap.GetDumpHeapStatisticsHeaderIndexes("              MT    Count    TotalSize Class Name");
-        var line = new DumpHeapStatisticsOutputLine("00007fff4b774a70        1           24 System.IO.SyncTextReader", indices);
+        var ranges = Parser.DumpHeap.GetDumpHeapStatisticsHeaderRanges("              MT    Count    TotalSize Class Name");
+        var line = new DumpHeapStatisticsOutputLine("00007fff4b774a70        1           24 System.IO.SyncTextReader", ranges);
         Assert.Equal("System.IO.SyncTextReader", line.TypeName.ToString());
         Assert.Equal("00007fff4b774a70", line.MethodTable.ToString());
     }

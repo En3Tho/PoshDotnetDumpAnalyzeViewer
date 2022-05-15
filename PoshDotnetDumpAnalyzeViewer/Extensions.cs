@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using En3Tho.ValueTupleExtensions.Linq;
 using Terminal.Gui;
 
@@ -131,6 +132,11 @@ public static class ListViewExtensions
         if (!SetSelectedItem(index))
             SetSelectedItem(0);
     }
+}
+
+public static class GroupExtensions
+{
+    public static Range GetRange(this Group @this) => new(@this.Index, @this.Length + @this.Index - 1);
 }
 
 public static class StringExtensions

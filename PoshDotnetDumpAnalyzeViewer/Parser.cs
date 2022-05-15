@@ -41,7 +41,7 @@ public static class Parser
     {
         public static CommandOutput Parse(string command, string[] output)
         {
-            var mainIndexesStart =
+            var mainRangeStart =
                 output.IndexAfter(x => x.Contains("Address ") && x.Contains(" MT ") && x.Contains(" Size"));
 
             var statisticsStart = output.IndexAfter("Statistics:");
@@ -49,7 +49,6 @@ public static class Parser
             if (statisticsStart > 0) statisticsStart++;
 
             var statisticsEnd = output.IndexBefore(x => x.Contains("Total ") && x.Contains(" objects"));
-
             var foundSectionEnd = output.IndexBefore(x => x.Contains("Found ") && x.Contains(" objects"));
 
             // there are 4 lines between main section data and statistics data
@@ -58,37 +57,39 @@ public static class Parser
                     ? foundSectionEnd
                     : statisticsStart - 4;
 
-            var (mainRange, mainIndexes) =
-                mainIndexesStart == -1
+            var (mainRange, mainHeaderRanges) =
+                mainRangeStart == -1
                     ? default
-                    : (new Range(mainIndexesStart, mainIndexesEnd + 1),
-                        GetDumpHeapHeaderIndices(output[mainIndexesStart - 1]));
+                    : (new Range(mainRangeStart, mainIndexesEnd + 1),
+                        GetDumpHeapHeaderRanges(output[mainRangeStart - 1]));
 
-
-            var (statisticsRange, statisticsIndexes) =
+            var (statisticsRange, statisticsHeaderRanges) =
                 statisticsStart == -1
                     ? default
                     : (new Range(statisticsStart, statisticsEnd + 1),
-                        GetDumpHeapStatisticsHeaderIndexes(output[statisticsStart - 1]));
+                        GetDumpHeapStatisticsHeaderRanges(output[statisticsStart - 1]));
 
             return new(command, output.MapRange(
                 x => new(x),
-                new RangeMapper<string, OutputLine>(mainRange, x => new DumpHeapOutputLine(x, mainIndexes)),
+                new RangeMapper<string, OutputLine>(mainRange, x => new DumpHeapOutputLine(x, mainHeaderRanges)),
                 new RangeMapper<string, OutputLine>(statisticsRange,
-                    x => new DumpHeapStatisticsOutputLine(x, statisticsIndexes))
+                    x => new DumpHeapStatisticsOutputLine(x, statisticsHeaderRanges))
             ));
         }
 
-        public static DumpHeapIndexes GetDumpHeapHeaderIndices(string header)
+        public static DumpHeapRanges GetDumpHeapHeaderRanges(string header)
         {
+            // TO regex ?
+
             var address = header.FindColumnRange("Address");
             var mt = header.FindColumnRange("MT", address);
             var size = header.FindColumnRange("Size", mt);
             return new(address, mt, size);
         }
 
-        public static DumpHeapStatisticsIndexes GetDumpHeapStatisticsHeaderIndexes(string header)
+        public static DumpHeapStatisticsRanges GetDumpHeapStatisticsHeaderRanges(string header)
         {
+            // TO regex ?
             var mt = header.FindColumnRange("MT");
             var count = header.FindColumnRange("Count", mt);
             var totalSize = header.FindColumnRange("TotalSize", count);
@@ -99,22 +100,20 @@ public static class Parser
 
     public static class SetThread
     {
-        public static readonly Regex IndexParser = new(@"[\*|\s]+\d+\s+(0x.+)\s*\(\d+\)");
+        public static readonly Regex OsIdParser = new(@"[\*|\s]+\d+\s+(0x.+)\s*\(\d+\)");
 
         public static ReadOnlyMemory<char> GetOsIDFromSetThreadLine(string lineWithOsId)
         {
-            var group = IndexParser.Match(lineWithOsId).Groups[1];
-            // ToExtension
-            var osIdRange = new Range(group.Index, group.Length + group.Index - 1);
+            var group = OsIdParser.Match(lineWithOsId).Groups[1];
+            var osIdRange = group.GetRange();
             return lineWithOsId.AsMemory()[osIdRange];
         }
 
         public static CommandOutput Parse(string command, string[] output)
         {
-            var threadsIndexesStart = output.IndexAfter(x => x.StartsWith(">"));
             return new(command, output.Map(x =>
             {
-                if (IndexParser.IsMatch(x))
+                if (OsIdParser.IsMatch(x))
                     return new SetThreadOutputLine(x);
 
                 return new OutputLine(x);

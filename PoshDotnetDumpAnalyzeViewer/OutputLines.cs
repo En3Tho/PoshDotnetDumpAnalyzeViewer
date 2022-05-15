@@ -11,25 +11,35 @@ public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpComman
     public string[] Commands => Parser.Help.GetCommandsFromLine(Line);
 }
 
-public record struct DumpHeapIndexes(Range Address, Range MethodTable, Range Size);
+public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
 
-public sealed record DumpHeapOutputLine(string Line, DumpHeapIndexes Indexes) : OutputLine(Line), IMethodTable, IAddress
+public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IAddress
 {
     public override string ToString() => Line;
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Indexes.MethodTable);
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Indexes.Address);
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
 }
 
-public record struct DumpHeapStatisticsIndexes(Range MethodTable, Range Count, Range TotalSize, Range ClassName);
+public record struct DumpHeapStatisticsRanges(Range MethodTable, Range Count, Range TotalSize, Range ClassName);
 
-public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatisticsIndexes Indexes) : OutputLine(Line), IMethodTable, ITypeName
+public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatisticsRanges Ranges) : OutputLine(Line),
+    IMethodTable, ITypeName
 {
     public override string ToString() => Line;
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Indexes.MethodTable);
-    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Indexes.ClassName);
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.ClassName);
 }
 
 public sealed record SetThreadOutputLine(string Line) : OutputLine(Line), IOsThreadId
+{
+    public override string ToString() => Line;
+    public ReadOnlyMemory<char> OsThreadId => Parser.SetThread.GetOsIDFromSetThreadLine(Line);
+}
+
+public record struct ClrThreadsIndexes(Range Dbg, Range Id, Range OsId, Range ThreadObj, Range State, Range GcMode,
+    Range GcAllocContext, Range Domain, Range LockCount, Range AptException); // not sure if AptException is one thing or 2 different ones
+
+public sealed record ClrThreads(string Line) : OutputLine(Line), IOsThreadId
 {
     public override string ToString() => Line;
     public ReadOnlyMemory<char> OsThreadId => Parser.SetThread.GetOsIDFromSetThreadLine(Line);
