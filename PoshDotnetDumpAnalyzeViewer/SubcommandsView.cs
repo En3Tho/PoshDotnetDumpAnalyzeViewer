@@ -82,13 +82,8 @@ public static class SubcommandsView
         // TODO: really, make just di based commands with funcs and helpers.
         Action MakePasteAction(string data) => () =>
         {
-            // use help to execute side effect as it never closes :D
-            commandQueue.SendCommand("help", ignoreOutput: true, customAction: views =>
-            {
-                topLevelViews.CommandInput.Paste(data);
-                topLevelViews.CommandInput.SetFocus();
-                return views;
-            });
+            topLevelViews.CommandInput.Paste(data);
+            topLevelViews.CommandInput.SetFocus();
         };
 
         Button MakeCommandButton(string title, string command, bool ignoreOutput = false, bool forceRefresh = false,

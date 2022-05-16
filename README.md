@@ -3,27 +3,35 @@ This is a small gui.cs based ui to work with dotnet dump analyze
 
 It's able to list output of all supported SOS commands and additionally custom parsers providing contextual subcommands like this:
 
+
 ![img.png](img.png)
+
+```powershell
+    Install-Module -Name PoshDotnetDumpAnalyzeViewerModule
+    Get-DotnetDumpAnalyzeViewer "path-to-dump-file"
+```
+
+Note that this viewer is completely dependent on dotnet-dump and it does not bundle sos or anything like that.
 
 Command field:
 - Enter -> invoke command or get already existing tab
 - Ctrl + Enter -> invoke command and refresh existing tab (if it exist) 
 
 Tabs:
-- Ctrl+W to close tab (help is not closeable)
-- Ctrl+R to refresh tab (invoke command again, failed commands are not refreshable)
+- Ctrl + W -> close tab (help is not closeable)
+- Ctrl + R -> refresh tab (invoke command again, failed commands are not refreshable)
 
 List view:
 - Enter -> invoke custom action or get subcommands view
 - Tab -> find next item using text from filter field
 
 Filter field:
-- Enter: filter items in list view 
-- Tab: find next item in list view and focus it
+- Enter -> filter items in list view 
+- Tab -> find next item in list view and focus it
 
 Subcommands dialog:
-- Enter: execute subcommand
-- Tab: copy subcommand's command string into command field
+- Enter -> execute subcommand
+- Tab -> copy subcommand's command string into command field (might be useful when you want to invoke command with custom flags)
 
 Currently implemented custom parsers:
 
