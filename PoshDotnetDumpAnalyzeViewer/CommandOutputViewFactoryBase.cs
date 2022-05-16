@@ -36,7 +36,7 @@ public abstract record CommandOutputViewFactoryBase<TOutputParser>(IClipboard Cl
     protected abstract CommandOutputViews CreateView(CommandOutput output);
 }
 
-public abstract record DefaultViewsOutputViewFactoryBase<TParser>(IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase<TParser>(Clipboard)
+public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase<TParser>(Clipboard)
     where TParser : IOutputParser, new()
 {
     protected override CommandOutputViews CreateView(CommandOutput output)
@@ -49,7 +49,7 @@ public abstract record DefaultViewsOutputViewFactoryBase<TParser>(IClipboard Cli
             {
                 if (views.OutputListView.GetSelectedOutput<OutputLine>() is { } line)
                 {
-                    if (SubcommandsView.TryGetSubcommandsDialog(line, Clipboard, CommandQueue) is { } dialog)
+                    if (SubcommandsView.TryGetSubcommandsDialog(TopLevelViews, line, Clipboard, CommandQueue) is { } dialog)
                     {
                         Application.Run(dialog, ex =>
                         {

@@ -30,8 +30,8 @@ public static class App
         {
             new QuitCommandOutputViewFactory(clipboard),
             new HelpCommandOutputViewFactory(clipboard, commandQueue),
-            new DumpHeapCommandOutputViewFactory(clipboard, commandQueue),
-            new SetThreadCommandOutputViewFactory(clipboard, commandQueue),
+            new DumpHeapCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new SetThreadCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new DefaultCommandOutputViewFactory(clipboard)
         };
 

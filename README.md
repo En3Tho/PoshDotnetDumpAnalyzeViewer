@@ -21,6 +21,10 @@ Filter field:
 - Enter: filter items in list view 
 - Tab: find next item in list view and focus it
 
+Subcommands dialog:
+- Enter: execute subcommand
+- Tab: copy subcommand's command string into command field
+
 Currently implemented custom parsers:
 
 - [x] dumpheap <arguments>                       Displays info about the garbage-collected heap and collection statistics about objects.

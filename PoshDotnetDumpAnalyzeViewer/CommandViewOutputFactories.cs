@@ -81,8 +81,8 @@ public struct DumpHeapOutputParser : IOutputParser
 }
 
 public sealed record DumpHeapCommandOutputViewFactory
-    (IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpHeapOutputParser>(
-        Clipboard, CommandQueue)
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpHeapOutputParser>(
+        TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpHeap);
 }
@@ -94,8 +94,8 @@ public struct SetThreadOutputParser : IOutputParser
 }
 
 public sealed record SetThreadCommandOutputViewFactory
-    (IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SetThreadOutputParser>(
-        Clipboard, CommandQueue)
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SetThreadOutputParser>(
+        TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SetThread, Commands.Threads);
 }
