@@ -12,6 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="En3Tho.Extensions.DependencyInjection" Version="1.1.0" />
       <PackageReference Include="En3Tho.ValueTupleExtensions" Version="1.0.1" />
       <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
       <PackageReference Include="Terminal.Gui" Version="1.5.0" />
