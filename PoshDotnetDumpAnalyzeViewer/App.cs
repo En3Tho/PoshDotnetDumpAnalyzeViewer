@@ -11,17 +11,17 @@ public static class App
         Application.Init();
 
         var source = new CancellationTokenSource();
-        Application.Top.Closing += _ =>
-        {
-            source.Cancel();
-            process.Kill(true);
-        };
-
         var bridge = new DotnetDumpAnalyzeBridge(process, source.Token);
         var topLevelViews = UI.MakeViews(Application.Top);
         var tabManager = new TabManager(Application.MainLoop, topLevelViews.TabView);
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
         var historyList = new HistoryList<string>();
+
+        Application.Top.Closing += _ =>
+        {
+            source.Cancel();
+            process.Kill(true);
+        };
 
         var exceptionHandler = UI.MakeExceptionHandler(tabManager, clipboard);
         var commandQueue = new CommandQueue(exn => exceptionHandler(exn));

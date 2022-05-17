@@ -40,8 +40,27 @@ public record CommandQueueWorker(
 
             var viewFactory = ViewFactories.First(x => x.IsSupported(command));
 
-            var result = await DotnetDump.PerformCommand(command);
+            using var cts = new CancellationTokenSource();
+            async Task RunTicker(CancellationToken token)
+            {
 
+                using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+                var seconds = 0;
+
+                while (!token.IsCancellationRequested)
+                {
+                    await timer.WaitForNextTickAsync(token);
+                    Application.MainLoop.Invoke(() =>
+                    {
+                        TopLevelViews.CommandInput.Text = $"{command} ... executing command ({seconds++}s)";
+                    });
+                }
+            }
+
+            var _ = RunTicker(cts.Token);
+            var result = await cts.AwaitAndCancel(DotnetDump.PerformCommand(command));
+
+            TopLevelViews.CommandInput.Text = $"{command} ... processing output" ;
             var views =
                 result.IsOk
                     ? viewFactory.HandleOutput(command, result.Output)
@@ -84,7 +103,9 @@ public record CommandQueueWorker(
 
 public record CommandQueue(Action<Exception> ExceptionHandler)
 {
-    private readonly Channel<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)> _channel = Channel.CreateUnbounded<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)>(new() { SingleReader = true});
+    private readonly Channel<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)> _channel =
+        Channel.CreateUnbounded<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)>(new() { SingleReader = true});
+
     public void SendCommand(string command,  bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
         _channel.Writer.TryWrite((command, forceRefresh, ignoreOutput, customAction));

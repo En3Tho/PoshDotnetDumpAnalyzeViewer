@@ -134,6 +134,21 @@ public static class ListViewExtensions
     }
 }
 
+public static class CancellationTokenSourceExtensions
+{
+    public static async Task<T> AwaitAndCancel<T>(this CancellationTokenSource @this, Task<T> job)
+    {
+        try
+        {
+            return await job;
+        }
+        finally
+        {
+            @this.Cancel();
+        }
+    }
+}
+
 public static class GroupExtensions
 {
     public static Range GetRange(this Group @this) => new(@this.Index, @this.Length + @this.Index - 1);
