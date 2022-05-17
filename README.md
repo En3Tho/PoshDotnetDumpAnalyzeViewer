@@ -4,7 +4,7 @@ This is a small gui.cs based ui to work with dotnet dump analyze
 It's able to list output of all supported SOS commands and additionally custom parsers providing contextual subcommands like this:
 
 
-![img.png](img.png)
+![img_1.png](img_1.png)
 
 ```powershell
     Install-Module -Name PoshDotnetDumpAnalyzeViewerModule
