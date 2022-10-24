@@ -118,7 +118,7 @@ public static class ViewsExtensions
                 case Key.CtrlMask | Key.W:
                 {
                     // special case help
-                    if (@this.TabView is { SelectedTab: {} selectedTab} && selectedTab.Text.ToString() != "help")
+                    if (@this.TabView is { SelectedTab: {} selectedTab} && selectedTab.Text.ToString() is "help")
                         tabManager.RemoveTab(selectedTab);
                     args.Handled = true;
                     break;
@@ -126,7 +126,7 @@ public static class ViewsExtensions
                 case Key.CtrlMask | Key.R:
                 {
                     // special case help
-                    if (@this.TabView is { SelectedTab: { } selectedTab } && selectedTab.Text.ToString()! is not "help" and var tabText)
+                    if (@this.TabView is { SelectedTab: {} selectedTab } && selectedTab.Text.ToString()! is not "help" and var tabText)
                     {
                         if (tabManager.TryGetTab(tabText) is { IsOk: true })
                         {

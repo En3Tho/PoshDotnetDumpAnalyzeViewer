@@ -133,16 +133,5 @@ public class TabManager
         _loop.Invoke(() => { _tabView.AddTab(tab, true); });
     }
 
-    public bool TrySetSelectedExistingTab(string command)
-    {
-        if (TryGetTab(command) is { } existingTab)
-        {
-            SetSelected(existingTab.Tab);
-            return true;
-        }
-
-        return false;
-    }
-
     public void SetSelected(TabView.Tab tab) => _loop.Invoke(() => _tabView.SelectedTab = tab);
 }

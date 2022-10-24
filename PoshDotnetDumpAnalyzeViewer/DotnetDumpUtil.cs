@@ -20,7 +20,7 @@ public static class ProcessUtil
 
         if (dotnetDump == null)
         {
-            throw new("Unable to start dotnet dump process");
+            throw new("Unable to start dotnet-dump process");
         }
 
         if (dotnetDump.HasExited)

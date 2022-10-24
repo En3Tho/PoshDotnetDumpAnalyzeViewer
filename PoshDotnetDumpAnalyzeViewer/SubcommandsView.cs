@@ -147,6 +147,7 @@ public static class SubcommandsView
         }
 
         // TODO: not sure if clr thread id is any useful
+        // There can exist a mapping between clr thread id and os thread id. Can use it behind the scenes
         if (line is IClrThreadId clrThreadId)
         {
             var data = clrThreadId.ClrThreadId.ToString();
@@ -154,6 +155,8 @@ public static class SubcommandsView
                 () => MakeButton("Copy CLR thread id", () => clipboard.SetClipboardData(data), MakePasteAction(data))));
         }
 
+        // Not all OSThreadIds are linked with CLR
+        // It might be useful to filter out native-only ones
         if (line is IOsThreadId osThreadId)
         {
             var data = osThreadId.OsThreadId.ToString();
@@ -208,6 +211,7 @@ public static class SubcommandsView
         {
             var buttons = buttonsWithPriorities.OrderBy(x => x.Priority).Select(x => x.Button()).ToArray();
 
+            // 6 and 2 are pop-up dialog borders
             var width = buttons.MaxBy(values => values.Text.Length)!.Text.Length + 6;
             var height = buttons.Length + 2;
 
