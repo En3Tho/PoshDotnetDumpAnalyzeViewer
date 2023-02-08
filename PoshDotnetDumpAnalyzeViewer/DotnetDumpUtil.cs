@@ -23,6 +23,10 @@ public static class ProcessUtil
             throw new("Unable to start dotnet-dump process");
         }
 
+        // not sure how to reliably wait for errors?
+        // should we wait instead for stdoutput?
+        await Task.Delay(1000);
+
         if (dotnetDump.HasExited)
         {
             if (await dotnetDump.StandardError.ReadLineAsync() is { } errorMessage)
@@ -40,11 +44,6 @@ public static class ProcessUtil
                 break;
             messages.Add(message);
         }
-
-        dotnetDump.Exited += (_, _) =>
-        {
-            Environment.Exit(0);
-        };
 
         return dotnetDump;
     }
