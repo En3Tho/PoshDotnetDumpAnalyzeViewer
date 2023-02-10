@@ -6,9 +6,10 @@ static class RegexPatterns
 {
     private const string D = @"-?[0-9]+";
     private const string H = @"(?:0[xX])?[0-9a-fA-F]+";
-    private const string A = @"[0-9a-fA-F]{16}";
+    private const string A = @"[0-9a-fA-F]{16}"; // address
     private const string S = @"[^\s].*[^\s]";
     private const string C = @".+";
+    private const string az = @"[a-z]+";
     private const string Co = @".*";
     private const string WS = @"\s+";
     private const string WSo = @"\s*";
@@ -18,49 +19,53 @@ static class RegexPatterns
     private const string Sg = $"({S})";
     private const string Sgo = $"({S})*";
 
+    // cmd (..,cmd)? <arg>? Description
+    // S
+
+    public const string Help =
+        $@"{WSo}({az}(?:,{WS}{az})*)(?:<{C}>)?{C}";
+
     // ...   OsId ...
     // C WS  Hg    WS C
     public const string OsId =
-        $"{C}{Hg}{C}";
+        $"{C}{WS}{Hg}{WS}{C}";
 
     //                                                                               Lock
     // "DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception"
     // "(D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
     public const string ClrThreads =
         $"{WSo}((?:XXXX)|{D}){WS}{Dg}{WS}{Hg}{WS}{Ag}{WS}{Hg}{WS}{Sg}{WS}({A}:{A}){WS}{Ag}{WS}{Dg}{WS}{Sg}{WSo}{Sgo}{WSo}";
+
+    // Address  MT  Size ..rest
+    // Ag       Ag  Dg
+    public const string DumpHeap =
+        $"{Ag}{WS}{Ag}{WS}{Dg}{C}";
+
+    // MT  Count  TotalSize  Class Name
+    // Ag  Dg     Dg         Sg
+    public const string DumpHeapStatistics =
+        $"{Ag}{WS}{Dg}{WS}{Dg}{WS}{Sg}{WSo}";
 }
 
 public static class Help
 {
-    // TODO: regex, single-line parsing
+    public static readonly Regex Regex = new(RegexPatterns.Help);
+
+    // TODO: single-line parsing
     public static CommandOutput Parse(string command, string[] output)
     {
-        var commandStartIndex = output.IndexAfter("Commands:");
-        var helpCommandsRange = commandStartIndex..;
+        return new(command, output.Map(x =>
+        {
+            if (x.Length > 45 && Regex.IsMatch(x))
+                return new SetThreadOutputLine(x);
 
-        return new(command, output.MapRange(
-            x => new(x),
-            new RangeMapper<string, OutputLine>(helpCommandsRange, x =>
-            {
-                if (string.IsNullOrWhiteSpace(x) || x.AsSpan()[..42].IsWhiteSpace())
-                    return new(x);
-                return new HelpOutputLine(x);
-            })));
+            return new OutputLine(x);
+        }));
     }
 
     public static string[] GetCommandsFromLine(string line)
     {
-        // usually there is 42 chars for commands column, next is description column
-        return line[..42].Split(",", StringSplitOptions.TrimEntries)
-            .Select(part =>
-                {
-                    var indexOfCommandArgs = part.IndexOf('<');
-                    if (indexOfCommandArgs != -1)
-                        // cmd <arg>
-                        return part[..(indexOfCommandArgs - 1)];
-                    return part;
-                }
-            ).ToArray();
+        return Regex.Match(line).Groups[1].Value.Split(",");
     }
 }
 
@@ -129,21 +134,21 @@ public static class DumpHeap
 
 public static class SetThread
 {
-    public static readonly Regex OsIdParser = new(RegexPatterns.OsId);
+    public static readonly Regex Regex = new(RegexPatterns.OsId);
 
     public static ReadOnlyMemory<char> GetOsIDFromSetThreadLine(string lineWithOsId)
     {
-        var group = OsIdParser.Match(lineWithOsId).Groups[1];
+        var group = Regex.Match(lineWithOsId).Groups[1];
         var osIdRange = group.GetRange();
         return lineWithOsId.AsMemory()[osIdRange];
     }
 
-    // TODO: regex, single-line parsing
+    // TODO: single-line parsing
     public static CommandOutput Parse(string command, string[] output)
     {
         return new(command, output.Map(x =>
         {
-            if (OsIdParser.IsMatch(x))
+            if (Regex.IsMatch(x))
                 return new SetThreadOutputLine(x);
 
             return new OutputLine(x);
@@ -153,7 +158,7 @@ public static class SetThread
 
 public static class ClrThreads
 {
-    public static readonly Regex ClrThreadsRegex = new(RegexPatterns.ClrThreads, RegexOptions.Compiled);
+    public static readonly Regex Regex = new(RegexPatterns.ClrThreads, RegexOptions.Compiled);
 
     public static CommandOutput Parse(string command, string[] output)
     {
@@ -171,7 +176,7 @@ public static class ClrThreads
 
     public static ClrThreadsRanges? GetClrThreadsRanges(string line)
     {
-        if (ClrThreadsRegex.Match(line) is
+        if (Regex.Match(line) is
             {
                 Success: true,
             } match)

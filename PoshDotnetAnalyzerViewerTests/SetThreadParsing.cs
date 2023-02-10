@@ -8,9 +8,9 @@ public class SetThreadParsing
     [Fact]
     public void TestThatOsIdIsParsedCorrectly()
     {
-        Assert.Matches(SetThread.OsIdParser, "*0 0x0001 (1)");
-        Assert.Matches(SetThread.OsIdParser, " 1 0x000A (10)");
-        Assert.Matches(SetThread.OsIdParser, " 50 0x025C (604)");
+        Assert.Matches(SetThread.Regex, "*0 0x0001 (1)");
+        Assert.Matches(SetThread.Regex, " 1 0x000A (10)");
+        Assert.Matches(SetThread.Regex, " 50 0x025C (604)");
 
         var line1 = new SetThreadOutputLine("*0 0x0001 (1)");
         Assert.Equal("0x0001", line1.OsThreadId.ToString());
