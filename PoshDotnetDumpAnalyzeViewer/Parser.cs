@@ -18,20 +18,21 @@ static class RegexPatterns
     private const string Sg = $"({S})";
     private const string Sgo = $"({S})*";
 
-
-
-
+    // ...   OsId ...
+    // C WS  Hg    WS C
     public const string OsId =
-        $"{C}{WS}{Hg}{WS}{C}";
+        $"{C}{Hg}{C}";
 
-    /// "DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception"
-    /// "(D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
+    //                                                                               Lock
+    // "DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception"
+    // "(D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
     public const string ClrThreads =
         $"{WSo}((?:XXXX)|{D}){WS}{Dg}{WS}{Hg}{WS}{Ag}{WS}{Hg}{WS}{Sg}{WS}({A}:{A}){WS}{Ag}{WS}{Dg}{WS}{Sg}{WSo}{Sgo}{WSo}";
 }
 
 public static class Help
 {
+    // TODO: regex, single-line parsing
     public static CommandOutput Parse(string command, string[] output)
     {
         var commandStartIndex = output.IndexAfter("Commands:");
@@ -65,6 +66,7 @@ public static class Help
 
 public static class DumpHeap
 {
+    // TODO: regex, single-line parsing
     public static CommandOutput Parse(string command, string[] output)
     {
         var mainRangeStart =
@@ -103,6 +105,7 @@ public static class DumpHeap
         ));
     }
 
+    // TODO: regex, single-line parsing
     public static DumpHeapRanges GetDumpHeapHeaderRanges(string header)
     {
         // TODO: regex
@@ -112,6 +115,7 @@ public static class DumpHeap
         return new(address, mt, size);
     }
 
+    // TODO: regex, single-line parsing
     public static DumpHeapStatisticsRanges GetDumpHeapStatisticsHeaderRanges(string header)
     {
         // TODO: regex
@@ -134,6 +138,7 @@ public static class SetThread
         return lineWithOsId.AsMemory()[osIdRange];
     }
 
+    // TODO: regex, single-line parsing
     public static CommandOutput Parse(string command, string[] output)
     {
         return new(command, output.Map(x =>
