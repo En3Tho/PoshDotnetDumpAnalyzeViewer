@@ -160,6 +160,7 @@ public static class SubcommandsView
         if (line is IOsThreadId osThreadId)
         {
             var data = osThreadId.OsThreadId.ToString();
+            data = data.PadLeft(data.Length + data.Length % 4, '0');
             var idAsInt = Convert.ToInt32(data, 16);
 
             buttonsWithPriorities.Add((CopyPriority,

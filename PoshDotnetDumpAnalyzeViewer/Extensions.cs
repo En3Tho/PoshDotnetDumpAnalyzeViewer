@@ -104,7 +104,7 @@ public static class ListViewExtensions
 
         bool SetSelectedItem(int index)
         {
-            while (index < source!.Count)
+            while (index < source.Count)
             {
                 if (filter(source[index].ToString()))
                 {
@@ -151,7 +151,26 @@ public static class CancellationTokenSourceExtensions
 
 public static class GroupExtensions
 {
-    public static Range GetRange(this Group @this) => new(@this.Index, @this.Length + @this.Index - 1);
+    public static Range GetRange(this Group @this)
+    {
+        return
+            @this.ValueSpan.Length == 0
+                ? new Range()
+                : new(@this.Index, @this.Length + @this.Index);
+    }
+}
+
+public static class MatchExtensions
+{
+    public static void CopyGroupsRangesTo(this Match @this, Span<Range> ranges)
+    {
+        var i = 0;
+        foreach (var group in @this.Groups.Cast<Group>().Skip(1))
+        {
+            var range = group.GetRange();
+            ranges[i++] = range;
+        }
+    }
 }
 
 public static class StringExtensions

@@ -41,7 +41,7 @@ public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : Comman
 public struct HelpOutputParser : IOutputParser
 {
     public CommandOutput Parse(string command, string[] output)
-        => Parser.Help.Parse(command, output);
+        => Help.Parse(command, output);
 }
 
 public sealed record HelpCommandOutputViewFactory
@@ -77,7 +77,7 @@ public sealed record HelpCommandOutputViewFactory
 public struct DumpHeapOutputParser : IOutputParser
 {
     public CommandOutput Parse(string command, string[] output) =>
-        Parser.DumpHeap.Parse(command, output);
+        DumpHeap.Parse(command, output);
 }
 
 public sealed record DumpHeapCommandOutputViewFactory
@@ -90,7 +90,7 @@ public sealed record DumpHeapCommandOutputViewFactory
 public struct SetThreadOutputParser : IOutputParser
 {
     public CommandOutput Parse(string command, string[] output) =>
-        Parser.SetThread.Parse(command, output);
+        SetThread.Parse(command, output);
 }
 
 public sealed record SetThreadCommandOutputViewFactory
@@ -98,4 +98,17 @@ public sealed record SetThreadCommandOutputViewFactory
         TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SetThread, Commands.Threads);
+}
+
+public struct ClrThreadsOutputParser : IOutputParser
+{
+    public CommandOutput Parse(string command, string[] output) =>
+        ClrThreads.Parse(command, output);
+}
+
+public sealed record ClrThreadsCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<ClrThreadsOutputParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ClrThreads);
 }

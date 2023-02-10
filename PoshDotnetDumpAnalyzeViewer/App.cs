@@ -32,6 +32,7 @@ public static class App
             new HelpCommandOutputViewFactory(clipboard, commandQueue),
             new DumpHeapCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SetThreadCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new ClrThreadsCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new DefaultCommandOutputViewFactory(clipboard)
         };
 

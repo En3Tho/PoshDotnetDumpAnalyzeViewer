@@ -1,7 +1,11 @@
-﻿namespace PoshDotnetAnalyzerViewerTests;
+﻿using PoshDotnetDumpAnalyzeViewer;
+using Xunit;
+
+namespace PoshDotnetAnalyzerViewerTests;
 
 public class ClrThreadsParsing
 {
+    [Fact]
     public void TestThatClrThreadsOutputIsParsedCorrectly()
     {
         var output = new[]
@@ -21,5 +25,25 @@ public class ClrThreadsParsing
             "  11    5       13 00007FC30C018670  1020220 Preemptive  00007FC33DD3AE18:00007FC33DD3C9A0 00007FCD9FE44060 -00001 Ukn (Threadpool Worker) ",
             "Special"
         };
+
+        var parseResult = new ClrThreadsOutputParser().Parse("clrthreads", output);
+        var lines = parseResult.Lines;
+
+        Assert.True(lines is [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            ClrThreadsOutputLine,
+            ClrThreadsOutputLine,
+            ClrThreadsOutputLine,
+            ClrThreadsOutputLine,
+            {}
+        ]);
     }
 }

@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <EnablePreviewFeatures>true</EnablePreviewFeatures>
         <IsPackable>false</IsPackable>
+        <LangVersion>11</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

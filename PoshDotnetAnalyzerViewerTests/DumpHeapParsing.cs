@@ -8,7 +8,7 @@ public class DumpHeapParsing
     [Fact]
     public void TestThatDumpHeapRangesAreParsedCorrectly()
     {
-        var ranges = Parser.DumpHeap.GetDumpHeapHeaderRanges("         Address               MT     Size");
+        var ranges = DumpHeap.GetDumpHeapHeaderRanges("         Address               MT     Size");
         var line = new DumpHeapOutputLine("000002a724541000 000002a722993230       24 Free", ranges);
         Assert.Equal("000002a724541000", line.Address.ToString());
         Assert.Equal("000002a722993230", line.MethodTable.ToString());
@@ -17,7 +17,7 @@ public class DumpHeapParsing
     [Fact]
     public void TestThatDumpHeapStatisticsRangesAreParsedCorrectly()
     {
-        var ranges = Parser.DumpHeap.GetDumpHeapStatisticsHeaderRanges("              MT    Count    TotalSize Class Name");
+        var ranges = DumpHeap.GetDumpHeapStatisticsHeaderRanges("              MT    Count    TotalSize Class Name");
         var line = new DumpHeapStatisticsOutputLine("00007fff4b774a70        1           24 System.IO.SyncTextReader", ranges);
         Assert.Equal("System.IO.SyncTextReader", line.TypeName.ToString());
         Assert.Equal("00007fff4b774a70", line.MethodTable.ToString());
@@ -45,19 +45,21 @@ public class DumpHeapParsing
         var parseResult = new DumpHeapOutputParser().Parse("", output);
         var lines = parseResult.Lines;
 
-        var idx = 0;
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapOutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapOutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapOutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapStatisticsOutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapStatisticsOutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapStatisticsOutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.True(lines is
+        [
+            {},
+            {},
+            DumpHeapOutputLine,
+            DumpHeapOutputLine,
+            DumpHeapOutputLine,
+            {},
+            {},
+            {},
+            DumpHeapStatisticsOutputLine,
+            DumpHeapStatisticsOutputLine,
+            DumpHeapStatisticsOutputLine,
+            {}
+        ]);
     }
 
     [Fact]
@@ -77,13 +79,15 @@ public class DumpHeapParsing
         var parseResult = new DumpHeapOutputParser().Parse("", output);
         var lines = parseResult.Lines;
 
-        var idx = 0;
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapStatisticsOutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapStatisticsOutputLine>(lines[idx++]);
-        Assert.IsType<DumpHeapStatisticsOutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.True(lines is
+        [
+            {},
+            {},
+            {},
+            DumpHeapStatisticsOutputLine,
+            DumpHeapStatisticsOutputLine,
+            DumpHeapStatisticsOutputLine,
+            {}
+        ]);
     }
 }

@@ -1,6 +1,6 @@
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public record OutputLine(string Line) : IOutputLine
+public record OutputLine(string Line) : IOutputLine // IParsable<OutputLine> ?
 {
     public override string ToString() => Line;
 }
@@ -8,7 +8,7 @@ public record OutputLine(string Line) : IOutputLine
 public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpCommand
 {
     public override string ToString() => Line;
-    public string[] Commands => Parser.Help.GetCommandsFromLine(Line);
+    public string[] Commands => Help.GetCommandsFromLine(Line);
 }
 
 public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
@@ -33,14 +33,15 @@ public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatistic
 public sealed record SetThreadOutputLine(string Line) : OutputLine(Line), IOsThreadId
 {
     public override string ToString() => Line;
-    public ReadOnlyMemory<char> OsThreadId => Parser.SetThread.GetOsIDFromSetThreadLine(Line);
+    public ReadOnlyMemory<char> OsThreadId => SetThread.GetOsIDFromSetThreadLine(Line);
 }
 
-public record struct ClrThreadsIndexes(Range Dbg, Range Id, Range OsId, Range ThreadObj, Range State, Range GcMode,
-    Range GcAllocContext, Range Domain, Range LockCount, Range AptException); // not sure if AptException is one thing or 2 different ones
+public record struct ClrThreadsRanges(Range Dbg, Range Id, Range OsId, Range ThreadObj, Range State, Range GcMode,
+    Range GcAllocContext, Range Domain, Range LockCount, Range Apt, Range Exception); // not sure if AptException is one thing or 2 different ones
 
-public sealed record ClrThreads(string Line) : OutputLine(Line), IOsThreadId
+public sealed record ClrThreadsOutputLine(string Line, ClrThreadsRanges Ranges) : OutputLine(Line), IOsThreadId, IClrThreadId
 {
     public override string ToString() => Line;
-    public ReadOnlyMemory<char> OsThreadId => Parser.SetThread.GetOsIDFromSetThreadLine(Line);
+    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OsId);
+    public ReadOnlyMemory<char> ClrThreadId => Line.AsMemory(Ranges.Id);
 }

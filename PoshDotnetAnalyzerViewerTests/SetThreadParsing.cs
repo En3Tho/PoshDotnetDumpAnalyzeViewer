@@ -8,9 +8,9 @@ public class SetThreadParsing
     [Fact]
     public void TestThatOsIdIsParsedCorrectly()
     {
-        Assert.Matches(Parser.SetThread.OsIdParser, "*0 0x0001 (1)");
-        Assert.Matches(Parser.SetThread.OsIdParser, " 1 0x000A (10)");
-        Assert.Matches(Parser.SetThread.OsIdParser, " 50 0x025C (604)");
+        Assert.Matches(SetThread.OsIdParser, "*0 0x0001 (1)");
+        Assert.Matches(SetThread.OsIdParser, " 1 0x000A (10)");
+        Assert.Matches(SetThread.OsIdParser, " 50 0x025C (604)");
 
         var line1 = new SetThreadOutputLine("*0 0x0001 (1)");
         Assert.Equal("0x0001", line1.OsThreadId.ToString());
@@ -36,13 +36,15 @@ public class SetThreadParsing
         var parseResult = new SetThreadOutputParser().Parse("", output);
         var lines = parseResult.Lines;
 
-        var idx = 0;
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
+        Assert.True(lines is
+        [
+            {},
+            SetThreadOutputLine,
+            SetThreadOutputLine,
+            SetThreadOutputLine,
+            SetThreadOutputLine,
+            SetThreadOutputLine
+        ]);
     }
 
     [Fact]
@@ -51,7 +53,7 @@ public class SetThreadParsing
         var output = new[]
         {
             "> setthread -v",
-            "*0 0x0001 (1)", // parse only these using regex?
+            "*0 0x0001 (1)",
             "   IP  0x00007FCDA018D413",
             "   SP  0x00007FFF43CC37B8",
             "   FP  0x0000000000000080",
@@ -71,25 +73,24 @@ public class SetThreadParsing
         var parseResult = new SetThreadOutputParser().Parse("", output);
         var lines = parseResult.Lines;
 
-        var idx = 0;
-        Assert.IsType<OutputLine>(lines[idx++]);
-
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-
-        Assert.IsType<SetThreadOutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
-        Assert.IsType<OutputLine>(lines[idx++]);
+        Assert.True(lines is
+        [
+            { },
+            SetThreadOutputLine,
+            { },
+            { },
+            { },
+            { },
+            SetThreadOutputLine,
+            { },
+            { },
+            { },
+            { },
+            SetThreadOutputLine,
+            { },
+            { },
+            { },
+            { }
+        ]);
     }
 }
