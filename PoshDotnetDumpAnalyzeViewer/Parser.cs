@@ -9,7 +9,7 @@ static class RegexPatterns
     private const string A = @"[0-9a-fA-F]{16}";
     private const string S = @"[^\s].*[^\s]";
     private const string C = @".+";
-    private const string Co = @".?";
+    private const string Co = @".*";
     private const string WS = @"\s+";
     private const string WSo = @"\s*";
     private const string Dg = $"({D})";
@@ -18,14 +18,14 @@ static class RegexPatterns
     private const string Sg = $"({S})";
     private const string Sgo = $"({S})*";
 
-    // "DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception"
-    // "(D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
 
-    // [\*|\s]+\d+\s+(0x.+)\s*\(\d+\)1
+
 
     public const string OsId =
         $"{C}{WS}{Hg}{WS}{C}";
 
+    /// "DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception"
+    /// "(D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
     public const string ClrThreads =
         $"{WSo}((?:XXXX)|{D}){WS}{Dg}{WS}{Hg}{WS}{Ag}{WS}{Hg}{WS}{Sg}{WS}({A}:{A}){WS}{Ag}{WS}{Dg}{WS}{Sg}{WSo}{Sgo}{WSo}";
 }
