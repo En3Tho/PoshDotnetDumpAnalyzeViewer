@@ -33,6 +33,7 @@ public static class App
             new DumpHeapCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SetThreadCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new ClrThreadsCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new SyncBlockCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new DefaultCommandOutputViewFactory(clipboard)
         };
 

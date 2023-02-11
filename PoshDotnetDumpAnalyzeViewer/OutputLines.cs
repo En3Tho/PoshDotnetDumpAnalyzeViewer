@@ -45,3 +45,13 @@ public sealed record ClrThreadsOutputLine(string Line, ClrThreadsRanges Ranges) 
     public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OsId);
     public ReadOnlyMemory<char> ClrThreadId => Line.AsMemory(Ranges.Id);
 }
+
+public record struct SyncBlockRanges(Range Index, Range SyncBlock, Range MonitorHeld, Range Recursion, Range OwningThreadAddress, Range OwningThreadOsId,
+    Range OwningThreadDbgId, Range SyncBlockOwnerAddress, Range SyncBlockOwnerType);
+
+public sealed record SyncBlockOutputLine(string Line, SyncBlockRanges Ranges) : OutputLine(Line), IOsThreadId, ISyncBlockOwnerAddress
+{
+    public override string ToString() => Line;
+    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OwningThreadOsId);
+    public ReadOnlyMemory<char> SyncBlockOwnerAddress => Line.AsMemory(Ranges.SyncBlockOwnerAddress);
+}

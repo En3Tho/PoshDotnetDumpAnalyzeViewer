@@ -30,9 +30,9 @@ static class RegexPatterns
     public const string OsId =
         $"{C}{WS}{Hg}{WS}{C}";
 
-    //                                                                               Lock
-    // "DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception"
-    // "(D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
+    //                                                                              Lock
+    // DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception
+    // (D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
     public const string ClrThreads =
         $"{WSo}((?:XXXX)|{D}){WS}{Dg}{WS}{Hg}{WS}{Ag}{WS}{Hg}{WS}{Sg}{WS}({A}:{A}){WS}{Ag}{WS}{Dg}{WS}{Sg}{WSo}{Sgo}{WSo}";
 
@@ -45,6 +45,11 @@ static class RegexPatterns
     // Ag  Dg     Dg         Sg
     public const string DumpHeapStatistics =
         $"{Ag}{WS}{Dg}{WS}{Dg}{WS}{Sg}{WSo}";
+
+    // Index  SyncBlock  MonitorHeld  Recursion  Owning Thread Info  SyncBlock Owner
+    // Dg     Ag         Dg           Dg         Ag Hg Dg            Ag Sg
+    public const string SyncBlock =
+        $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}{Hg}{WS}{Dg}{WS}{Ag}{WS}{Sg}{WSo}";
 }
 
 public static class Help
@@ -57,7 +62,7 @@ public static class Help
         return new(command, output.Map(x =>
         {
             if (x.Length > 45 && Regex.IsMatch(x))
-                return new SetThreadOutputLine(x);
+                return new HelpOutputLine(x);
 
             return new OutputLine(x);
         }));
@@ -65,7 +70,7 @@ public static class Help
 
     public static string[] GetCommandsFromLine(string line)
     {
-        return Regex.Match(line).Groups[1].Value.Split(",");
+        return Regex.Match(line).Groups[1].Value.Split(",", StringSplitOptions.TrimEntries);
     }
 }
 
@@ -164,7 +169,7 @@ public static class ClrThreads
     {
         return new(command, output.Map(x =>
         {
-            if (x.AsSpan().TrimStart().Length > 100 && GetClrThreadsRanges(x) is {} ranges)
+            if (x.AsSpan().TrimStart().Length > 100 && GetRanges(x) is {} ranges)
             {
 
                 return new ClrThreadsOutputLine(x, ranges);
@@ -174,16 +179,50 @@ public static class ClrThreads
         }));
     }
 
-    public static ClrThreadsRanges? GetClrThreadsRanges(string line)
+    public static ClrThreadsRanges? GetRanges(string line)
     {
         if (Regex.Match(line) is
             {
-                Success: true,
+                Success: true
             } match)
         {
             var ranges = new Range[11];
             match.CopyGroupsRangesTo(ranges);
             return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7], ranges[8], ranges[9], ranges[10]);
+        }
+
+        return default;
+    }
+}
+
+public static class SyncBlock
+{
+    public static readonly Regex Regex = new(RegexPatterns.SyncBlock, RegexOptions.Compiled);
+
+    public static CommandOutput Parse(string command, string[] output)
+    {
+        return new(command, output.Map(x =>
+        {
+            if (x.AsSpan().TrimStart().Length > 50 && GetRanges(x) is {} ranges)
+            {
+
+                return new SyncBlockOutputLine(x, ranges);
+            }
+
+            return new OutputLine(x);
+        }));
+    }
+
+    public static SyncBlockRanges? GetRanges(string line)
+    {
+        if (Regex.Match(line) is
+            {
+                Success: true
+            } match)
+        {
+            var ranges = new Range[9];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7], ranges[8]);
         }
 
         return default;

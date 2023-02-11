@@ -112,3 +112,16 @@ public sealed record ClrThreadsCommandOutputViewFactory
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ClrThreads);
 }
+
+public struct SyncBlockOutputParser : IOutputParser
+{
+    public CommandOutput Parse(string command, string[] output) =>
+        SyncBlock.Parse(command, output);
+}
+
+public sealed record SyncBlockCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SyncBlockOutputParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SyncBlock);
+}

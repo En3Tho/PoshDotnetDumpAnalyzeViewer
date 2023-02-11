@@ -16,6 +16,8 @@ public static class Commands
     public const string ParallelStacks = "pstacks";
     public const string ClrThreads = "clrthreads";
 
+    public const string SyncBlock = "syncblk";
+
     public const string DumpObject = "do";
     public const string DumpArray = "dumparray";
     public const string DumpConcurrentDictionary = "dumparray";

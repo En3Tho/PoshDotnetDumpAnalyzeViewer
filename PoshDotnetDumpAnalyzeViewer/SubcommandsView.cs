@@ -37,6 +37,16 @@ public interface IOsThreadId
     ReadOnlyMemory<char> OsThreadId { get; }
 }
 
+public interface IThreadState
+{
+    ReadOnlyMemory<char> ThreadState { get; }
+}
+
+public interface ISyncBlockOwnerAddress
+{
+    ReadOnlyMemory<char> SyncBlockOwnerAddress { get; }
+}
+
 public static class SubcommandsView
 {
     private const int CopyPriority = 0;
