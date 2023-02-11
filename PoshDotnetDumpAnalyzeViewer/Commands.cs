@@ -17,6 +17,7 @@ public static class Commands
     public const string ClrThreads = "clrthreads";
 
     public const string SyncBlock = "syncblk";
+    public const string ThreadState = "threadstate";
 
     public const string DumpObject = "do";
     public const string DumpArray = "dumparray";

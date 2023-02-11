@@ -39,11 +39,12 @@ public sealed record SetThreadOutputLine(string Line) : OutputLine(Line), IOsThr
 public record struct ClrThreadsRanges(Range Dbg, Range Id, Range OsId, Range ThreadObj, Range State, Range GcMode,
     Range GcAllocContext, Range Domain, Range LockCount, Range Apt, Range Exception); // not sure if AptException is one thing or 2 different ones
 
-public sealed record ClrThreadsOutputLine(string Line, ClrThreadsRanges Ranges) : OutputLine(Line), IOsThreadId, IClrThreadId
+public sealed record ClrThreadsOutputLine(string Line, ClrThreadsRanges Ranges) : OutputLine(Line), IOsThreadId, IClrThreadId, IThreadState
 {
     public override string ToString() => Line;
     public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OsId);
     public ReadOnlyMemory<char> ClrThreadId => Line.AsMemory(Ranges.Id);
+    public ReadOnlyMemory<char> ThreadState => Line.AsMemory(Ranges.State);
 }
 
 public record struct SyncBlockRanges(Range Index, Range SyncBlock, Range MonitorHeld, Range Recursion, Range OwningThreadAddress, Range OwningThreadOsId,

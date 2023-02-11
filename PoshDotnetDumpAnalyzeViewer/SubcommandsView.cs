@@ -56,6 +56,7 @@ public static class SubcommandsView
     private const int DumpMethodTablePriority = 4;
     private const int PStacksPriority = 5;
     private const int SetThreadPriority = 5;
+    private const int ThreadStatePriority = 6;
 
     private const int
         DumpMemoryPriority = 10; // let them have the lowest priority for now because there are lot of them
@@ -216,6 +217,13 @@ public static class SubcommandsView
                         return views;
                     })
                 ));
+        }
+
+        if (line is IThreadState threadState)
+        {
+            var data = threadState.ThreadState.ToString();
+            buttonsWithPriorities.Add((ThreadStatePriority,
+                () => MakeCommandButton("Pretty print thread state", $"{Commands.ThreadState} {data}")));
         }
 
         if (buttonsWithPriorities.Count > 0)
