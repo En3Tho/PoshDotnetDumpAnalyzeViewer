@@ -49,9 +49,8 @@ public interface ISyncBlockOwnerAddress
 
 public static class SubcommandsView
 {
-    private class ButtonFactory
+    private record ButtonFactory(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue)
     {
-#pragma warning disable CA1069
         private enum Priority
         {
             Copy = 0,
@@ -61,69 +60,70 @@ public static class SubcommandsView
             DumpMethodTable = 4,
             PStacks = 5,
             SetThread = 5,
+            ThreadState = 9,
 
             // let them have the lowest priority for now because there are lot of them
             DumpMemory = 10
         }
-#pragma warning restore CA1069
 
-        
         private readonly Dialog _dialog = new ("Available commands");
-        private readonly Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] _buttonFactories;
-        private int _yAxis;
 
-        public ButtonFactory(
-            TopLevelViews topLevelViews,
-            IClipboard clipboard,
-            CommandQueue commandQueue)
+        private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
         {
-            CommandQueue = commandQueue ?? throw new ArgumentNullException(nameof(commandQueue));
-            Clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
-            TopLevelViews = topLevelViews ?? throw new ArgumentNullException(nameof(topLevelViews));
-            
-            _buttonFactories = new[]
-            {
+            return new[] {
                 GetAddressButtons,
                 GetMethodTableButtons,
                 GetTypeNameButtons,
                 GetClrThreadButtons,
                 GetOsThreadIdButtons,
+                GetThreadsStateButtons,
+                GetSyncBlockOwnerAddressButtons,
             };
         }
 
-        private TopLevelViews TopLevelViews { get; }
-
-        private IClipboard Clipboard { get; }
-
-        private CommandQueue CommandQueue { get; }
-
-        public Dialog? TryGetSubcommandsDialog(OutputLine line)
+        private Button MakeButton(string title, Action onClick, Action onTab)
         {
-            _ = line ?? throw new ArgumentNullException(nameof(line));
+            var button = new Button(0, 0, title);
 
-            var buttons = _buttonFactories.SelectMany(factory => factory(line)).ToArray();
+            button.KeyPress += args =>
+            {
+                if (args.KeyEvent.Key == Key.Tab)
+                {
+                    Application.RequestStop(_dialog);
+                    onTab();
+                    args.Handled = true;
+                }
+            };
 
-            if (buttons.Length is 0)
-                return null;
+            button.Clicked += () =>
+            {
+                Application.RequestStop(_dialog);
+                onClick();
+            };
 
-            var orderedButtons = buttons
-                .OrderBy(x => x.priority)
-                .Select(x => x.button)
-                .ToArray();
-
-            // 6 and 2 are pop-up dialog borders
-            int width = orderedButtons.MaxBy(values => values.Text.Length)!.Text.Length + 6;
-            int height = orderedButtons.Length + 2;
-
-            foreach (var button in orderedButtons)
-                _dialog.AddButton(button);
-
-            _dialog.Width = width;
-            _dialog.Height = height;
-
-            return _dialog;
+            return button;
         }
-        
+
+        private Action MakePasteAction(string data) =>
+            () =>
+            {
+                TopLevelViews.CommandInput.Paste(data);
+                TopLevelViews.CommandInput.SetFocus();
+            };
+
+        private Button MakeCommandButton(
+            string title,
+            string command,
+            bool ignoreOutput = false,
+            bool forceRefresh = false,
+            Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+        {
+            return MakeButton(
+                title,
+                () => CommandQueue.SendCommand(command, forceRefresh, ignoreOutput, customAction),
+                MakePasteAction(command));
+        }
+
         private IEnumerable<(Priority, Button)> GetAddressButtons(OutputLine line)
         {
             if (line is not IAddress address)
@@ -263,10 +263,10 @@ public static class SubcommandsView
                         views.FilterTextField.Text = normalizedOsId;
                         views.OutputListView.TryFindItemAndSetSelected(x =>
                         {
-                            const string threadAnchor = "~~~~ ";
-                            if (x.IndexOf(threadAnchor, StringComparison.Ordinal) is not -1 and var index)
+                            const string ThreadAnchor = "~~~~ ";
+                            if (x.IndexOf(ThreadAnchor, StringComparison.Ordinal) is not -1 and var index)
                             {
-                                var values = x[(index + threadAnchor.Length)..]
+                                var values = x[(index + ThreadAnchor.Length)..]
                                     .Split(",", StringSplitOptions.TrimEntries);
                                 return values.AsSpan().Contains(normalizedOsId);
                             }
@@ -277,48 +277,57 @@ public static class SubcommandsView
                     })
                 );
         }
-        
-        private Button MakeCommandButton(
-            string title,
-            string command,
-            bool ignoreOutput = false,
-            bool forceRefresh = false,
-            Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+
+        private IEnumerable<(Priority, Button)> GetThreadsStateButtons(OutputLine line)
         {
-            return MakeButton(
-                title,
-                () => CommandQueue.SendCommand(command, forceRefresh, ignoreOutput, customAction),
-                MakePasteAction(command));
+            if (line is not IThreadState threadState)
+                yield break;
+
+            var data = threadState.ThreadState.ToString();
+            yield return (
+                Priority.ThreadState,
+                MakeCommandButton("Pretty print thread state", $"{Commands.ThreadState} {data}"));
         }
 
-        private Action MakePasteAction(string data) =>
-            () =>
-            {
-                TopLevelViews.CommandInput.Paste(data);
-                TopLevelViews.CommandInput.SetFocus();
-            };
 
-        private Button MakeButton(string title, Action onClick, Action onTab)
+        private IEnumerable<(Priority, Button)> GetSyncBlockOwnerAddressButtons(OutputLine line)
         {
-            var button = new Button(0, _yAxis++, title);
+            if (line is not ISyncBlockOwnerAddress threadState)
+                yield break;
 
-            button.KeyPress += args =>
+            var data = threadState.SyncBlockOwnerAddress.ToString();
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump syncblock owner", $"{Commands.DumpObject} {data}"));
+        }
+
+        public Dialog? TryGetSubcommandsDialog(OutputLine line)
+        {
+            var buttons =
+                GetFactories()
+                    .SelectMany(factory => factory(line))
+                    .OrderBy(x => x.priority)
+                    .Select(x => x.button)
+                    .ToArray();
+
+            if (buttons.Length is 0)
+                return null;
+
+            // 6 and 2 are pop-up dialog borders
+            var width = buttons.MaxBy(values => values.Text.Length)!.Text.Length + 6;
+            var height = buttons.Length + 2;
+
+            for (var i = 0; i < buttons.Length; i++)
             {
-                if (args.KeyEvent.Key == Key.Tab)
-                {
-                    Application.RequestStop(_dialog);
-                    onTab();
-                    args.Handled = true;
-                }
-            };
+                var button = buttons[i];
+                button.Y = i;
+                _dialog.AddButton(button);
+            }
 
-            button.Clicked += () =>
-            {
-                Application.RequestStop(_dialog);
-                onClick();
-            };
+            _dialog.Width = width;
+            _dialog.Height = height;
 
-            return button;
+            return _dialog;
         }
     }
     
