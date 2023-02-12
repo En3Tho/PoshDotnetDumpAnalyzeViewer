@@ -86,14 +86,14 @@ public static class ListViewExtensions
         return @this.Source.ToList() as T;
     }
 
-    public static TOutputSpeciality? GetSelectedOutput<TOutputSpeciality>(this ListView @this)
-        where TOutputSpeciality : class
+    public static OutputLine? TryParseLine<TParser>(this ListView @this)
+        where TParser : IOutputParser, new()
     {
         var selectedItem = @this.SelectedItem;
-        if (@this.GetSource<IList<OutputLine>>() is { } source && selectedItem >= 0)
-            return source[selectedItem] as TOutputSpeciality;
+        if (@this.GetSource<IList<string>>() is { } source && selectedItem >= 0)
+            return new TParser().Parse(source[selectedItem]);
 
-        return default;
+        return null;
     }
 
     public static void TryFindItemAndSetSelected(this ListView @this, Func<string, bool> filter)
@@ -217,5 +217,13 @@ public static class ArrayExtensions
         var result = new TOut[@this.Length];
         @this.AsSpan().Map(result.AsSpan(), mapper);
         return result;
+    }
+}
+
+public static class OutputParserExtensions
+{
+    public static OutputLine[] Parse<T>(T @this, string[] lines) where T : IOutputParser
+    {
+        return lines.Map(@this.Parse);
     }
 }

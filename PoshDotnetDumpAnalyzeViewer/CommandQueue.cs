@@ -64,7 +64,7 @@ public record CommandQueueWorker(
             var views =
                 result.IsOk
                     ? viewFactory.HandleOutput(command, result.Output)
-                    : UI.MakeDefaultCommandViews().SetupLogic(Clipboard, result.Output.Map(x => new OutputLine(x)));
+                    : UI.MakeDefaultCommandViews().SetupLogic(Clipboard, result.Output);
 
             if (ignoreOutput && result.IsOk)
             {

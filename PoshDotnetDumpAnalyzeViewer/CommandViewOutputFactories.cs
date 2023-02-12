@@ -3,15 +3,7 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public struct DefaultOutputParser : IOutputParser
-{
-    public CommandOutput Parse(string command, string[] output)
-    {
-        return new(command, output.Map(x => new OutputLine(x)));
-    }
-}
-
-public sealed record DefaultCommandOutputViewFactory(IClipboard Clipboard) : CommandOutputViewFactoryBase<DefaultOutputParser>(Clipboard)
+public sealed record DefaultCommandOutputViewFactory(IClipboard Clipboard) : CommandOutputViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = new();
     public override bool IsSupported(string command) => true;
@@ -23,7 +15,7 @@ public sealed record DefaultCommandOutputViewFactory(IClipboard Clipboard) : Com
     }
 }
 
-public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : CommandOutputViewFactoryBase<DefaultOutputParser>(Clipboard)
+public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : CommandOutputViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } =
         ImmutableArray.Create(Commands.Exit, Commands.Q, Commands.Quit);
@@ -40,12 +32,14 @@ public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : Comman
 
 public struct HelpOutputParser : IOutputParser
 {
-    public CommandOutput Parse(string command, string[] output)
-        => Help.Parse(command, output);
+    public OutputLine Parse(string line)
+    {
+        return Help.Parse(line);
+    }
 }
 
 public sealed record HelpCommandOutputViewFactory
-    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase<HelpOutputParser>(Clipboard)
+    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Help);
 
@@ -61,7 +55,7 @@ public sealed record HelpCommandOutputViewFactory
             // To function ?
             if (args.KeyEvent.Key == Key.Enter)
             {
-                if (views.OutputListView.GetSelectedOutput<IHelpCommand>() is { } line)
+                if (views.OutputListView.TryParseLine<HelpOutputParser>() is HelpOutputLine line)
                 {
                     var command = line.Commands[0];
                     CommandQueue.SendCommand($"help {command}");
@@ -76,8 +70,10 @@ public sealed record HelpCommandOutputViewFactory
 
 public struct DumpHeapOutputParser : IOutputParser
 {
-    public CommandOutput Parse(string command, string[] output) =>
-        DumpHeap.Parse(command, output);
+    public OutputLine Parse(string line)
+    {
+        return DumpHeap.Parse(line);
+    }
 }
 
 public sealed record DumpHeapCommandOutputViewFactory
@@ -89,8 +85,10 @@ public sealed record DumpHeapCommandOutputViewFactory
 
 public struct SetThreadOutputParser : IOutputParser
 {
-    public CommandOutput Parse(string command, string[] output) =>
-        SetThread.Parse(command, output);
+    public OutputLine Parse(string line)
+    {
+        return SetThread.Parse(line);
+    }
 }
 
 public sealed record SetThreadCommandOutputViewFactory
@@ -102,8 +100,10 @@ public sealed record SetThreadCommandOutputViewFactory
 
 public struct ClrThreadsOutputParser : IOutputParser
 {
-    public CommandOutput Parse(string command, string[] output) =>
-        ClrThreads.Parse(command, output);
+    public OutputLine Parse(string line)
+    {
+        return ClrThreads.Parse(line);
+    }
 }
 
 public sealed record ClrThreadsCommandOutputViewFactory
@@ -115,8 +115,10 @@ public sealed record ClrThreadsCommandOutputViewFactory
 
 public struct SyncBlockOutputParser : IOutputParser
 {
-    public CommandOutput Parse(string command, string[] output) =>
-        SyncBlock.Parse(command, output);
+    public OutputLine Parse(string line)
+    {
+        return SyncBlock.Parse(line);
+    }
 }
 
 public sealed record SyncBlockCommandOutputViewFactory

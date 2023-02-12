@@ -12,11 +12,10 @@ public interface ICommandOutputViewFactory
 
 public interface IOutputParser
 {
-    public CommandOutput Parse(string command, string[] output);
+    public OutputLine Parse(string line);
 }
 
-public abstract record CommandOutputViewFactoryBase<TOutputParser>(IClipboard Clipboard) : ICommandOutputViewFactory
-    where TOutputParser : IOutputParser, new()
+public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard) : ICommandOutputViewFactory
 {
     public abstract ImmutableArray<string> SupportedCommands { get; }
 
@@ -28,7 +27,7 @@ public abstract record CommandOutputViewFactoryBase<TOutputParser>(IClipboard Cl
         if (!IsSupported(command))
             throw new NotSupportedException($"{GetType().FullName} does not support command {command}");
 
-        var commandOutput = new TOutputParser().Parse(command, output);
+        var commandOutput = new CommandOutput(command, output);
 
         return CreateView(commandOutput);
     }
@@ -36,7 +35,7 @@ public abstract record CommandOutputViewFactoryBase<TOutputParser>(IClipboard Cl
     protected abstract CommandOutputViews CreateView(CommandOutput output);
 }
 
-public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase<TParser>(Clipboard)
+public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
     where TParser : IOutputParser, new()
 {
     protected override CommandOutputViews CreateView(CommandOutput output)
@@ -47,7 +46,7 @@ public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews 
         {
             if (args.KeyEvent.Key == Key.Enter)
             {
-                if (views.OutputListView.GetSelectedOutput<OutputLine>() is { } line)
+                if (views.OutputListView.TryParseLine<TParser>() is { } line)
                 {
                     if (SubcommandsView.TryGetSubcommandsDialog(TopLevelViews, line, Clipboard, CommandQueue) is { } dialog)
                     {

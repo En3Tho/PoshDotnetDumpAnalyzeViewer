@@ -16,9 +16,8 @@ public record CommandOutputViews(
 
 public static class CommandViewsExtensions
 {
-    public static CommandOutputViews SetupLogic<T>(this CommandOutputViews @this, IClipboard clipboard,
-        T[] initialSource)
-        where T : IOutputLine
+    public static CommandOutputViews SetupLogic(this CommandOutputViews @this, IClipboard clipboard,
+        string[] initialSource)
     {
         var lastFilter = "";
 
@@ -74,7 +73,7 @@ public static class CommandViewsExtensions
             {
                 var filteredOutput =
                     initialSource
-                        .Where(line => line.Line.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                        .Where(line => line.Contains(filter, StringComparison.OrdinalIgnoreCase))
                         .ToArray();
                 @this.OutputListView.SetSource(filteredOutput);
             }
@@ -181,8 +180,7 @@ public class UI
         {
             var errorSource =
                 exn.ToString()
-                    .Split(Environment.NewLine)
-                    .Select(x => new OutputLine(x)).ToArray();
+                    .Split(Environment.NewLine);
 
             var commandViews =
                 MakeDefaultCommandViews()

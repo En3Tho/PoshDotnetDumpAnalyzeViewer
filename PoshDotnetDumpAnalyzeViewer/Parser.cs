@@ -65,10 +65,6 @@ public static class Help
         return new(line);
     }
 
-    public static CommandOutput Parse(string command, string[] output)
-    {
-        return new(command, output.Map(Parse));
-    }
 
     public static string[] GetCommandsFromLine(string line)
     {
@@ -92,11 +88,6 @@ public static class DumpHeap
             return new DumpHeapStatisticsOutputLine(line, dumpHeapStatisticsRanges);
 
         return new(line);
-    }
-
-    public static CommandOutput Parse(string command, string[] output)
-    {
-        return new(command, output.Map(Parse));
     }
 
     public static DumpHeapRanges? GetDumpHeapHeaderRanges(string line)
@@ -138,11 +129,6 @@ public static class SetThread
         return new(line);
     }
 
-    public static CommandOutput Parse(string command, string[] output)
-    {
-        return new(command, output.Map(Parse));
-    }
-
     public static SetThreadRanges? GetRanges(string line)
     {
         if (Regex.Match(line) is { Success: true } match)
@@ -168,11 +154,6 @@ public static class ClrThreads
         return new(line);
     }
 
-    public static CommandOutput Parse(string command, string[] output)
-    {
-        return new(command, output.Map(Parse));
-    }
-
     public static ClrThreadsRanges? GetRanges(string line)
     {
         if (Regex.Match(line) is { Success: true } match)
@@ -196,11 +177,6 @@ public static class SyncBlock
             return new SyncBlockOutputLine(line, ranges);
 
         return new(line);
-    }
-
-    public static CommandOutput Parse(string command, string[] output)
-    {
-        return new(command, output.Map(Parse));
     }
 
     public static SyncBlockRanges? GetRanges(string line)

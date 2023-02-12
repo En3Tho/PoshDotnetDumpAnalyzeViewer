@@ -26,8 +26,7 @@ public class ClrThreadsParsing
             "Special"
         };
 
-        var parseResult = new ClrThreadsOutputParser().Parse("clrthreads", output);
-        var lines = parseResult.Lines;
+        var lines = OutputParserExtensions.Parse(new ClrThreadsOutputParser(), output);
 
         Assert.True(lines is [
             {},
