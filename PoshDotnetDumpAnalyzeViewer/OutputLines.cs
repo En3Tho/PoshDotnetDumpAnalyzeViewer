@@ -30,10 +30,12 @@ public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatistic
     public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.ClassName);
 }
 
-public sealed record SetThreadOutputLine(string Line) : OutputLine(Line), IOsThreadId
+public record struct SetThreadRanges(Range OsThreadId);
+
+public sealed record SetThreadOutputLine(string Line, SetThreadRanges Ranges) : OutputLine(Line), IOsThreadId
 {
     public override string ToString() => Line;
-    public ReadOnlyMemory<char> OsThreadId => SetThread.GetOsIDFromSetThreadLine(Line);
+    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OsThreadId);
 }
 
 public record struct ClrThreadsRanges(Range Dbg, Range Id, Range OsId, Range ThreadObj, Range State, Range GcMode,

@@ -39,10 +39,10 @@ public class ClrThreadsParsing
             {},
             {},
             {},
-            ClrThreadsOutputLine,
-            ClrThreadsOutputLine,
-            ClrThreadsOutputLine,
-            ClrThreadsOutputLine,
+            ClrThreadsOutputLine { OsThreadId.Span: "1", ClrThreadId.Span: "1", ThreadState.Span: "2020020" },
+            ClrThreadsOutputLine { OsThreadId.Span: "10", ClrThreadId.Span: "2", ThreadState.Span: "21220" },
+            ClrThreadsOutputLine { OsThreadId.Span: "12", ClrThreadId.Span: "4", ThreadState.Span: "21220" },
+            ClrThreadsOutputLine { OsThreadId.Span: "13", ClrThreadId.Span: "5", ThreadState.Span: "1020220" },
             {}
         ]);
     }

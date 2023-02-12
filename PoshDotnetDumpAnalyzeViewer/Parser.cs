@@ -141,23 +141,28 @@ public static class SetThread
 {
     public static readonly Regex Regex = new(RegexPatterns.OsId);
 
-    public static ReadOnlyMemory<char> GetOsIDFromSetThreadLine(string lineWithOsId)
-    {
-        var group = Regex.Match(lineWithOsId).Groups[1];
-        var osIdRange = group.GetRange();
-        return lineWithOsId.AsMemory()[osIdRange];
-    }
-
     // TODO: single-line parsing
     public static CommandOutput Parse(string command, string[] output)
     {
         return new(command, output.Map(x =>
         {
-            if (Regex.IsMatch(x))
-                return new SetThreadOutputLine(x);
+            if (GetRanges(x) is {} ranges)
+                return new SetThreadOutputLine(x, ranges);
 
             return new OutputLine(x);
         }));
+    }
+
+    public static SetThreadRanges? GetRanges(string line)
+    {
+        if (Regex.Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
     }
 }
 
@@ -181,10 +186,7 @@ public static class ClrThreads
 
     public static ClrThreadsRanges? GetRanges(string line)
     {
-        if (Regex.Match(line) is
-            {
-                Success: true
-            } match)
+        if (Regex.Match(line) is { Success: true } match)
         {
             var ranges = new Range[11];
             match.CopyGroupsRangesTo(ranges);
@@ -215,10 +217,7 @@ public static class SyncBlock
 
     public static SyncBlockRanges? GetRanges(string line)
     {
-        if (Regex.Match(line) is
-            {
-                Success: true
-            } match)
+        if (Regex.Match(line) is { Success: true } match)
         {
             var ranges = new Range[9];
             match.CopyGroupsRangesTo(ranges);

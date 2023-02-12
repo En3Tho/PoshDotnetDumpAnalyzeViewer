@@ -6,21 +6,6 @@ namespace PoshDotnetAnalyzerViewerTests;
 public class SetThreadParsing
 {
     [Fact]
-    public void TestThatOsIdIsParsedCorrectly()
-    {
-        Assert.Matches(SetThread.Regex, "*0 0x0001 (1)");
-        Assert.Matches(SetThread.Regex, " 1 0x000A (10)");
-        Assert.Matches(SetThread.Regex, " 50 0x025C (604)");
-
-        var line1 = new SetThreadOutputLine("*0 0x0001 (1)");
-        Assert.Equal("0x0001", line1.OsThreadId.ToString());
-        var line2 = new SetThreadOutputLine(" 1 0x000A (10)");
-        Assert.Equal("0x000A", line2.OsThreadId.ToString());
-        var line3 = new SetThreadOutputLine(" 50 0x025C (604)");
-        Assert.Equal("0x025C", line3.OsThreadId.ToString());
-    }
-
-    [Fact]
     public void TestThatSetThreadWithTFlagOutputIsParsedCorrectly()
     {
         var output = new[]
@@ -39,11 +24,11 @@ public class SetThreadParsing
         Assert.True(lines is
         [
             {},
-            SetThreadOutputLine,
-            SetThreadOutputLine,
-            SetThreadOutputLine,
-            SetThreadOutputLine,
-            SetThreadOutputLine
+            SetThreadOutputLine { OsThreadId.Span: "0x0001" },
+            SetThreadOutputLine { OsThreadId.Span: "0x0008" },
+            SetThreadOutputLine { OsThreadId.Span: "0x0009" },
+            SetThreadOutputLine { OsThreadId.Span: "0x000A" },
+            SetThreadOutputLine { OsThreadId.Span: "0x000B" }
         ]);
     }
 
@@ -76,17 +61,17 @@ public class SetThreadParsing
         Assert.True(lines is
         [
             { },
-            SetThreadOutputLine,
+            SetThreadOutputLine { OsThreadId.Span: "0x0001" },
             { },
             { },
             { },
             { },
-            SetThreadOutputLine,
+            SetThreadOutputLine { OsThreadId.Span: "0x0008" },
             { },
             { },
             { },
             { },
-            SetThreadOutputLine,
+            SetThreadOutputLine { OsThreadId.Span: "0x0009" },
             { },
             { },
             { },
