@@ -57,15 +57,17 @@ public static class Help
     public static readonly Regex Regex = new(RegexPatterns.Help);
 
     // TODO: single-line parsing
+    public static OutputLine Parse(string line)
+    {
+        if (Regex.IsMatch(line))
+            return new HelpOutputLine(line);
+
+        return new(line);
+    }
+
     public static CommandOutput Parse(string command, string[] output)
     {
-        return new(command, output.Map(x =>
-        {
-            if (x.Length > 45 && Regex.IsMatch(x))
-                return new HelpOutputLine(x);
-
-            return new OutputLine(x);
-        }));
+        return new(command, output.Map(Parse));
     }
 
     public static string[] GetCommandsFromLine(string line)
@@ -76,64 +78,49 @@ public static class Help
 
 public static class DumpHeap
 {
+    public static readonly Regex DumpHeapRegex = new(RegexPatterns.DumpHeap);
+    public static readonly Regex DumpHeapStatisticsRegex = new(RegexPatterns.DumpHeapStatistics);
+
     // TODO: regex, single-line parsing
+
+    public static OutputLine Parse(string line)
+    {
+        if (GetDumpHeapHeaderRanges(line) is {} dumpHeapRanges)
+            return new DumpHeapOutputLine(line, dumpHeapRanges);
+
+        if (GetDumpHeapStatisticsHeaderRanges(line) is {} dumpHeapStatisticsRanges)
+            return new DumpHeapStatisticsOutputLine(line, dumpHeapStatisticsRanges);
+
+        return new(line);
+    }
+
     public static CommandOutput Parse(string command, string[] output)
     {
-        var mainRangeStart =
-            output.IndexAfter(x => x.Contains("Address ") && x.Contains(" MT ") && x.Contains(" Size"));
-
-        var statisticsStart = output.IndexAfter("Statistics:");
-        // skip statistics header if statistics are present
-        if (statisticsStart > 0) statisticsStart++;
-
-        var statisticsEnd = output.IndexBefore(x => x.Contains("Total ") && x.Contains(" objects"));
-        var foundSectionEnd = output.IndexBefore(x => x.Contains("Found ") && x.Contains(" objects"));
-
-        // there are 4 lines between main section data and statistics data
-        var mainIndexesEnd =
-            statisticsStart == -1
-                ? foundSectionEnd
-                : statisticsStart - 4;
-
-        var (mainRange, mainHeaderRanges) =
-            mainRangeStart == -1
-                ? default
-                : (new Range(mainRangeStart, mainIndexesEnd + 1),
-                    GetDumpHeapHeaderRanges(output[mainRangeStart - 1]));
-
-        var (statisticsRange, statisticsHeaderRanges) =
-            statisticsStart == -1
-                ? default
-                : (new Range(statisticsStart, statisticsEnd + 1),
-                    GetDumpHeapStatisticsHeaderRanges(output[statisticsStart - 1]));
-
-        return new(command, output.MapRange(
-            x => new(x),
-            new RangeMapper<string, OutputLine>(mainRange, x => new DumpHeapOutputLine(x, mainHeaderRanges)),
-            new RangeMapper<string, OutputLine>(statisticsRange,
-                x => new DumpHeapStatisticsOutputLine(x, statisticsHeaderRanges))
-        ));
+        return new(command, output.Map(Parse));
     }
 
-    // TODO: regex, single-line parsing
-    public static DumpHeapRanges GetDumpHeapHeaderRanges(string header)
+    public static DumpHeapRanges? GetDumpHeapHeaderRanges(string line)
     {
-        // TODO: regex
-        var address = header.FindColumnRange("Address");
-        var mt = header.FindColumnRange("MT", address);
-        var size = header.FindColumnRange("Size", mt);
-        return new(address, mt, size);
+        if (DumpHeapRegex.Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[3];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2]);
+        }
+
+        return default;
     }
 
-    // TODO: regex, single-line parsing
-    public static DumpHeapStatisticsRanges GetDumpHeapStatisticsHeaderRanges(string header)
+    public static DumpHeapStatisticsRanges? GetDumpHeapStatisticsHeaderRanges(string line)
     {
-        // TODO: regex
-        var mt = header.FindColumnRange("MT");
-        var count = header.FindColumnRange("Count", mt);
-        var totalSize = header.FindColumnRange("TotalSize", count);
-        var className = header.FindColumnRange("Class Name", totalSize, true);
-        return new(mt, count, totalSize, className);
+        if (DumpHeapStatisticsRegex.Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[4];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2], ranges[3]);
+        }
+
+        return default;
     }
 }
 
@@ -142,15 +129,18 @@ public static class SetThread
     public static readonly Regex Regex = new(RegexPatterns.OsId);
 
     // TODO: single-line parsing
+
+    public static OutputLine Parse(string line)
+    {
+        if (GetRanges(line) is {} ranges)
+            return new SetThreadOutputLine(line, ranges);
+
+        return new(line);
+    }
+
     public static CommandOutput Parse(string command, string[] output)
     {
-        return new(command, output.Map(x =>
-        {
-            if (GetRanges(x) is {} ranges)
-                return new SetThreadOutputLine(x, ranges);
-
-            return new OutputLine(x);
-        }));
+        return new(command, output.Map(Parse));
     }
 
     public static SetThreadRanges? GetRanges(string line)
@@ -170,18 +160,17 @@ public static class ClrThreads
 {
     public static readonly Regex Regex = new(RegexPatterns.ClrThreads, RegexOptions.Compiled);
 
+    public static OutputLine Parse(string line)
+    {
+        if (GetRanges(line) is {} ranges)
+            return new ClrThreadsOutputLine(line, ranges);
+
+        return new(line);
+    }
+
     public static CommandOutput Parse(string command, string[] output)
     {
-        return new(command, output.Map(x =>
-        {
-            if (x.AsSpan().TrimStart().Length > 100 && GetRanges(x) is {} ranges)
-            {
-
-                return new ClrThreadsOutputLine(x, ranges);
-            }
-
-            return new OutputLine(x);
-        }));
+        return new(command, output.Map(Parse));
     }
 
     public static ClrThreadsRanges? GetRanges(string line)
@@ -201,18 +190,17 @@ public static class SyncBlock
 {
     public static readonly Regex Regex = new(RegexPatterns.SyncBlock, RegexOptions.Compiled);
 
+    public static OutputLine Parse(string line)
+    {
+        if (GetRanges(line) is {} ranges)
+            return new SyncBlockOutputLine(line, ranges);
+
+        return new(line);
+    }
+
     public static CommandOutput Parse(string command, string[] output)
     {
-        return new(command, output.Map(x =>
-        {
-            if (x.AsSpan().TrimStart().Length > 50 && GetRanges(x) is {} ranges)
-            {
-
-                return new SyncBlockOutputLine(x, ranges);
-            }
-
-            return new OutputLine(x);
-        }));
+        return new(command, output.Map(Parse));
     }
 
     public static SyncBlockRanges? GetRanges(string line)

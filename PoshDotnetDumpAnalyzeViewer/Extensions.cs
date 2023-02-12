@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using En3Tho.ValueTupleExtensions.Linq;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
@@ -199,45 +198,9 @@ public static class ViewExtensions
     }
 }
 
-public static class ArrayExtensions
+public static class SpanExtensions
 {
-    public static int IndexAfter<T>(this T[] @this, T value) where T : IEquatable<T>
-    {
-        var indexOfValue = @this.AsSpan().IndexOf(value);
-        if (indexOfValue == -1 || indexOfValue == @this.Length - 1) return -1;
-        return indexOfValue + 1;
-    }
-
-    public static int IndexAfter<T>(this T[] @this, Func<T, bool> finder)
-    {
-        // length - 1 because we don't need last element
-        for (var i = 0; i < @this.Length - 1; i++)
-        {
-            if (finder(@this[i])) return i + 1;
-        }
-
-        return -1;
-    }
-
-    public static int IndexBefore<T>(this T[] @this, T value) where T : IEquatable<T>
-    {
-        var indexOfValue = @this.AsSpan().LastIndexOf(value);
-        if (indexOfValue <= 0) return -1;
-        return indexOfValue - 1;
-    }
-
-    public static int IndexBefore<T>(this T[] @this, Func<T, bool> finder)
-    {
-        // length - 1 because we don't need first element
-        for (var i = @this.Length - 1; i > 1; i--)
-        {
-            if (finder(@this[i])) return i - 1;
-        }
-
-        return -1;
-    }
-
-    private static void Map<TIn, TOut>(this Span<TIn> @this, Span<TOut> result, Func<TIn, TOut> mapper)
+    public static void Map<TIn, TOut>(this Span<TIn> @this, Span<TOut> result, Func<TIn, TOut> mapper)
     {
         if (@this.Length != result.Length)
             throw new ArgumentException("Span's lengths are different");
@@ -245,55 +208,14 @@ public static class ArrayExtensions
         for (var i = 0; i < @this.Length; i++)
             result[i] = mapper(@this[i]);
     }
+}
 
+public static class ArrayExtensions
+{
     public static TOut[] Map<TIn, TOut>(this TIn[] @this, Func<TIn, TOut> mapper)
     {
         var result = new TOut[@this.Length];
         @this.AsSpan().Map(result.AsSpan(), mapper);
-        return result;
-    }
-
-    public static TOut[] MapRange<TIn, TOut>(this TIn[] @this, Func<TIn, TOut> defaultMapper,
-        params RangeMapper<TIn, TOut>[] mappers)
-    {
-        var result = new TOut[@this.Length];
-
-        // sort ranges and filter empty ones
-        mappers = mappers.OrderBy(x => x.Range.Start.Value)
-            .Where(x => x.Range.GetOffsetAndLength(@this.Length).Length != 0).ToArray();
-
-        if (mappers.Length == 0)
-        {
-            @this.AsSpan().Map(result.AsSpan(), defaultMapper);
-        }
-        else
-        {
-            var startingRange = Range.EndAt(mappers[0].Range.Start);
-            @this.AsSpan(startingRange).Map(result.AsSpan(startingRange), defaultMapper);
-
-            if (mappers.Length == 1)
-            {
-                var mapper = mappers[0];
-                @this.AsSpan(mapper.Range).Map(result.AsSpan(mapper.Range), x => mapper.Map(x));
-            }
-            else
-            {
-                foreach (var (prev, current) in mappers.Pairwise())
-                {
-                    @this.AsSpan(prev.Range).Map(result.AsSpan(prev.Range), x => prev.Map(x));
-
-                    var betweenRange = new Range(prev.Range.End, current.Range.Start);
-                    @this.AsSpan(betweenRange).Map(result.AsSpan(betweenRange), defaultMapper);
-
-                    @this.AsSpan(current.Range).Map(result.AsSpan(current.Range), x => current.Map(x));
-                }
-            }
-
-            var endingRange = Range.StartAt(mappers[^1].Range.End);
-            @this.AsSpan(endingRange).Map(result.AsSpan(endingRange), defaultMapper);
-        }
-
-
         return result;
     }
 }
