@@ -80,7 +80,8 @@ public class DotnetDumpAnalyzeBridge
 
     public async Task<(string[] Output, bool IsOk)> PerformCommand(string command)
     {
-        List<string> values = new(256);
+        // TODO: jagged array?
+        List<string> values = new(8192);
 
         await _dotnetDump.StandardInput.WriteLineAsync(command);
 
