@@ -49,165 +49,224 @@ public interface ISyncBlockOwnerAddress
 
 public static class SubcommandsView
 {
-    private const int CopyPriority = 0;
-    private const int DumpHeapPriority = 1;
-    private const int GcRootPriority = 2;
-    private const int DumpObjectsPriority = 3;
-    private const int DumpMethodTablePriority = 4;
-    private const int PStacksPriority = 5;
-    private const int SetThreadPriority = 5;
-    private const int ThreadStatePriority = 6;
-
-    private const int
-        DumpMemoryPriority = 10; // let them have the lowest priority for now because there are lot of them
-
-    public static Dialog? TryGetSubcommandsDialog(TopLevelViews topLevelViews, OutputLine line, IClipboard clipboard,
-        CommandQueue commandQueue)
+    private class ButtonFactory
     {
-        var dialog = new Dialog("Available commands");
-        var yAxis = 0;
-
-        Button MakeButton(string title, Action onClick, Action onTab)
+#pragma warning disable CA1069
+        private enum Priority
         {
-            var button = new Button(0, yAxis++, title);
+            Copy = 0,
+            DumpHeap = 1,
+            GcRoot = 2,
+            DumpObjects = 3,
+            DumpMethodTable = 4,
+            PStacks = 5,
+            SetThread = 5,
 
-            button.KeyPress += args =>
+            // let them have the lowest priority for now because there are lot of them
+            DumpMemory = 10
+        }
+#pragma warning restore CA1069
+
+        
+        private readonly Dialog _dialog = new ("Available commands");
+        private readonly Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] _buttonFactories;
+        private int _yAxis;
+
+        public ButtonFactory(
+            TopLevelViews topLevelViews,
+            IClipboard clipboard,
+            CommandQueue commandQueue)
+        {
+            CommandQueue = commandQueue ?? throw new ArgumentNullException(nameof(commandQueue));
+            Clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
+            TopLevelViews = topLevelViews ?? throw new ArgumentNullException(nameof(topLevelViews));
+            
+            _buttonFactories = new[]
             {
-                if (args.KeyEvent.Key == Key.Tab)
-                {
-                    Application.RequestStop(dialog);
-                    onTab();
-                    args.Handled = true;
-                }
+                GetAddressButtons,
+                GetMethodTableButtons,
+                GetTypeNameButtons,
+                GetClrThreadButtons,
+                GetOsThreadIdButtons,
             };
-
-            button.Clicked += () =>
-            {
-                Application.RequestStop(dialog);
-                onClick();
-            };
-
-            return button;
         }
 
-        // TODO: really, make just di based commands with funcs and helpers.
-        Action MakePasteAction(string data) => () =>
-        {
-            topLevelViews.CommandInput.Paste(data);
-            topLevelViews.CommandInput.SetFocus();
-        };
+        private TopLevelViews TopLevelViews { get; }
 
-        Button MakeCommandButton(string title, string command, bool ignoreOutput = false, bool forceRefresh = false,
-            Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+        private IClipboard Clipboard { get; }
+
+        private CommandQueue CommandQueue { get; }
+
+        public Dialog? TryGetSubcommandsDialog(OutputLine line)
         {
-            return MakeButton(title, () => commandQueue.SendCommand(command, forceRefresh, ignoreOutput, customAction),
-                MakePasteAction(command));
+            _ = line ?? throw new ArgumentNullException(nameof(line));
+
+            var buttons = _buttonFactories.SelectMany(factory => factory(line)).ToArray();
+
+            if (buttons.Length is 0)
+                return null;
+
+            var orderedButtons = buttons
+                .OrderBy(x => x.priority)
+                .Select(x => x.button)
+                .ToArray();
+
+            // 6 and 2 are pop-up dialog borders
+            int width = orderedButtons.MaxBy(values => values.Text.Length)!.Text.Length + 6;
+            int height = orderedButtons.Length + 2;
+
+            foreach (var button in orderedButtons)
+                _dialog.AddButton(button);
+
+            _dialog.Width = width;
+            _dialog.Height = height;
+
+            return _dialog;
         }
-
-        var buttonsWithPriorities = new List<(int Priority, Func<Button> Button)>();
-
-        if (line is IAddress address)
+        
+        private IEnumerable<(Priority, Button)> GetAddressButtons(OutputLine line)
         {
+            if (line is not IAddress address)
+                yield break;
+            
             var data = address.Address.ToString();
-            buttonsWithPriorities.Add((CopyPriority,
-                () => MakeButton("Copy address", () => clipboard.SetClipboardData(data), MakePasteAction(data))));
-            buttonsWithPriorities.Add((GcRootPriority,
-                () => MakeCommandButton("Find GC root", $"{Commands.GcRoot} {data}")));
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.GcRoot,
+                MakeCommandButton("Find GC root", $"{Commands.GcRoot} {data}"));
 
-            buttonsWithPriorities.Add((DumpObjectsPriority,
-                () => MakeCommandButton("Dump object", $"{Commands.DumpObject} {data}")));
+            yield return (Priority.DumpObjects,
+                MakeCommandButton("Dump object", $"{Commands.DumpObject} {data}"));
 
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory", $"{Commands.DumpMemory} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as bytes", $"{Commands.DumpMemoryAsBytes} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as chars", $"{Commands.DumpMemoryAsChars} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as byte string", $"{Commands.DumpMemoryAsByteString} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as char string", $"{Commands.DumpMemoryAsCharString} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as native ints", $"{Commands.DumpMemoryAsPointers} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as shorts", $"{Commands.DumpMemoryAsWords} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as int", $"{Commands.DumpMemoryAsDoubleWords} {data}")));
-            buttonsWithPriorities.Add((DumpMemoryPriority,
-                () => MakeCommandButton("Dump memory as longs", $"{Commands.DumpMemoryAsQuadWords} {data}")));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory", $"{Commands.DumpMemory} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as bytes", $"{Commands.DumpMemoryAsBytes} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as chars", $"{Commands.DumpMemoryAsChars} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as byte string", $"{Commands.DumpMemoryAsByteString} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as char string", $"{Commands.DumpMemoryAsCharString} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as native ints", $"{Commands.DumpMemoryAsPointers} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as shorts", $"{Commands.DumpMemoryAsWords} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as int", $"{Commands.DumpMemoryAsDoubleWords} {data}"));
+            yield return (
+                Priority.DumpMemory,
+                MakeCommandButton("Dump memory as longs", $"{Commands.DumpMemoryAsQuadWords} {data}"));
         }
 
-        if (line is IMethodTable methodTable)
+        private IEnumerable<(Priority, Button)> GetMethodTableButtons(OutputLine line)
         {
+            if (line is not IMethodTable methodTable)
+                yield break;
             var data = methodTable.MethodTable.ToString();
-            buttonsWithPriorities.Add((CopyPriority,
-                () => MakeButton("Copy method table", () => clipboard.SetClipboardData(data), MakePasteAction(data))));
-            buttonsWithPriorities.Add((DumpHeapPriority,
-                () => MakeCommandButton("Dump heap (method table)", $"{Commands.DumpHeap} -mt {data}")));
-            buttonsWithPriorities.Add((DumpMethodTablePriority,
-                () => MakeCommandButton("Dump method table", $"{Commands.DumpMethodTable} {data}")));
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy method table", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.DumpHeap,
+                MakeCommandButton("Dump heap (method table)", $"{Commands.DumpHeap} -mt {data}"));
+            yield return (
+                Priority.DumpMethodTable,
+                MakeCommandButton("Dump method table", $"{Commands.DumpMethodTable} {data}"));
         }
 
-        if (line is ITypeName typeName)
+        private IEnumerable<(Priority, Button)> GetTypeNameButtons(OutputLine line)
         {
+            if (line is not ITypeName typeName)
+                yield break;
+
             var data = typeName.TypeName.ToString();
-            buttonsWithPriorities.Add((CopyPriority,
-                () => MakeButton("Copy type name", () => clipboard.SetClipboardData(data), MakePasteAction(data))));
-            buttonsWithPriorities.Add((DumpHeapPriority,
-                () => MakeCommandButton("Dump heap (type)", $"{Commands.DumpHeap} -type {data}")));
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy type name", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.DumpHeap,
+                MakeCommandButton("Dump heap (type)", $"{Commands.DumpHeap} -type {data}"));
         }
 
-        // TODO: not sure if clr thread id is any useful
-        // There can exist a mapping between clr thread id and os thread id. Can use it behind the scenes
-        if (line is IClrThreadId clrThreadId)
+        private IEnumerable<(Priority, Button)> GetClrThreadButtons(OutputLine line)
         {
+            // TODO: not sure if clr thread id is any useful
+            // There can exist a mapping between clr thread id and os thread id. Can use it behind the scenes
+            if (line is not IClrThreadId clrThreadId)
+                yield break;
+        
             var data = clrThreadId.ClrThreadId.ToString();
-            buttonsWithPriorities.Add((CopyPriority,
-                () => MakeButton("Copy CLR thread id", () => clipboard.SetClipboardData(data), MakePasteAction(data))));
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy CLR thread id", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
         }
 
-        // Not all OSThreadIds are linked with CLR
-        // It might be useful to filter out native-only ones
-        if (line is IOsThreadId osThreadId)
+        private IEnumerable<(Priority, Button)> GetOsThreadIdButtons(OutputLine line)
         {
+            // Not all OSThreadIds are linked with CLR
+            // It might be useful to filter out native-only ones
+            if (line is not IOsThreadId osThreadId)
+                yield break;
+            
             var data = osThreadId.OsThreadId.ToString();
             data = data.PadLeft(data.Length + data.Length % 4, '0');
             var idAsInt = Convert.ToInt32(data, 16);
 
-            buttonsWithPriorities.Add((CopyPriority,
-                () => MakeButton("Copy OS thread id", () => clipboard.SetClipboardData(data), MakePasteAction(data))));
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy OS thread id", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
 
-            buttonsWithPriorities.Add((SetThreadPriority,
-                () => MakeCommandButton("Set as current thread", $"{Commands.SetThread} -t {idAsInt}",
-                    ignoreOutput: true)));
+            yield return (
+                Priority.SetThread,
+                MakeCommandButton("Set as current thread", $"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true));
 
-            buttonsWithPriorities.Add((SetThreadPriority, () =>
-                MakeCommandButton("Set as current thread and display call stack", $"{Commands.SetThread} -t {idAsInt}",
-                    ignoreOutput: true, customAction: views =>
+            yield return (
+                Priority.SetThread,
+                MakeCommandButton("Set as current thread and display call stack",
+                    $"{Commands.SetThread} -t {idAsInt}",
+                    ignoreOutput: true,
+                    customAction: views =>
                     {
-                        commandQueue.SendCommand($"{Commands.ClrStack}", forceRefresh: true);
+                        CommandQueue.SendCommand($"{Commands.ClrStack}", forceRefresh: true);
                         return views;
-                    })));
+                    }));
 
-            buttonsWithPriorities.Add((SetThreadPriority, () =>
+            yield return (
+                Priority.SetThread,
                 MakeCommandButton("Set as current thread and display call stack (full info)",
-                    $"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true, customAction: views =>
+                    $"{Commands.SetThread} -t {idAsInt}",
+                    ignoreOutput: true,
+                    customAction: views =>
                     {
-                        commandQueue.SendCommand($"{Commands.ClrStack} -a", forceRefresh: true);
+                        CommandQueue.SendCommand($"{Commands.ClrStack} -a", forceRefresh: true);
                         return views;
-                    })));
+                    }));
 
-            buttonsWithPriorities.Add((PStacksPriority, () => MakeCommandButton("Find thread in parallel stacks",
-                    $"{Commands.ParallelStacks} -a", customAction: views =>
+            yield return (
+                Priority.PStacks,
+                MakeCommandButton("Find thread in parallel stacks",
+                    $"{Commands.ParallelStacks} -a",
+                    customAction: views =>
                     {
                         var normalizedOsId = Convert.ToString(idAsInt, 16);
                         views.FilterTextField.Text = normalizedOsId;
                         views.OutputListView.TryFindItemAndSetSelected(x =>
                         {
-                            const string ThreadAnchor = "~~~~ ";
-                            if (x.IndexOf(ThreadAnchor, StringComparison.Ordinal) is not -1 and var index)
+                            const string threadAnchor = "~~~~ ";
+                            if (x.IndexOf(threadAnchor, StringComparison.Ordinal) is not -1 and var index)
                             {
-                                var values = x[(index + ThreadAnchor.Length)..]
+                                var values = x[(index + threadAnchor.Length)..]
                                     .Split(",", StringSplitOptions.TrimEntries);
                                 return values.AsSpan().Contains(normalizedOsId);
                             }
@@ -216,33 +275,60 @@ public static class SubcommandsView
                         });
                         return views;
                     })
-                ));
+                );
         }
-
-        if (line is IThreadState threadState)
+        
+        private Button MakeCommandButton(
+            string title,
+            string command,
+            bool ignoreOutput = false,
+            bool forceRefresh = false,
+            Func<CommandOutputViews, CommandOutputViews>? customAction = null)
         {
-            var data = threadState.ThreadState.ToString();
-            buttonsWithPriorities.Add((ThreadStatePriority,
-                () => MakeCommandButton("Pretty print thread state", $"{Commands.ThreadState} {data}")));
+            return MakeButton(
+                title,
+                () => CommandQueue.SendCommand(command, forceRefresh, ignoreOutput, customAction),
+                MakePasteAction(command));
         }
 
-        if (buttonsWithPriorities.Count > 0)
+        private Action MakePasteAction(string data) =>
+            () =>
+            {
+                TopLevelViews.CommandInput.Paste(data);
+                TopLevelViews.CommandInput.SetFocus();
+            };
+
+        private Button MakeButton(string title, Action onClick, Action onTab)
         {
-            var buttons = buttonsWithPriorities.OrderBy(x => x.Priority).Select(x => x.Button()).ToArray();
+            var button = new Button(0, _yAxis++, title);
 
-            // 6 and 2 are pop-up dialog borders
-            var width = buttons.MaxBy(values => values.Text.Length)!.Text.Length + 6;
-            var height = buttons.Length + 2;
+            button.KeyPress += args =>
+            {
+                if (args.KeyEvent.Key == Key.Tab)
+                {
+                    Application.RequestStop(_dialog);
+                    onTab();
+                    args.Handled = true;
+                }
+            };
 
-            foreach (var button in buttons)
-                dialog.AddButton(button);
+            button.Clicked += () =>
+            {
+                Application.RequestStop(_dialog);
+                onClick();
+            };
 
-            dialog.Width = width;
-            dialog.Height = height;
-
-            return dialog;
+            return button;
         }
-
-        return null;
+    }
+    
+    public static Dialog? TryGetSubcommandsDialog(
+        TopLevelViews topLevelViews,
+        OutputLine line,
+        IClipboard clipboard,
+        CommandQueue commandQueue)
+    {
+        var factory = new ButtonFactory(topLevelViews, clipboard, commandQueue);
+        return factory.TryGetSubcommandsDialog(line);
     }
 }
