@@ -49,37 +49,26 @@ public interface ISyncBlockOwnerAddress
 
 public static class SubcommandsView
 {
+#pragma warning disable CA1069
+    private enum Priority
+    {
+        Copy = 0,
+        DumpHeap = 1,
+        GcRoot = 2,
+        DumpObjects = 3,
+        DumpMethodTable = 4,
+        PStacks = 5,
+        SetThread = 5,
+        ThreadState = 9,
+
+        // let them have the lowest priority for now because there are lot of them
+        DumpMemory = 10
+    }
+#pragma warning restore CA1069
+
     private record ButtonFactory(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue)
     {
-        private enum Priority
-        {
-            Copy = 0,
-            DumpHeap = 1,
-            GcRoot = 2,
-            DumpObjects = 3,
-            DumpMethodTable = 4,
-            PStacks = 5,
-            SetThread = 5,
-            ThreadState = 9,
-
-            // let them have the lowest priority for now because there are lot of them
-            DumpMemory = 10
-        }
-
         private readonly Dialog _dialog = new ("Available commands");
-
-        private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
-        {
-            return new[] {
-                GetAddressButtons,
-                GetMethodTableButtons,
-                GetTypeNameButtons,
-                GetClrThreadButtons,
-                GetOsThreadIdButtons,
-                GetThreadsStateButtons,
-                GetSyncBlockOwnerAddressButtons,
-            };
-        }
 
         private Button MakeButton(string title, Action onClick, Action onTab)
         {
@@ -299,6 +288,19 @@ public static class SubcommandsView
             yield return (
                 Priority.DumpObjects,
                 MakeCommandButton("Dump syncblock owner", $"{Commands.DumpObject} {data}"));
+        }
+
+        private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
+        {
+            return new[] {
+                GetAddressButtons,
+                GetMethodTableButtons,
+                GetTypeNameButtons,
+                GetClrThreadButtons,
+                GetOsThreadIdButtons,
+                GetThreadsStateButtons,
+                GetSyncBlockOwnerAddressButtons,
+            };
         }
 
         public Dialog? TryGetSubcommandsDialog(OutputLine line)
