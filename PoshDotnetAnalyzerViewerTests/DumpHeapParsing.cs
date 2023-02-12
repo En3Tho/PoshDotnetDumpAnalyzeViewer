@@ -24,7 +24,7 @@ public class DumpHeapParsing
             "Total 3 objects"
         };
 
-        var lines = OutputParserExtensions.Parse(new DumpHeapOutputParser(), output);
+        var lines = OutputParserExtensions.Parse<DumpHeapParser>(output);
 
         Assert.True(lines is
         [
@@ -57,7 +57,7 @@ public class DumpHeapParsing
             "Total 3 objects"
         };
 
-        var lines = OutputParserExtensions.Parse(new DumpHeapOutputParser(), output);
+        var lines = OutputParserExtensions.Parse<DumpHeapParser>(output);
 
         Assert.True(lines is
         [

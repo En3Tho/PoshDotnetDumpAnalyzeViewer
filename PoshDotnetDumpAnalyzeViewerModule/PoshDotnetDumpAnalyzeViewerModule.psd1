@@ -4,7 +4,7 @@
 RootModule = 'PoshDotnetDumpAnalyzeViewerModule.dll'
 
 # Version number of this module.
-ModuleVersion = '0.0.2'
+ModuleVersion = '0.0.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -25,7 +25,7 @@ Copyright = '(c) Igor Bagdamyan. All rights reserved.'
 Description = 'Micro UI for dotnet dump analyze command'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '7.1.3'
+PowerShellVersion = '7.3.2'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''

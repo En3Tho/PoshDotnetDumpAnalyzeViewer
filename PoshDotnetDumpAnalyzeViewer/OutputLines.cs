@@ -8,7 +8,7 @@ public record OutputLine(string Line) : IOutputLine // IParsable<OutputLine> ?
 public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpCommand
 {
     public override string ToString() => Line;
-    public string[] Commands => Help.GetCommandsFromLine(Line);
+    public string[] Commands => HelpParser.GetCommandsFromLine(Line);
 }
 
 public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);

@@ -52,7 +52,7 @@ static class RegexPatterns
         $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}{Hg}{WS}{Dg}{WS}{Ag}{WS}{Sg}{WSo}";
 }
 
-public static class Help
+public class HelpParser : IOutputParser
 {
     public static readonly Regex Regex = new(RegexPatterns.Help);
 
@@ -72,7 +72,7 @@ public static class Help
     }
 }
 
-public static class DumpHeap
+public class DumpHeapParser : IOutputParser
 {
     public static readonly Regex DumpHeapRegex = new(RegexPatterns.DumpHeap);
     public static readonly Regex DumpHeapStatisticsRegex = new(RegexPatterns.DumpHeapStatistics);
@@ -115,7 +115,7 @@ public static class DumpHeap
     }
 }
 
-public static class SetThread
+public class SetThreadParser : IOutputParser
 {
     public static readonly Regex Regex = new(RegexPatterns.OsId);
 
@@ -142,7 +142,7 @@ public static class SetThread
     }
 }
 
-public static class ClrThreads
+public class ClrThreadsParser : IOutputParser
 {
     public static readonly Regex Regex = new(RegexPatterns.ClrThreads, RegexOptions.Compiled);
 
@@ -167,7 +167,7 @@ public static class ClrThreads
     }
 }
 
-public static class SyncBlock
+public class SyncBlockParser : IOutputParser
 {
     public static readonly Regex Regex = new(RegexPatterns.SyncBlock, RegexOptions.Compiled);
 
