@@ -38,6 +38,8 @@ Currently implemented custom parsers:
 - [x] dumpheap <arguments>                       Displays info about the garbage-collected heap and collection statistics about objects.
 - [x] help <command>                             Display help for a command.
 - [x] setthread, threads <thread>                Displays threads or sets the current thread.
+- [x] clrthreads
+- [x] syncblk
 - [x] exit, q, quit                              Exit interactive mode.
 
 There are many other commands that might have contextual subcommands so need to make more parsers. Any help is welcome!
@@ -70,7 +72,6 @@ setsymbolserver, logging
 - [] threadpoolqueue, tpq                       Display queued ThreadPool work items.
 - [] ti, timerinfo                              Display running timers details.
 - [] clrstack <arguments>                       Provides a stack trace of managed code only.
-- [] clrthreads <arguments>                     List the managed threads running.
 - [] dbgout <arguments>                         Enable/disable (-off) internal SOS logging.
 - [] dumpalc <arguments>                        Displays details about a collectible AssemblyLoadContext into which the specified object is loaded.
 - [] dumparray <arguments>                      Displays details about a managed array.
@@ -95,7 +96,6 @@ setsymbolserver, logging
 - [] ip2md <arguments>                          Displays the MethodDesc structure at the specified address in code that has been JIT-compiled.
 - [] name2ee <arguments>                        Displays the MethodTable structure and EEClass structure for the specified type or method in the specified module.
 - [] pe, printexception <arguments>             Displays and formats fields of any object derived from the Exception class at the specified address.
-- [] syncblk <arguments>                        Displays the SyncBlock holder info.
 - [] histclear <arguments>                      Releases any resources used by the family of Hist commands.
 - [] histinit <arguments>                       Initializes the SOS structures from the stress log saved in the debuggee.
 - [] histobj <arguments>                        Examines all stress log relocation records and displays the chain of garbage collection relocations that may have led to the address passed in as an argument.
