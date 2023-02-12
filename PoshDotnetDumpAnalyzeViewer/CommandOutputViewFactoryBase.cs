@@ -12,7 +12,7 @@ public interface ICommandOutputViewFactory
 
 public interface IOutputParser
 {
-    public OutputLine Parse(string line);
+    static abstract OutputLine Parse(string line);
 }
 
 public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard) : ICommandOutputViewFactory

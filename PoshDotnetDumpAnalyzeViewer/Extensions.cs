@@ -87,11 +87,11 @@ public static class ListViewExtensions
     }
 
     public static OutputLine? TryParseLine<TParser>(this ListView @this)
-        where TParser : IOutputParser, new()
+        where TParser : IOutputParser
     {
         var selectedItem = @this.SelectedItem;
         if (@this.GetSource<IList<string>>() is { } source && selectedItem >= 0)
-            return new TParser().Parse(source[selectedItem]);
+            return TParser.Parse(source[selectedItem]);
 
         return null;
     }
@@ -222,8 +222,8 @@ public static class ArrayExtensions
 
 public static class OutputParserExtensions
 {
-    public static OutputLine[] Parse<T>(T @this, string[] lines) where T : IOutputParser
+    public static OutputLine[] Parse<T>(string[] lines) where T : IOutputParser
     {
-        return lines.Map(@this.Parse);
+        return lines.Map(T.Parse);
     }
 }

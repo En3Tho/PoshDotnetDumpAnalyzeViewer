@@ -18,7 +18,7 @@ public class SetThreadParsing
             " 4 0x000B (11)"
         };
 
-        var lines = OutputParserExtensions.Parse(new SetThreadOutputParser(), output);
+        var lines = OutputParserExtensions.Parse<SetThreadParser>(output);
 
         Assert.True(lines is
         [
@@ -54,7 +54,7 @@ public class SetThreadParsing
             "   TEB 0x0000000000000000"
         };
 
-        var lines = OutputParserExtensions.Parse(new SetThreadOutputParser(), output);
+        var lines = OutputParserExtensions.Parse<SetThreadParser>(output);
 
         Assert.True(lines is
         [

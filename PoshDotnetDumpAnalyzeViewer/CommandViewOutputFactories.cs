@@ -30,14 +30,6 @@ public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : Comman
     }
 }
 
-public struct HelpOutputParser : IOutputParser
-{
-    public OutputLine Parse(string line)
-    {
-        return Help.Parse(line);
-    }
-}
-
 public sealed record HelpCommandOutputViewFactory
     (IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
 {
@@ -55,7 +47,7 @@ public sealed record HelpCommandOutputViewFactory
             // To function ?
             if (args.KeyEvent.Key == Key.Enter)
             {
-                if (views.OutputListView.TryParseLine<HelpOutputParser>() is HelpOutputLine line)
+                if (views.OutputListView.TryParseLine<HelpParser>() is HelpOutputLine line)
                 {
                     var command = line.Commands[0];
                     CommandQueue.SendCommand($"help {command}");
@@ -68,61 +60,29 @@ public sealed record HelpCommandOutputViewFactory
     }
 }
 
-public struct DumpHeapOutputParser : IOutputParser
-{
-    public OutputLine Parse(string line)
-    {
-        return DumpHeap.Parse(line);
-    }
-}
-
 public sealed record DumpHeapCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpHeapOutputParser>(
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpHeapParser>(
         TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpHeap);
 }
 
-public struct SetThreadOutputParser : IOutputParser
-{
-    public OutputLine Parse(string line)
-    {
-        return SetThread.Parse(line);
-    }
-}
-
 public sealed record SetThreadCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SetThreadOutputParser>(
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SetThreadParser>(
         TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SetThread, Commands.Threads);
 }
 
-public struct ClrThreadsOutputParser : IOutputParser
-{
-    public OutputLine Parse(string line)
-    {
-        return ClrThreads.Parse(line);
-    }
-}
-
 public sealed record ClrThreadsCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<ClrThreadsOutputParser>(
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<ClrThreadsParser>(
         TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ClrThreads);
 }
 
-public struct SyncBlockOutputParser : IOutputParser
-{
-    public OutputLine Parse(string line)
-    {
-        return SyncBlock.Parse(line);
-    }
-}
-
 public sealed record SyncBlockCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SyncBlockOutputParser>(
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SyncBlockParser>(
         TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SyncBlock);
