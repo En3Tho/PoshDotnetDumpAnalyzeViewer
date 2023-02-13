@@ -8,8 +8,7 @@ public static class ProcessUtil
     {
         var dotnetDumpStartInfo = new ProcessStartInfo
         {
-            FileName =
-                "dotnet-dump",
+            FileName = "dotnet-dump",
             Arguments = $"analyze {analyzeArgs}",
             RedirectStandardError = true,
             RedirectStandardInput = true,
@@ -87,7 +86,7 @@ public class DotnetDumpAnalyzeBridge
 
         while (true)
         {
-            var line = await _dotnetDump.StandardOutput.ReadLineAsync();
+            var line = await _dotnetDump.StandardOutput.ReadLineAsync(_cancellationToken);
             if (line is Constants.EndCommandErrorAnchor)
             {
                 await foreach (var error in _dotnetDump.StandardError.ReadAllLinesToEndAsync().WithCancellation(_cancellationToken))

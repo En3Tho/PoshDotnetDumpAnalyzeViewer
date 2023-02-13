@@ -78,34 +78,28 @@ public static class TextFieldExtensions
     }
 }
 
-public static class ListViewExtensions
+public static class ArrayListViewExtensions
 {
-    public static T? GetSource<T>(this ListView @this)
-        where T : class
-    {
-        return @this.Source.ToList() as T;
-    }
-
-    public static OutputLine? TryParseLine<TParser>(this ListView @this)
+    public static OutputLine? TryParseLine<TParser>(this ArrayListView<string> @this)
         where TParser : IOutputParser
     {
         var selectedItem = @this.SelectedItem;
-        if (@this.GetSource<IList<string>>() is { } source && selectedItem >= 0)
+        if (@this.Source is { } source && selectedItem >= 0)
             return TParser.Parse(source[selectedItem]);
 
         return null;
     }
 
-    public static void TryFindItemAndSetSelected(this ListView @this, Func<string, bool> filter)
+    public static void TryFindItemAndSetSelected<T>(this ArrayListView<T> @this, Func<T, bool> filter)
     {
-        if (@this.GetSource<IList<OutputLine>>() is not { Count: > 0 } source)
+        if (@this.Source is not { Length: > 0 } source)
             return;
 
         bool SetSelectedItem(int index)
         {
-            while (index < source.Count)
+            while (index < source.Length)
             {
-                if (filter(source[index].ToString()))
+                if (filter(source[index]))
                 {
                     if (!@this.HasFocus)
                         @this.SetFocus();
@@ -169,18 +163,6 @@ public static class MatchExtensions
             var range = group.GetRange();
             ranges[i++] = range;
         }
-    }
-}
-
-public static class StringExtensions
-{
-    public static Range FindColumnRange(this string header, string columnName, Range previousColumnRange = default,
-        bool isLastColumn = false)
-    {
-        var rangeStart = previousColumnRange.End.Value == 0 ? 0 : previousColumnRange.End.Value + 1;
-        return isLastColumn
-            ? Range.StartAt(rangeStart)
-            : new(rangeStart, header.IndexOf(columnName, StringComparison.Ordinal) + columnName.Length);
     }
 }
 

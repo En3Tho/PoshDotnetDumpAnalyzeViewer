@@ -1,6 +1,6 @@
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public record OutputLine(string Line) : IOutputLine // IParsable<OutputLine> ?
+public record OutputLine(string Line) : IOutputLine
 {
     public override string ToString() => Line;
 }

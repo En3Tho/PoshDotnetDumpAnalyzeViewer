@@ -1,7 +1,18 @@
-﻿using NStack;
-using Terminal.Gui;
+﻿using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
+
+public class ArrayListView<T> : ListView
+{
+    public ArrayListView(T[] initialSource)
+    {
+        SetSource(initialSource);
+    }
+
+    public void SetSource(T[] source) => base.SetSource(source);
+
+    public new T[] Source => (T[]) base.Source.ToList();
+}
 
 public record TopLevelViews(
     Toplevel Toplevel,
@@ -11,7 +22,7 @@ public record TopLevelViews(
 
 public record CommandOutputViews(
     Window Window,
-    ListView OutputListView,
+    ArrayListView<string> OutputListView,
     TextField FilterTextField);
 
 public static class CommandViewsExtensions
@@ -19,8 +30,6 @@ public static class CommandViewsExtensions
     public static CommandOutputViews SetupLogic(this CommandOutputViews @this, IClipboard clipboard,
         string[] initialSource)
     {
-        var lastFilter = "";
-
         @this.OutputListView.SetSource(initialSource);
 
         @this.OutputListView.KeyPress += args =>
@@ -28,17 +37,13 @@ public static class CommandViewsExtensions
             switch (args.KeyEvent.Key)
             {
                 case Key.CtrlMask | Key.C:
-                    clipboard.SetClipboardData(@this.OutputListView.Source.ToList()[@this.OutputListView.SelectedItem]
-                        ?.ToString());
+                    clipboard.SetClipboardData(@this.OutputListView.Source[@this.OutputListView.SelectedItem]);
                     args.Handled = true;
                     break;
 
                 case Key.CtrlMask | Key.ShiftMask | Key.C:
-                    if (@this.OutputListView.GetSource<IList<OutputLine>>() is { } source)
-                    {
-                        clipboard.SetClipboardData(string.Join(Environment.NewLine, source.Select(x => x.ToString())));
-                        args.Handled = true;
-                    }
+                    clipboard.SetClipboardData(string.Join(Environment.NewLine, @this.OutputListView.Source));
+                    args.Handled = true;
                     break;
                 case Key.Tab:
                     ProcessTabKey();
@@ -48,21 +53,11 @@ public static class CommandViewsExtensions
         };
 
         var filterHistory = new HistoryList<string>();
-
-        void ProcessTabKey()
-        {
-            var filter = (@this.FilterTextField.Text ?? ustring.Empty).ToString()!;
-
-            if (string.IsNullOrWhiteSpace(filter))
-                return;
-
-            @this.OutputListView.TryFindItemAndSetSelected(x => x.Contains(filter, StringComparison.OrdinalIgnoreCase));
-        }
+        var lastFilter = "";
 
         void ProcessEnterKey()
         {
-            var filter = (@this.FilterTextField.Text ?? ustring.Empty).ToString()!;
-
+            var filter = @this.FilterTextField.Text?.ToString();
             if (lastFilter.Equals(filter)) return;
 
             if (string.IsNullOrEmpty(filter))
@@ -75,12 +70,22 @@ public static class CommandViewsExtensions
                     initialSource
                         .Where(line => line.Contains(filter, StringComparison.OrdinalIgnoreCase))
                         .ToArray();
+
                 @this.OutputListView.SetSource(filteredOutput);
+                filterHistory.Add(filter);
             }
 
-            lastFilter = filter;
-            if (!string.IsNullOrWhiteSpace(filter))
-                filterHistory.Add(filter);
+            lastFilter = filter ?? "";
+        }
+
+        void ProcessTabKey()
+        {
+            var filter = @this.FilterTextField.Text?.ToString();
+
+            if (string.IsNullOrWhiteSpace(filter))
+                return;
+
+            @this.OutputListView.TryFindItemAndSetSelected(x => x.Contains(filter, StringComparison.OrdinalIgnoreCase));
         }
 
         @this.FilterTextField
@@ -140,7 +145,7 @@ public static class ViewsExtensions
 
         void ProcessEnterKey(bool forceRefresh)
         {
-            var command = (@this.CommandInput.Text ?? ustring.Empty).ToString()!;
+            var command = @this.CommandInput.Text?.ToString();
             if (string.IsNullOrWhiteSpace(command)) return;
             commandQueue.SendCommand(command, forceRefresh: forceRefresh);
         }
@@ -202,7 +207,7 @@ public class UI
             Height = Dim.Fill()
         };
 
-        var listView = new ListView
+        var listView = new ArrayListView<string>(Array.Empty<string>())
         {
             Height = Dim.Fill() - Dim.Sized(3),
             Width = Dim.Fill()
