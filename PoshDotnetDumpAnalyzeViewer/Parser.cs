@@ -52,14 +52,14 @@ static class RegexPatterns
         $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}{Hg}{WS}{Dg}{WS}{Ag}{WS}{Sg}{WSo}";
 }
 
-public class HelpParser : IOutputParser
+public partial class HelpParser : IOutputParser
 {
-    public static readonly Regex Regex = new(RegexPatterns.Help);
+    [GeneratedRegex(RegexPatterns.Help)]
+    public static partial Regex Regex();
 
-    // TODO: single-line parsing
     public static OutputLine Parse(string line)
     {
-        if (Regex.IsMatch(line))
+        if (Regex().IsMatch(line))
             return new HelpOutputLine(line);
 
         return new(line);
@@ -68,16 +68,17 @@ public class HelpParser : IOutputParser
 
     public static string[] GetCommandsFromLine(string line)
     {
-        return Regex.Match(line).Groups[1].Value.Split(",", StringSplitOptions.TrimEntries);
+        return Regex().Match(line).Groups[1].Value.Split(",", StringSplitOptions.TrimEntries);
     }
 }
 
-public class DumpHeapParser : IOutputParser
+public partial class DumpHeapParser : IOutputParser
 {
-    public static readonly Regex DumpHeapRegex = new(RegexPatterns.DumpHeap);
-    public static readonly Regex DumpHeapStatisticsRegex = new(RegexPatterns.DumpHeapStatistics);
+    [GeneratedRegex(RegexPatterns.DumpHeap)]
+    public static partial Regex DumpHeapRegex();
 
-    // TODO: regex, single-line parsing
+    [GeneratedRegex(RegexPatterns.DumpHeapStatistics)]
+    public static partial Regex DumpHeapStatisticsRegex();
 
     public static OutputLine Parse(string line)
     {
@@ -92,7 +93,7 @@ public class DumpHeapParser : IOutputParser
 
     public static DumpHeapRanges? GetDumpHeapHeaderRanges(string line)
     {
-        if (DumpHeapRegex.Match(line) is { Success: true } match)
+        if (DumpHeapRegex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[3];
             match.CopyGroupsRangesTo(ranges);
@@ -104,7 +105,7 @@ public class DumpHeapParser : IOutputParser
 
     public static DumpHeapStatisticsRanges? GetDumpHeapStatisticsHeaderRanges(string line)
     {
-        if (DumpHeapStatisticsRegex.Match(line) is { Success: true } match)
+        if (DumpHeapStatisticsRegex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[4];
             match.CopyGroupsRangesTo(ranges);
@@ -115,11 +116,10 @@ public class DumpHeapParser : IOutputParser
     }
 }
 
-public class SetThreadParser : IOutputParser
+public partial class SetThreadParser : IOutputParser
 {
-    public static readonly Regex Regex = new(RegexPatterns.OsId);
-
-    // TODO: single-line parsing
+    [GeneratedRegex(RegexPatterns.OsId)]
+    public static partial Regex Regex();
 
     public static OutputLine Parse(string line)
     {
@@ -131,7 +131,7 @@ public class SetThreadParser : IOutputParser
 
     public static SetThreadRanges? GetRanges(string line)
     {
-        if (Regex.Match(line) is { Success: true } match)
+        if (Regex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[1];
             match.CopyGroupsRangesTo(ranges);
@@ -142,9 +142,10 @@ public class SetThreadParser : IOutputParser
     }
 }
 
-public class ClrThreadsParser : IOutputParser
+public partial class ClrThreadsParser : IOutputParser
 {
-    public static readonly Regex Regex = new(RegexPatterns.ClrThreads, RegexOptions.Compiled);
+    [GeneratedRegex(RegexPatterns.ClrThreads)]
+    public static partial Regex Regex();
 
     public static OutputLine Parse(string line)
     {
@@ -156,7 +157,7 @@ public class ClrThreadsParser : IOutputParser
 
     public static ClrThreadsRanges? GetRanges(string line)
     {
-        if (Regex.Match(line) is { Success: true } match)
+        if (Regex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[11];
             match.CopyGroupsRangesTo(ranges);
@@ -167,9 +168,10 @@ public class ClrThreadsParser : IOutputParser
     }
 }
 
-public class SyncBlockParser : IOutputParser
+public partial class SyncBlockParser : IOutputParser
 {
-    public static readonly Regex Regex = new(RegexPatterns.SyncBlock, RegexOptions.Compiled);
+    [GeneratedRegex(RegexPatterns.SyncBlock)]
+    public static partial Regex Regex();
 
     public static OutputLine Parse(string line)
     {
@@ -181,7 +183,7 @@ public class SyncBlockParser : IOutputParser
 
     public static SyncBlockRanges? GetRanges(string line)
     {
-        if (Regex.Match(line) is { Success: true } match)
+        if (Regex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[9];
             match.CopyGroupsRangesTo(ranges);
