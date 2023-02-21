@@ -47,6 +47,11 @@ public interface ISyncBlockOwnerAddress
     ReadOnlyMemory<char> SyncBlockOwnerAddress { get; }
 }
 
+public interface IEEClassAddress
+{
+    ReadOnlyMemory<char> EEClassAddress { get; }
+}
+
 public static class SubcommandsView
 {
 #pragma warning disable CA1069
@@ -290,6 +295,17 @@ public static class SubcommandsView
                 MakeCommandButton("Dump syncblock owner", $"{Commands.DumpObject} {data}"));
         }
 
+        private IEnumerable<(Priority, Button)> GetEEClassAddressButtons(OutputLine line)
+        {
+            if (line is not IEEClassAddress threadState)
+                yield break;
+
+            var data = threadState.EEClassAddress.ToString();
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump EEClass", $"{Commands.DumpClass} {data}"));
+        }
+
         private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
         {
             return new[] {
@@ -300,6 +316,7 @@ public static class SubcommandsView
                 GetOsThreadIdButtons,
                 GetThreadsStateButtons,
                 GetSyncBlockOwnerAddressButtons,
+                GetEEClassAddressButtons
             };
         }
 

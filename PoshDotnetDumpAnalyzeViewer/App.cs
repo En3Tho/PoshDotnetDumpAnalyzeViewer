@@ -34,6 +34,7 @@ public static class App
             new SetThreadCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new ClrThreadsCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SyncBlockCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new DumpObjectCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new DefaultCommandOutputViewFactory(clipboard)
         };
 

@@ -1,8 +1,11 @@
+using PoshDotnetDumpAnalyzeViewer;
+using Xunit;
+
 namespace PoshDotnetAnalyzerViewerTests;
 
 public class DumpObjParsing
 {
-    // TODO:
+    [Fact]
     public void TestThatDumpObjIsParsedCorrectly()
     {
         var output = new[]
@@ -25,5 +28,28 @@ public class DumpObjParsing
             "Thread:", // I believe it was here.
             ""
         };
+
+        var lines = OutputParserExtensions.Parse<DumpObjectParser>(output);
+
+        Assert.True(lines is
+        [
+            ObjectAddressOutputLine { Address.Span: "00007f9f1bfff138" },
+            TypeNameOutputLine { TypeName.Span: "System.StackOverflowException" },
+            MethodTableOutputLine { MethodTable.Span: "00007f9f540ff000" },
+            EEClassOutputLine { EEClassAddress.Span: "00007f9f540d81a8" },
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+        ]);
     }
 }

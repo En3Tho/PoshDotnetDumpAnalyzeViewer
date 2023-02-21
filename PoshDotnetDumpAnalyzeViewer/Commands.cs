@@ -33,4 +33,6 @@ public static class Commands
     public const string DumpMemoryAsDoubleWords = "dd";
     public const string DumpMemoryAsPointers = "dp";
     public const string DumpMemoryAsQuadWords = "dq";
+
+    public const string DumpClass = "dumpclass";
 }

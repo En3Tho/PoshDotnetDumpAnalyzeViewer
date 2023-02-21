@@ -10,6 +10,34 @@ public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpComman
     public string[] Commands => HelpParser.GetCommandsFromLine(Line);
 }
 
+public record struct ObjectAddressRanges(Range Address);
+
+public sealed record ObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IAddress
+{
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
+}
+
+public record struct TypeNameRanges(Range TypeName);
+
+public sealed record TypeNameOutputLine(string Line, TypeNameRanges Ranges) : OutputLine(Line), ITypeName
+{
+    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.TypeName);
+}
+
+public record struct MethodTableRanges(Range MethodTable);
+
+public sealed record MethodTableOutputLine(string Line, MethodTableRanges Ranges) : OutputLine(Line), IMethodTable
+{
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+}
+
+public record struct EEClassRanges(Range EEClass);
+
+public sealed record EEClassOutputLine(string Line, EEClassRanges Ranges) : OutputLine(Line), IEEClassAddress
+{
+    public ReadOnlyMemory<char> EEClassAddress => Line.AsMemory(Ranges.EEClass);
+}
+
 public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
 
 public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IAddress

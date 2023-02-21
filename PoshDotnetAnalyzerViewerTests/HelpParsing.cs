@@ -19,6 +19,9 @@ public class HelpParsing
 
         commands = HelpParser.GetCommandsFromLine(" dso, dumpstackobjects <arguments>          Displays all managed objects found within the bounds of the current stack.");
         Assert.True(commands is [ "dso", "dumpstackobjects" ]);
+
+        commands = HelpParser.GetCommandsFromLine(" name2ee <arguments>                        Displays the MethodTable structure and EEClass structure for the specified type or method in the specified module.");
+        Assert.True(commands is [ "name2ee" ]);
     }
 
 }

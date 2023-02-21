@@ -4,12 +4,12 @@ namespace PoshDotnetDumpAnalyzeViewer;
 
 static class RegexPatterns
 {
-    private const string D = @"-?[0-9]+";
+    private const string D = @"-?\d+";
     private const string H = @"(?:0[xX])?[0-9a-fA-F]+";
     private const string A = @"[0-9a-fA-F]{16}"; // address
-    private const string S = @"[^\s].*[^\s]";
+    private const string S = @"\S+";
     private const string C = @".+";
-    private const string az = @"[a-z]+";
+    private const string azD = @"[a-z\d]+";
     private const string Co = @".*";
     private const string WS = @"\s+";
     private const string WSo = @"\s*";
@@ -23,7 +23,7 @@ static class RegexPatterns
     // S
 
     public const string Help =
-        $@"{WSo}({az}(?:,{WS}{az})*)(?:<{C}>)?{C}";
+        $@"{WSo}({azD}(?:,{WS}{azD})*)(?:<{C}>)?{C}";
 
     // ...   OsId ...
     // C WS  Hg    WS C
@@ -50,6 +50,21 @@ static class RegexPatterns
     // Dg     Ag         Dg           Dg         Ag Hg Dg            Ag Sg
     public const string SyncBlock =
         $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}{Hg}{WS}{Dg}{WS}{Ag}{WS}{Sg}{WSo}";
+
+    public static class DumpObject
+    {
+        public const string CmdWithAddress =
+            $"do{WSo}{Ag}";
+
+        public const string TypeName =
+            $"Name:{WSo}{Sg}";
+
+        public const string MethodTable =
+            $"MethodTable:{WSo}{Ag}";
+
+        public const string EEClass =
+            $"EEClass:{WSo}{Ag}";
+    }
 }
 
 public partial class HelpParser : IOutputParser
@@ -188,6 +203,86 @@ public partial class SyncBlockParser : IOutputParser
             var ranges = new Range[9];
             match.CopyGroupsRangesTo(ranges);
             return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7], ranges[8]);
+        }
+
+        return default;
+    }
+}
+
+public partial class DumpObjectParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.DumpObject.CmdWithAddress)]
+    public static partial Regex CmdWithAddress();
+
+    [GeneratedRegex(RegexPatterns.DumpObject.MethodTable)]
+    public static partial Regex MethodTable();
+
+    [GeneratedRegex(RegexPatterns.DumpObject.TypeName)]
+    public static partial Regex TypeName();
+
+    [GeneratedRegex(RegexPatterns.DumpObject.EEClass)]
+    public static partial Regex EEClass();
+
+    public static OutputLine Parse(string line)
+    {
+        if (GetObjectAddressRanges(line) is {} objectAddressRanges)
+            return new ObjectAddressOutputLine(line, objectAddressRanges);
+
+        if (GetMethodTableRanges(line) is {} methodTableRanges)
+            return new MethodTableOutputLine(line, methodTableRanges);
+
+        if (GetTypeNameRanges(line) is {} typeNameRanges)
+            return new TypeNameOutputLine(line, typeNameRanges);
+
+        if (GetEEClassRanges(line) is {} eeClassRanges)
+            return new EEClassOutputLine(line, eeClassRanges);
+
+        return new(line);
+    }
+
+    public static ObjectAddressRanges? GetObjectAddressRanges(string line)
+    {
+        if (CmdWithAddress().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static MethodTableRanges? GetMethodTableRanges(string line)
+    {
+        if (MethodTable().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static TypeNameRanges? GetTypeNameRanges(string line)
+    {
+        if (TypeName().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static EEClassRanges? GetEEClassRanges(string line)
+    {
+        if (EEClass().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
         }
 
         return default;
