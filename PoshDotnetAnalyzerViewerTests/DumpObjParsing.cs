@@ -29,7 +29,7 @@ public class DumpObjParsing
             ""
         };
 
-        var lines = OutputParserExtensions.Parse<DumpObjectParser>(output);
+        var lines = OutputParserExtensions.ParseAll<DumpObjectParser>(output);
 
         Assert.True(lines is
         [

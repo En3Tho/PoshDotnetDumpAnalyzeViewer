@@ -81,12 +81,10 @@ public class TabManager
     private readonly Dictionary<string, (TabView.Tab Tab, CommandOutputViews Views, bool IsOk)> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly MainLoop _loop;
     private readonly TabView _tabView;
 
-    public TabManager(MainLoop loop, TabView tabView)
+    public TabManager(TabView tabView)
     {
-        _loop = loop;
         _tabView = tabView;
     }
 
@@ -119,7 +117,8 @@ public class TabManager
     {
         if (_tabMap.TryGetValue(command, out var result))
         {
-            _loop.Invoke(() => { _tabView.RemoveTab(result.Tab); });
+            //_loop.Invoke(() => { _tabView.RemoveTab(result.Tab); });
+            _tabView.RemoveTab(result.Tab);
         }
 
         _tabMap.Remove(command);
@@ -130,8 +129,13 @@ public class TabManager
         RemoveTab(command);
 
         _tabMap[command] = (tab, views, isOk);
-        _loop.Invoke(() => { _tabView.AddTab(tab, true); });
+        //_loop.Invoke(() => { _tabView.AddTab(tab, true); });
+        _tabView.AddTab(tab, true);
     }
 
-    public void SetSelected(TabView.Tab tab) => _loop.Invoke(() => _tabView.SelectedTab = tab);
+    public void SetSelected(TabView.Tab tab)
+    {
+        //_loop.Invoke(() => _tabView.SelectedTab = tab);
+        _tabView.SelectedTab = tab;
+    }
 }

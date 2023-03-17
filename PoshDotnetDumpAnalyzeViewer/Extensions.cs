@@ -204,7 +204,7 @@ public static class ArrayExtensions
 
 public static class OutputParserExtensions
 {
-    public static OutputLine[] Parse<T>(string[] lines) where T : IOutputParser
+    public static OutputLine[] ParseAll<T>(string[] lines) where T : IOutputParser
     {
         return lines.Map(T.Parse);
     }
