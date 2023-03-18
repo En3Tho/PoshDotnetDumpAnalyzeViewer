@@ -74,8 +74,6 @@ public class HistoryList<T>
     }
 }
 
-public record struct RangeMapper<TIn, TOut>(Range Range, Func<TIn, TOut> Map);
-
 public class TabManager
 {
     private readonly Dictionary<string, (TabView.Tab Tab, CommandOutputViews Views, bool IsOk)> _tabMap =
@@ -107,7 +105,7 @@ public class TabManager
 
     public void RemoveTab(TabView.Tab tab)
     {
-        string? command = TryGetCommand(tab);
+        var command = TryGetCommand(tab);
 
         if (command is { })
             RemoveTab(command);
@@ -117,7 +115,6 @@ public class TabManager
     {
         if (_tabMap.TryGetValue(command, out var result))
         {
-            //_loop.Invoke(() => { _tabView.RemoveTab(result.Tab); });
             _tabView.RemoveTab(result.Tab);
         }
 
@@ -127,15 +124,12 @@ public class TabManager
     public void AddTab(string command, CommandOutputViews views, TabView.Tab tab, bool isOk)
     {
         RemoveTab(command);
-
         _tabMap[command] = (tab, views, isOk);
-        //_loop.Invoke(() => { _tabView.AddTab(tab, true); });
         _tabView.AddTab(tab, true);
     }
 
     public void SetSelected(TabView.Tab tab)
     {
-        //_loop.Invoke(() => _tabView.SelectedTab = tab);
         _tabView.SelectedTab = tab;
     }
 }
