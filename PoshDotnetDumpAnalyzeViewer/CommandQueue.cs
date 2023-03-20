@@ -25,7 +25,7 @@ public record CommandQueueWorker(
 
     // TODO: rewrite this to di based commands maybe ?
     // TODO: too many booleans? -_-
-    public async GuiCsTask Process(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+    public async UITask Process(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
         try
         {
@@ -41,7 +41,7 @@ public record CommandQueueWorker(
             var viewFactory = ViewFactories.First(x => x.IsSupported(command));
 
             using var cts = new CancellationTokenSource();
-            async GuiCsTask RunTicker(CancellationToken token)
+            async UITask RunTicker(CancellationToken token)
             {
 
                 using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
