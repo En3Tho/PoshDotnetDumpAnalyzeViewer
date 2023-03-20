@@ -43,7 +43,6 @@ public record CommandQueueWorker(
             using var cts = new CancellationTokenSource();
             async UITask RunTicker(CancellationToken token)
             {
-
                 using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
                 var seconds = 0;
 
