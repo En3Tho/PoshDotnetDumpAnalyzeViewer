@@ -54,6 +54,7 @@ public class DumpHeapParsing
             "00007fff4b774a70        1           24 System.IO.SyncTextReader",
             "00007fff4b773e68        1           24 System.Threading.Tasks.Task+<>c",
             "00007fff4b72e0c8        1           24 System.IO.Stream+NullStream",
+            "7fff9b7859c0 3591478 341091786 System.String", // address is not 16 chars anymore
             "Total 3 objects"
         };
 
@@ -67,6 +68,7 @@ public class DumpHeapParsing
             DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b774a70", TypeName.Span: "System.IO.SyncTextReader" },
             DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b773e68", TypeName.Span: "System.Threading.Tasks.Task+<>c" },
             DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b72e0c8", TypeName.Span: "System.IO.Stream+NullStream" },
+            DumpHeapStatisticsOutputLine { MethodTable.Span: "7fff9b7859c0", TypeName.Span: "System.String" },
             {}
         ]);
     }

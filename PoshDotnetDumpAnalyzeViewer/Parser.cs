@@ -1,27 +1,76 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
 static class RegexPatterns
 {
+    /// <summary>
+    /// Digit
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string D = @"-?\d+";
+    /// <summary>
+    /// Hex
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string H = @"(?:0[xX])?[0-9a-fA-F]+";
-    private const string A = @"[0-9a-fA-F]{16}"; // address
+    /// <summary>
+    /// Address
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
+    private const string A = @"[0-9a-fA-F]+";
+    /// <summary>
+    /// Non white space
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string S = @"\S+";
+    /// <summary>
+    /// Any amount of characters
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string C = @".+";
+    /// <summary>
+    /// a to z and numbers
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string azD = @"[a-z\d]+";
+    /// <summary>
+    /// Any amount of characters optional
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string Co = @".*";
+    /// <summary>
+    /// White space
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string WS = @"\s+";
+    /// <summary>
+    /// White space optional
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string WSo = @"\s*";
+
     private const string Dg = $"({D})";
+    /// <summary>
+    /// Hex group
+    /// </summary>
     private const string Hg = $"({H})";
+    /// <summary>
+    /// Address group
+    /// </summary>
     private const string Ag = $"({A})";
+    /// <summary>
+    /// Non-whitespace group
+    /// </summary>
     private const string Sg = $"({S})";
+    /// <summary>
+    /// Non-whitespace optional group
+    /// </summary>
     private const string Sgo = $"({S})*";
 
     // cmd (..,cmd)? <arg>? Description
     // S
-
     public const string Help =
         $@"{WSo}({azD}(?:,{WS}{azD})*)(?:<{C}>)?{C}";
 
@@ -97,11 +146,11 @@ public partial class DumpHeapParser : IOutputParser
 
     public static OutputLine Parse(string line)
     {
-        if (GetDumpHeapHeaderRanges(line) is {} dumpHeapRanges)
-            return new DumpHeapOutputLine(line, dumpHeapRanges);
-
         if (GetDumpHeapStatisticsHeaderRanges(line) is {} dumpHeapStatisticsRanges)
             return new DumpHeapStatisticsOutputLine(line, dumpHeapStatisticsRanges);
+
+        if (GetDumpHeapHeaderRanges(line) is {} dumpHeapRanges)
+            return new DumpHeapOutputLine(line, dumpHeapRanges);
 
         return new(line);
     }
