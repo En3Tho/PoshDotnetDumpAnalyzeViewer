@@ -34,8 +34,12 @@ public static class App
             new ClrThreadsCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SyncBlockCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new DumpObjectCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new GCRootCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new DefaultCommandOutputViewFactory(clipboard)
         };
+
+        viewFactories[^2] = new SosCommandOutputViewFactory(topLevelViews, clipboard, commandQueue, viewFactories);
 
         var commandQueueWorker = new CommandQueueWorker(clipboard, bridge, topLevelViews, historyList, tabManager, viewFactories);
 

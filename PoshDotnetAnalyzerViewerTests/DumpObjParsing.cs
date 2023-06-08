@@ -29,7 +29,7 @@ public class DumpObjParsing
             ""
         };
 
-        var lines = OutputParserExtensions.ParseAll<DumpObjectParser>(output);
+        var lines = OutputParserExtensions.ParseAll<DumpObjectParser>(output, Commands.DumpObject);
 
         Assert.True(lines is
         [
@@ -37,17 +37,17 @@ public class DumpObjParsing
             TypeNameOutputLine { TypeName.Span: "System.StackOverflowException" },
             MethodTableOutputLine { MethodTable.Span: "00007f9f540ff000" },
             EEClassOutputLine { EEClassAddress.Span: "00007f9f540d81a8" },
+            {}, // eew
             {},
             {},
             {},
             {},
-            {},
-            {},
-            {},
-            {},
-            {},
-            {},
-            {},
+            DumpObjectOutputLine { MethodTable.Span: "00007f9f54381c38" },
+            DumpObjectOutputLine { MethodTable.Span: "00007f9f540fd2e0" },
+            DumpObjectOutputLine { MethodTable.Span: "00007f9f54101250" },
+            DumpObjectOutputLine { MethodTable.Span: "00007f9f540fec90" },
+            DumpObjectOutputLine { MethodTable.Span: "00007f9f540fd2e0" },
+            DumpObjectOutputLine { MethodTable.Span: "00007f9f54b986b8" },
             {},
             {}
         ]);

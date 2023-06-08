@@ -18,11 +18,11 @@ public class SetThreadParsing
             " 4 0x000B (11)"
         };
 
-        var lines = OutputParserExtensions.ParseAll<SetThreadParser>(output);
+        var lines = OutputParserExtensions.ParseAll<SetThreadParser>(output, Commands.SetThread);
 
         Assert.True(lines is
         [
-            {},
+            not SetThreadOutputLine,
             SetThreadOutputLine { OsThreadId.Span: "0x0001" },
             SetThreadOutputLine { OsThreadId.Span: "0x0008" },
             SetThreadOutputLine { OsThreadId.Span: "0x0009" },
@@ -54,26 +54,26 @@ public class SetThreadParsing
             "   TEB 0x0000000000000000"
         };
 
-        var lines = OutputParserExtensions.ParseAll<SetThreadParser>(output);
+        var lines = OutputParserExtensions.ParseAll<SetThreadParser>(output, Commands.SetThread);
 
         Assert.True(lines is
         [
-            { },
+            not SetThreadOutputLine,
             SetThreadOutputLine { OsThreadId.Span: "0x0001" },
-            { },
-            { },
-            { },
-            { },
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
             SetThreadOutputLine { OsThreadId.Span: "0x0008" },
-            { },
-            { },
-            { },
-            { },
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
             SetThreadOutputLine { OsThreadId.Span: "0x0009" },
-            { },
-            { },
-            { },
-            { }
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
+            not SetThreadOutputLine,
+            not SetThreadOutputLine
         ]);
     }
 }

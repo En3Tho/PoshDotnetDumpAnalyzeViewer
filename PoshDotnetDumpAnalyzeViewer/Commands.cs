@@ -1,6 +1,8 @@
-﻿namespace PoshDotnetDumpAnalyzeViewer;
+﻿using System.Text.RegularExpressions;
 
-public static class Commands
+namespace PoshDotnetDumpAnalyzeViewer;
+
+public static partial class Commands
 {
     public const string Quit = "quit";
     public const string Exit = "exit";
@@ -8,7 +10,7 @@ public static class Commands
     public const string Help = "help";
     public const string DumpHeap = "dumpheap";
     public const string DumpMethodTable = "dumpmt";
-    public const string GcRoot = "gcroot";
+    public const string GCRoot = "gcroot";
 
     public const string SetThread = "setthread";
     public const string Threads = "threads";
@@ -35,4 +37,22 @@ public static class Commands
     public const string DumpMemoryAsQuadWords = "dq";
 
     public const string DumpClass = "dumpclass";
+
+    public const string Sos = "sos";
+    public const string Ext = "ext";
+
+    [GeneratedRegex(@$"(((?:{Sos}|{Ext})\s)?\S+)(.*)", RegexOptions.IgnoreCase)]
+    public static partial Regex NormalizationRegex();
+
+    public static string NormalizeCommand(string command)
+    {
+        if (NormalizationRegex().Match(command) is { Success: true } match)
+        {
+            var ranges = new Range[2];
+            match.CopyGroupsRangesTo(ranges);
+            return $"{command[ranges[0]].ToLower()}{command[ranges[1]]}";
+        }
+
+        return command;
+    }
 }

@@ -80,12 +80,12 @@ public static class TextFieldExtensions
 
 public static class ArrayListViewExtensions
 {
-    public static OutputLine? TryParseLine<TParser>(this ArrayListView<string> @this)
+    public static OutputLine? TryParseLine<TParser>(this ArrayListView<string> @this, string command)
         where TParser : IOutputParser
     {
         var selectedItem = @this.SelectedItem;
         if (@this.Source is { } source && selectedItem >= 0)
-            return TParser.Parse(source[selectedItem]);
+            return TParser.Parse(source[selectedItem], command);
 
         return null;
     }
@@ -204,8 +204,9 @@ public static class ArrayExtensions
 
 public static class OutputParserExtensions
 {
-    public static OutputLine[] ParseAll<T>(string[] lines) where T : IOutputParser
+    public static OutputLine[] ParseAll<T>(string[] lines, string command) where T : IOutputParser
     {
-        return lines.Map(T.Parse);
+        var parser = (string line) => T.Parse(line, command);
+        return lines.Map(parser);
     }
 }

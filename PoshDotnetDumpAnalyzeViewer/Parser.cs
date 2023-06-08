@@ -10,64 +10,95 @@ static class RegexPatterns
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string D = @"-?\d+";
+
     /// <summary>
     /// Hex
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string H = @"(?:0[xX])?[0-9a-fA-F]+";
+
     /// <summary>
     /// Address
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
-    private const string A = @"[0-9a-fA-F]+";
+    private const string A = @"[0-9a-fA-F]{8,}"; // not sure about 8 but let's go with it for now
+
     /// <summary>
     /// Non white space
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string S = @"\S+";
+
     /// <summary>
     /// Any amount of characters
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string C = @".+";
+
     /// <summary>
     /// a to z and numbers
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string azD = @"[a-z\d]+";
+
     /// <summary>
     /// Any amount of characters optional
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string Co = @".*";
+
     /// <summary>
     /// White space
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string WS = @"\s+";
+
     /// <summary>
     /// White space optional
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string WSo = @"\s*";
 
+    /// <summary>
+    /// Type name (with white space quirk)
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
+    private const string T = @"(?:(?:,\s)|\S)+";
+
+    /// <summary>
+    /// Digit group
+    /// </summary>
     private const string Dg = $"({D})";
+
     /// <summary>
     /// Hex group
     /// </summary>
     private const string Hg = $"({H})";
+
     /// <summary>
     /// Address group
     /// </summary>
     private const string Ag = $"({A})";
+
     /// <summary>
     /// Non-whitespace group
     /// </summary>
     private const string Sg = $"({S})";
+
     /// <summary>
     /// Non-whitespace optional group
     /// </summary>
     private const string Sgo = $"({S})*";
+
+    /// <summary>
+    /// Type name group
+    /// </summary>
+    private const string Tg = $"({T})";
+
+    /// <summary>
+    /// Type name optional group
+    /// </summary>
+    private const string Tgo = $"({T})";
 
     // cmd (..,cmd)? <arg>? Description
     // S
@@ -81,9 +112,9 @@ static class RegexPatterns
 
     //                                                                              Lock
     // DBG           ID  OSID  ThreadOBJ  State  GC Mode  GC Alloc Context  Domain  Count  Apt   Exception
-    // (D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Sg?
+    // (D | "XXXX")g Dg  Hg    Ag         Hg     Sg       (A & ":" & A)g    Ag      Dg     Sg    Tg?
     public const string ClrThreads =
-        $"{WSo}((?:XXXX)|{D}){WS}{Dg}{WS}{Hg}{WS}{Ag}{WS}{Hg}{WS}{Sg}{WS}({A}:{A}){WS}{Ag}{WS}{Dg}{WS}{Sg}{WSo}{Sgo}{WSo}";
+        $"{WSo}((?:XXXX)|{D}){WS}{Dg}{WS}{Hg}{WS}{Ag}{WS}{Hg}{WS}{Sg}{WS}({A}:{A}){WS}{Ag}{WS}{Dg}{WS}{Sg}{WSo}{Tgo}{WSo}";
 
     // Address  MT  Size ..rest
     // Ag       Ag  Dg
@@ -91,14 +122,22 @@ static class RegexPatterns
         $"{Ag}{WS}{Ag}{WS}{Dg}{C}";
 
     // MT  Count  TotalSize  Class Name
-    // Ag  Dg     Dg         Sg
+    // Ag  Dg     Dg         Tg
     public const string DumpHeapStatistics =
-        $"{Ag}{WS}{Dg}{WS}{Dg}{WS}{Sg}{WSo}";
+        $"{Ag}{WS}{Dg}{WS}{Dg}{WS}{Tg}{WSo}";
 
     // Index  SyncBlock  MonitorHeld  Recursion  Owning Thread Info  SyncBlock Owner
-    // Dg     Ag         Dg           Dg         Ag Hg Dg            Ag Sg
+    // Dg     Ag         Dg           Dg         Ag Hg Dg            Ag Tg
     public const string SyncBlock =
-        $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}{Hg}{WS}{Dg}{WS}{Ag}{WS}{Sg}{WSo}";
+        $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}{Hg}{WS}{Dg}{WS}{Ag}{WS}{Tg}{WSo}";
+
+    // Index  SyncBlock  MonitorHeld  Recursion  Owning Thread Info  SyncBlock Owner
+    // Dg     Ag         Dg           Dg         Ag | none            Ag Tg
+    public const string SyncBlockZero =
+        $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}({H}|none){WS}{Ag}{WS}{Tg}{WSo}";
+
+    public const string GCRoot =
+        $@"{WSo}(?:{WS}->{WS})?{Ag}{WS}(\(strong handle\)|{S}){WSo}";
 
     public static class DumpObject
     {
@@ -106,13 +145,17 @@ static class RegexPatterns
             $"do{WSo}{Ag}";
 
         public const string TypeName =
-            $"Name:{WSo}{Sg}";
+            $"Name:{WSo}{Tg}";
 
         public const string MethodTable =
             $"MethodTable:{WSo}{Ag}";
 
         public const string EEClass =
             $"EEClass:{WSo}{Ag}";
+
+        // "MT  Field   Offset  Type VT     Attr            Value Name",
+        // "Ag  Hg      Dg      Tg   Dg     Sg              Hg      Sg",
+        public const string Main = $"{Ag}{WS}{Hg}{WS}{Dg}{WS}{Tg}{WS}{Dg}{WS}{Sg}{WS}{Hg}{WS}{Sg}";
     }
 }
 
@@ -121,7 +164,7 @@ public partial class HelpParser : IOutputParser
     [GeneratedRegex(RegexPatterns.Help)]
     public static partial Regex Regex();
 
-    public static OutputLine Parse(string line)
+    public static OutputLine Parse(string line, string _)
     {
         if (Regex().IsMatch(line))
             return new HelpOutputLine(line);
@@ -144,7 +187,7 @@ public partial class DumpHeapParser : IOutputParser
     [GeneratedRegex(RegexPatterns.DumpHeapStatistics)]
     public static partial Regex DumpHeapStatisticsRegex();
 
-    public static OutputLine Parse(string line)
+    public static OutputLine Parse(string line, string _)
     {
         if (GetDumpHeapStatisticsHeaderRanges(line) is {} dumpHeapStatisticsRanges)
             return new DumpHeapStatisticsOutputLine(line, dumpHeapStatisticsRanges);
@@ -185,7 +228,7 @@ public partial class SetThreadParser : IOutputParser
     [GeneratedRegex(RegexPatterns.OsId)]
     public static partial Regex Regex();
 
-    public static OutputLine Parse(string line)
+    public static OutputLine Parse(string line, string _)
     {
         if (GetRanges(line) is {} ranges)
             return new SetThreadOutputLine(line, ranges);
@@ -211,7 +254,7 @@ public partial class ClrThreadsParser : IOutputParser
     [GeneratedRegex(RegexPatterns.ClrThreads)]
     public static partial Regex Regex();
 
-    public static OutputLine Parse(string line)
+    public static OutputLine Parse(string line, string _)
     {
         if (GetRanges(line) is {} ranges)
             return new ClrThreadsOutputLine(line, ranges);
@@ -237,10 +280,23 @@ public partial class SyncBlockParser : IOutputParser
     [GeneratedRegex(RegexPatterns.SyncBlock)]
     public static partial Regex Regex();
 
-    public static OutputLine Parse(string line)
+    [GeneratedRegex(RegexPatterns.SyncBlockZero)]
+    public static partial Regex RegexZero();
+
+    public static OutputLine Parse(string line, string _)
     {
         if (GetRanges(line) is {} ranges)
             return new SyncBlockOutputLine(line, ranges);
+
+        if (GetZeroRanges(line) is {} zeroRanges)
+        {
+            // special case lines like
+            // 64 0000000000000000            0         0 0000000000000000     none           0 Free
+            if (line.AsSpan()[zeroRanges.SyncBlock].IndexOfAnyExcept('0') > -1)
+            {
+                return new SyncBlockZeroOutputLine(line, zeroRanges);
+            }
+        }
 
         return new(line);
     }
@@ -252,6 +308,18 @@ public partial class SyncBlockParser : IOutputParser
             var ranges = new Range[9];
             match.CopyGroupsRangesTo(ranges);
             return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7], ranges[8]);
+        }
+
+        return default;
+    }
+
+    public static SyncBlockZeroRanges? GetZeroRanges(string line)
+    {
+        if (RegexZero().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[8];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7]);
         }
 
         return default;
@@ -272,8 +340,14 @@ public partial class DumpObjectParser : IOutputParser
     [GeneratedRegex(RegexPatterns.DumpObject.EEClass)]
     public static partial Regex EEClass();
 
-    public static OutputLine Parse(string line)
+    [GeneratedRegex(RegexPatterns.DumpObject.Main)]
+    public static partial Regex Main();
+
+    public static OutputLine Parse(string line, string _)
     {
+        if (GetMainRanges(line) is {} mainRanges)
+            return new DumpObjectOutputLine(line, mainRanges);
+
         if (GetObjectAddressRanges(line) is {} objectAddressRanges)
             return new ObjectAddressOutputLine(line, objectAddressRanges);
 
@@ -332,6 +406,49 @@ public partial class DumpObjectParser : IOutputParser
             var ranges = new Range[1];
             match.CopyGroupsRangesTo(ranges);
             return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static DumpObjectRanges? GetMainRanges(string line)
+    {
+        if (Main().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[8];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7]);
+        }
+
+        return default;
+    }
+}
+
+public partial class GCRootParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.GCRoot)]
+    public static partial Regex Regex();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetRanges(line) is { } ranges)
+        {
+            if (line.AsSpan()[ranges.TypeName].Contains("strong handle", StringComparison.Ordinal))
+                return new ObjectAddressOutputLine(line, new(ranges.Address));
+
+            return new GCRootOutputLine(line, ranges);
+        }
+
+        return new(line);
+    }
+
+    public static GCRootRanges? GetRanges(string line)
+    {
+        if (Regex().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[2];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1]);
         }
 
         return default;

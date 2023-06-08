@@ -24,22 +24,22 @@ public class DumpHeapParsing
             "Total 3 objects"
         };
 
-        var lines = OutputParserExtensions.ParseAll<DumpHeapParser>(output);
+        var lines = OutputParserExtensions.ParseAll<DumpHeapParser>(output, Commands.DumpHeap);
 
         Assert.True(lines is
         [
-            {},
-            {},
+            not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
+            not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
             DumpHeapOutputLine { Address.Span: "000002a724541000", MethodTable.Span: "000002a722993230" },
             DumpHeapOutputLine { Address.Span: "000002a724541018", MethodTable.Span: "000002a722993230" },
             DumpHeapOutputLine { Address.Span: "000002a724541030", MethodTable.Span: "000002a722993230" },
-            {},
-            {},
-            {},
+            not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
+            not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
+            not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
             DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b774a70", TypeName.Span: "System.IO.SyncTextReader" },
             DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b773e68", TypeName.Span: "System.Threading.Tasks.Task+<>c" },
             DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b72e0c8", TypeName.Span: "System.IO.Stream+NullStream" },
-            {}
+            not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine)
         ]);
     }
 
@@ -58,7 +58,7 @@ public class DumpHeapParsing
             "Total 3 objects"
         };
 
-        var lines = OutputParserExtensions.ParseAll<DumpHeapParser>(output);
+        var lines = OutputParserExtensions.ParseAll<DumpHeapParser>(output, Commands.DumpHeap);
 
         Assert.True(lines is
         [

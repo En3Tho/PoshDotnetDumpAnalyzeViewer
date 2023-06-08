@@ -48,8 +48,8 @@ public record CommandQueueWorker(
 
                 while (!token.IsCancellationRequested)
                 {
-                    await timer.WaitForNextTickAsync(token);
                     TopLevelViews.CommandInput.Text = $"{command} ... executing command ({seconds++}s)";
+                    await timer.WaitForNextTickAsync(token);
                 }
             }
 
@@ -114,7 +114,7 @@ public record CommandQueue(Action<Exception> ExceptionHandler)
         {
             try
             {
-                await worker.Process(command, forceRefresh, ignoreOutput, customAction);
+                await worker.Process(Commands.NormalizeCommand(command), forceRefresh, ignoreOutput, customAction);
             }
             catch (Exception exn)
             {

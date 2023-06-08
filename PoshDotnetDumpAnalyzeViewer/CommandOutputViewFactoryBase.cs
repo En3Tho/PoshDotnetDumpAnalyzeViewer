@@ -12,7 +12,7 @@ public interface ICommandOutputViewFactory
 
 public interface IOutputParser
 {
-    static abstract OutputLine Parse(string line);
+    static abstract OutputLine Parse(string line, string command);
 }
 
 public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard) : ICommandOutputViewFactory
@@ -46,7 +46,7 @@ public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews 
         {
             if (args.KeyEvent.Key == Key.Enter)
             {
-                if (views.OutputListView.TryParseLine<TParser>() is { } line)
+                if (views.OutputListView.TryParseLine<TParser>(output.Command) is { } line)
                 {
                     if (SubcommandsView.TryGetSubcommandsDialog(TopLevelViews, line, Clipboard, CommandQueue) is { } dialog)
                     {

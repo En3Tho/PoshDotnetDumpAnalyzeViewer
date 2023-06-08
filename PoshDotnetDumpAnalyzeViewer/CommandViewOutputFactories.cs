@@ -47,7 +47,7 @@ public sealed record HelpCommandOutputViewFactory
             // To function ?
             if (args.KeyEvent.Key == Key.Enter)
             {
-                if (views.OutputListView.TryParseLine<HelpParser>() is HelpOutputLine line)
+                if (views.OutputListView.TryParseLine<HelpParser>(Commands.Help) is HelpOutputLine line)
                 {
                     var command = line.Commands[0];
                     CommandQueue.SendCommand($"help {command}");
@@ -93,4 +93,23 @@ public sealed record DumpObjectCommandOutputViewFactory
         TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpObject);
+}
+
+public sealed record GCRootCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<GCRootParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.GCRoot);
+}
+
+public sealed record SosCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue, ICommandOutputViewFactory[] Factories) : CommandOutputViewFactoryBase(Clipboard)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Sos);
+
+    protected override CommandOutputViews CreateView(CommandOutput output)
+    {
+        var trimmedCommand = output.Command.TrimStart('s', 'o', 's', 'e', 'x', 't', ' ');
+        return Factories.First(x => x.IsSupported(trimmedCommand)).HandleOutput(output.Command, output.Lines);
+    }
 }

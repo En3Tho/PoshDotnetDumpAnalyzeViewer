@@ -37,14 +37,29 @@ public interface IOsThreadId
     ReadOnlyMemory<char> OsThreadId { get; }
 }
 
+public interface ISyncBlockIndex
+{
+    ReadOnlyMemory<char> SyncBlockIndex { get; }
+}
+
 public interface IThreadState
 {
     ReadOnlyMemory<char> ThreadState { get; }
 }
 
+public interface ISyncBlockAddress
+{
+    ReadOnlyMemory<char> SyncBlockAddress { get; }
+}
+
 public interface ISyncBlockOwnerAddress
 {
     ReadOnlyMemory<char> SyncBlockOwnerAddress { get; }
+}
+
+public interface ISyncBlockOwnerTypeName
+{
+    ReadOnlyMemory<char> SyncBlockOwnerTypeName { get; }
 }
 
 public interface IEEClassAddress
@@ -65,9 +80,10 @@ public static class SubcommandsView
         PStacks = 5,
         SetThread = 5,
         ThreadState = 9,
+        SyncBlock = 9,
 
         // let them have the lowest priority for now because there are lot of them
-        DumpMemory = 10
+        DumpMemory = 100
     }
 #pragma warning restore CA1069
 
@@ -122,14 +138,14 @@ public static class SubcommandsView
         {
             if (line is not IAddress address)
                 yield break;
-            
+
             var data = address.Address.ToString();
             yield return (
                 Priority.Copy,
                 MakeButton("Copy address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
                 Priority.GcRoot,
-                MakeCommandButton("Find GC root", $"{Commands.GcRoot} {data}"));
+                MakeCommandButton("Find GC root", $"{Commands.GCRoot} {data}"));
 
             yield return (Priority.DumpObjects,
                 MakeCommandButton("Dump object", $"{Commands.DumpObject} {data}"));
@@ -163,6 +179,39 @@ public static class SubcommandsView
                 MakeCommandButton("Dump memory as longs", $"{Commands.DumpMemoryAsQuadWords} {data}"));
         }
 
+        private IEnumerable<(Priority, Button)> GetSyncBlockOwnerAddressButtons(OutputLine line)
+        {
+            if (line is not ISyncBlockOwnerAddress threadState)
+                yield break;
+
+            var data = threadState.SyncBlockOwnerAddress.ToString();
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump syncblock owner", $"{Commands.DumpObject} {data}"));
+        }
+
+        private IEnumerable<(Priority, Button)> GetSyncBlockAddressButtons(OutputLine line)
+        {
+            if (line is not ISyncBlockAddress syncBlockAddress)
+                yield break;
+
+            var data = syncBlockAddress.SyncBlockAddress.ToString();
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump syncblock memory", $"{Commands.DumpMemory} {data}"));
+        }
+
+        private IEnumerable<(Priority, Button)> GetEEClassAddressButtons(OutputLine line)
+        {
+            if (line is not IEEClassAddress threadState)
+                yield break;
+
+            var data = threadState.EEClassAddress.ToString();
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump EEClass", $"{Commands.DumpClass} {data}"));
+        }
+
         private IEnumerable<(Priority, Button)> GetMethodTableButtons(OutputLine line)
         {
             if (line is not IMethodTable methodTable)
@@ -191,6 +240,20 @@ public static class SubcommandsView
             yield return (
                 Priority.DumpHeap,
                 MakeCommandButton("Dump heap (type)", $"{Commands.DumpHeap} -type {data}"));
+        }
+
+        private IEnumerable<(Priority, Button)> GetSyncBlockOwnerTypeNameButtons(OutputLine line)
+        {
+            if (line is not ISyncBlockOwnerTypeName typeName)
+                yield break;
+
+            var data = typeName.SyncBlockOwnerTypeName.ToString();
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy sync block type name", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.DumpHeap,
+                MakeCommandButton("Dump heap (sync block type)", $"{Commands.DumpHeap} -type {data}"));
         }
 
         private IEnumerable<(Priority, Button)> GetClrThreadButtons(OutputLine line)
@@ -283,39 +346,33 @@ public static class SubcommandsView
                 MakeCommandButton("Pretty print thread state", $"{Commands.ThreadState} {data}"));
         }
 
-
-        private IEnumerable<(Priority, Button)> GetSyncBlockOwnerAddressButtons(OutputLine line)
+        private IEnumerable<(Priority, Button)> GetSyncBlockIndexButtons(OutputLine line)
         {
-            if (line is not ISyncBlockOwnerAddress threadState)
+            if (line is not ISyncBlockIndex syncBlockIndex)
                 yield break;
 
-            var data = threadState.SyncBlockOwnerAddress.ToString();
+            var data = syncBlockIndex.SyncBlockIndex.ToString();
             yield return (
-                Priority.DumpObjects,
-                MakeCommandButton("Dump syncblock owner", $"{Commands.DumpObject} {data}"));
-        }
+                Priority.Copy,
+                MakeButton("Copy sync block index", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
 
-        private IEnumerable<(Priority, Button)> GetEEClassAddressButtons(OutputLine line)
-        {
-            if (line is not IEEClassAddress threadState)
-                yield break;
-
-            var data = threadState.EEClassAddress.ToString();
             yield return (
-                Priority.DumpObjects,
-                MakeCommandButton("Dump EEClass", $"{Commands.DumpClass} {data}"));
+                Priority.SyncBlock,
+                MakeCommandButton("Show syncblock info", $"{Commands.SyncBlock} {data}"));
         }
 
         private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
         {
             return new[] {
                 GetAddressButtons,
+                GetSyncBlockAddressButtons,
+                GetSyncBlockOwnerAddressButtons,
                 GetMethodTableButtons,
                 GetTypeNameButtons,
+                GetSyncBlockOwnerTypeNameButtons,
                 GetClrThreadButtons,
                 GetOsThreadIdButtons,
                 GetThreadsStateButtons,
-                GetSyncBlockOwnerAddressButtons,
                 GetEEClassAddressButtons
             };
         }

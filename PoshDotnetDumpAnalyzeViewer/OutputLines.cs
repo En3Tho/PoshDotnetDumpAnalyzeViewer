@@ -46,6 +46,20 @@ public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : Ou
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
 }
 
+public record struct DumpObjectRanges(Range MethodTable, Range Field, Range Offset, Range Type, Range VT, Range Attr, Range Value, Range Name);
+
+public sealed record DumpObjectOutputLine(string Line, DumpObjectRanges Ranges) : OutputLine(Line), IMethodTable
+{
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+}
+
+public record struct GCRootRanges(Range Address, Range TypeName);
+public sealed record GCRootOutputLine(string Line, GCRootRanges Ranges) : OutputLine(Line), IAddress, ITypeName
+{
+    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.TypeName);
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
+}
+
 public record struct DumpHeapStatisticsRanges(Range MethodTable, Range Count, Range TotalSize, Range ClassName);
 
 public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatisticsRanges Ranges) : OutputLine(Line),
@@ -75,8 +89,22 @@ public sealed record ClrThreadsOutputLine(string Line, ClrThreadsRanges Ranges) 
 public record struct SyncBlockRanges(Range Index, Range SyncBlock, Range MonitorHeld, Range Recursion, Range OwningThreadAddress, Range OwningThreadOsId,
     Range OwningThreadDbgId, Range SyncBlockOwnerAddress, Range SyncBlockOwnerType);
 
-public sealed record SyncBlockOutputLine(string Line, SyncBlockRanges Ranges) : OutputLine(Line), IOsThreadId, ISyncBlockOwnerAddress
+public sealed record SyncBlockOutputLine(string Line, SyncBlockRanges Ranges) : OutputLine(Line), ISyncBlockAddress, ISyncBlockIndex, IOsThreadId, ISyncBlockOwnerAddress, ISyncBlockOwnerTypeName
 {
+    public ReadOnlyMemory<char> SyncBlockAddress => Line.AsMemory(Ranges.SyncBlock);
+    public ReadOnlyMemory<char> SyncBlockIndex => Line.AsMemory(Ranges.Index);
     public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OwningThreadOsId);
     public ReadOnlyMemory<char> SyncBlockOwnerAddress => Line.AsMemory(Ranges.SyncBlockOwnerAddress);
+    public ReadOnlyMemory<char> SyncBlockOwnerTypeName => Line.AsMemory(Ranges.SyncBlockOwnerType);
+}
+
+public record struct SyncBlockZeroRanges(Range Index, Range SyncBlock, Range MonitorHeld, Range Recursion, Range OwningThreadAddress,
+    Range OwningThreadDbgId, Range SyncBlockOwnerAddress, Range SyncBlockOwnerType);
+
+public sealed record SyncBlockZeroOutputLine(string Line, SyncBlockZeroRanges Ranges) : OutputLine(Line), ISyncBlockAddress, ISyncBlockIndex, ISyncBlockOwnerAddress, ISyncBlockOwnerTypeName
+{
+    public ReadOnlyMemory<char> SyncBlockAddress => Line.AsMemory(Ranges.SyncBlock);
+    public ReadOnlyMemory<char> SyncBlockIndex => Line.AsMemory(Ranges.Index);
+    public ReadOnlyMemory<char> SyncBlockOwnerAddress => Line.AsMemory(Ranges.SyncBlockOwnerAddress);
+    public ReadOnlyMemory<char> SyncBlockOwnerTypeName => Line.AsMemory(Ranges.SyncBlockOwnerType);
 }
