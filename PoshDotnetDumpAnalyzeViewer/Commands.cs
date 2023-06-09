@@ -41,7 +41,7 @@ public static partial class Commands
     public const string Sos = "sos";
     public const string Ext = "ext";
 
-    [GeneratedRegex(@$"(((?:{Sos}|{Ext})\s)?\S+)(.*)", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@$"((?:(?:{Sos}|{Ext})\s)?\S+)(.*)", RegexOptions.IgnoreCase)]
     public static partial Regex NormalizationRegex();
 
     public static string NormalizeCommand(string command)
