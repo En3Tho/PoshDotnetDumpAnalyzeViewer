@@ -28,9 +28,9 @@ public record CommandOutputViews(
 public static class CommandViewsExtensions
 {
     public static CommandOutputViews SetupLogic(this CommandOutputViews @this, IClipboard clipboard,
-        string[] initialSource)
+        CommandOutput output)
     {
-        @this.OutputListView.SetSource(initialSource);
+        @this.OutputListView.SetSource(output.Lines);
 
         @this.OutputListView.KeyPress += args =>
         {
@@ -62,12 +62,12 @@ public static class CommandViewsExtensions
 
             if (string.IsNullOrEmpty(filter))
             {
-                @this.OutputListView.SetSource(initialSource);
+                @this.OutputListView.SetSource(output.Lines);
             }
             else
             {
                 var filteredOutput =
-                    initialSource
+                    output.Lines
                         .Where(line => line.Contains(filter, StringComparison.OrdinalIgnoreCase))
                         .ToArray();
 
@@ -187,19 +187,19 @@ public class UI
                 exn.ToString()
                     .Split(Environment.NewLine);
 
+            var commandOutput = new CommandOutput(exn.Message, errorSource);
             var commandViews =
-                MakeDefaultCommandViews()
-                    .SetupLogic(clipboard, errorSource);
+                MakeDefaultCommandViews(commandOutput)
+                    .SetupLogic(clipboard, commandOutput);
 
-            var tab =
-                new TabView.Tab("Unhandled exception", commandViews.Window);
-
+            var tab = new TabView.Tab("Unhandled exception", commandViews.Window);
             tabManager.AddTab(exn.Message, commandViews, tab, false);
+
             return true;
         };
     }
 
-    public static CommandOutputViews MakeDefaultCommandViews()
+    public static CommandOutputViews MakeDefaultCommandViews(CommandOutput output)
     {
         var window = new Window
         {

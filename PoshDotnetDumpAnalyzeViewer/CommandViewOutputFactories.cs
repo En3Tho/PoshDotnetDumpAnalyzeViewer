@@ -10,7 +10,7 @@ public sealed record DefaultCommandOutputViewFactory(IClipboard Clipboard) : Com
 
     protected override CommandOutputViews CreateView(CommandOutput output)
     {
-        var views = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
+        var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
         return views;
     }
 }
@@ -40,7 +40,7 @@ public sealed record HelpCommandOutputViewFactory
 
     protected override CommandOutputViews CreateView(CommandOutput output)
     {
-        var views = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
+        var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
 
         views.OutputListView.KeyPress += args =>
         {
@@ -110,6 +110,6 @@ public sealed record SosCommandOutputViewFactory
     protected override CommandOutputViews CreateView(CommandOutput output)
     {
         var trimmedCommand = output.Command.TrimStart('s', 'o', 's', 'e', 'x', 't', ' ');
-        return Factories.First(x => x.IsSupported(trimmedCommand)).HandleOutput(output.Command, output.Lines);
+        return Factories.First(x => x.IsSupported(trimmedCommand)).HandleOutput(output);
     }
 }

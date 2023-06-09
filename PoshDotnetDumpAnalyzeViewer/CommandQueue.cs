@@ -57,10 +57,11 @@ public record CommandQueueWorker(
             var result = await cts.AwaitAndCancel(DotnetDump.PerformCommand(command));
 
             TopLevelViews.CommandInput.Text = $"{command} ... processing output";
+            var output = new CommandOutput(command, result.Output);
             var views =
                 result.IsOk
-                    ? viewFactory.HandleOutput(command, result.Output)
-                    : UI.MakeDefaultCommandViews().SetupLogic(Clipboard, result.Output);
+                    ? viewFactory.HandleOutput(output)
+                    : UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
 
             if (ignoreOutput && result.IsOk)
             {

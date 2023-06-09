@@ -5,7 +5,7 @@ namespace PoshDotnetDumpAnalyzeViewer;
 
 public interface ICommandOutputViewFactory
 {
-    CommandOutputViews HandleOutput(string command, string[] output);
+    CommandOutputViews HandleOutput(CommandOutput output);
     ImmutableArray<string> SupportedCommands { get; }
     bool IsSupported(string command);
 }
@@ -22,14 +22,12 @@ public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard) : ICom
     public virtual bool IsSupported(string command) => SupportedCommands.Any(supportedCommand =>
         command.StartsWith(supportedCommand, StringComparison.OrdinalIgnoreCase));
 
-    public CommandOutputViews HandleOutput(string command, string[] output)
+    public CommandOutputViews HandleOutput(CommandOutput output)
     {
-        if (!IsSupported(command))
-            throw new NotSupportedException($"{GetType().FullName} does not support command {command}");
+        if (!IsSupported(output.Command))
+            throw new NotSupportedException($"{GetType().FullName} does not support command {output.Command}");
 
-        var commandOutput = new CommandOutput(command, output);
-
-        return CreateView(commandOutput);
+        return CreateView(output);
     }
 
     protected abstract CommandOutputViews CreateView(CommandOutput output);
@@ -40,7 +38,7 @@ public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews 
 {
     protected override CommandOutputViews CreateView(CommandOutput output)
     {
-        var views = UI.MakeDefaultCommandViews().SetupLogic(Clipboard, output.Lines);
+        var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
 
         views.OutputListView.KeyPress += args =>
         {
@@ -56,7 +54,6 @@ public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews 
                             return true;
                         });
                     }
-
 
                     args.Handled = true;
                 }
