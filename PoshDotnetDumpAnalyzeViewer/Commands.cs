@@ -12,6 +12,8 @@ public static partial class Commands
     public const string DumpMethodTable = "dumpmt";
     public const string GCRoot = "gcroot";
 
+    public const string ObjSize = "objsize";
+
     public const string SetThread = "setthread";
     public const string Threads = "threads";
     public const string ClrStack = "clrstack";

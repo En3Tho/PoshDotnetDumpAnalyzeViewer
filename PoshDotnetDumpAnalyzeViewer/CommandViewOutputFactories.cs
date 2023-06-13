@@ -67,6 +67,13 @@ public sealed record DumpHeapCommandOutputViewFactory
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpHeap);
 }
 
+public sealed record ObjSizeCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<ObjSizeParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ObjSize);
+}
+
 public sealed record SetThreadCommandOutputViewFactory
     (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<SetThreadParser>(
         TopLevelViews, Clipboard, CommandQueue)

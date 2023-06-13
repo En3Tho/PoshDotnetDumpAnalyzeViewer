@@ -126,6 +126,16 @@ static class RegexPatterns
     public const string DumpHeapStatistics =
         $"{Ag}{WS}{Dg}{WS}{Dg}{WS}{Tg}{WSo}";
 
+    // Address  MT  Size
+    // Ag       Ag  Dg
+    public const string ObjSize =
+        $"{Ag}{WS}{Ag}{WS}{Dg}{WSo}";
+
+    // MT  Count  TotalSize  Class Name
+    // Ag  Dg     Dg         Tg
+    public const string ObjSizeStatistics =
+        $"{Ag}{WS}{Dg}{WS}{Dg}{WS}{Tg}{WSo}";
+
     // Index  SyncBlock  MonitorHeld  Recursion  Owning Thread Info  SyncBlock Owner
     // Dg     Ag         Dg           Dg         Ag Hg Dg            Ag Tg
     public const string SyncBlock =
@@ -213,6 +223,50 @@ public partial class DumpHeapParser : IOutputParser
     public static DumpHeapStatisticsRanges? GetDumpHeapStatisticsHeaderRanges(string line)
     {
         if (DumpHeapStatisticsRegex().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[4];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2], ranges[3]);
+        }
+
+        return default;
+    }
+}
+
+public partial class ObjSizeParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.ObjSize)]
+    public static partial Regex ObjSizeRegex();
+
+    [GeneratedRegex(RegexPatterns.ObjSizeStatistics)]
+    public static partial Regex ObjSizeStatisticsRegex();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetObjSizeStatisticsHeaderRanges(line) is {} objSizeStatisticsRanges)
+            return new ObjSizeStatisticsOutputLine(line, objSizeStatisticsRanges);
+
+        if (GetObjSizeHeaderRanges(line) is {} objSizeRanges)
+            return new ObjSizeOutputLine(line, objSizeRanges);
+
+        return new(line);
+    }
+
+    public static ObjSizeRanges? GetObjSizeHeaderRanges(string line)
+    {
+        if (ObjSizeRegex().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[3];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2]);
+        }
+
+        return default;
+    }
+
+    public static ObjSizeStatisticsRanges? GetObjSizeStatisticsHeaderRanges(string line)
+    {
+        if (ObjSizeStatisticsRegex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[4];
             match.CopyGroupsRangesTo(ranges);

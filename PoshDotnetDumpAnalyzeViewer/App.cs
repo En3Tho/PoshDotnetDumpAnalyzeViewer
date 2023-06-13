@@ -30,12 +30,13 @@ public static class App
             new QuitCommandOutputViewFactory(clipboard),
             new HelpCommandOutputViewFactory(clipboard, commandQueue),
             new DumpHeapCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new ObjSizeCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SetThreadCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new ClrThreadsCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SyncBlockCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new DumpObjectCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new GCRootCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
+            (SosCommandOutputViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new DefaultCommandOutputViewFactory(clipboard)
         };
 

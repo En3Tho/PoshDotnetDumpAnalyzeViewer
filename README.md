@@ -36,6 +36,8 @@ Subcommands dialog:
 Currently implemented custom parsers:
 
 - [x] dumpheap <arguments>                       Displays info about the garbage-collected heap and collection statistics about objects.
+- [x] dumpmt <arguments>                         Displays information about a method table at the specified address.
+- [x] objsize <arguments>                        Lists the sizes of the all the objects found on managed threads.
 - [x] help <command>                             Display help for a command.
 - [x] setthread, threads <thread>                Displays threads or sets the current thread.
 - [x] clrthreads
@@ -80,12 +82,10 @@ setsymbolserver, logging
 - [] dumpclass <arguments>                      Displays information about a EE class structure at the specified address.
 - [] dumpdelegate <arguments>                   Displays information about a delegate.
 - [] dumpdomain <arguments>                     Displays information all the AppDomains and all assemblies within the domains.
-- [] dumpheap <arguments>                       Displays info about the garbage-collected heap and collection statistics about objects.
 - [] dumpil <arguments>                         Displays the Microsoft intermediate language (MSIL) that is associated with a managed method.
 - [] dumplog <arguments>                        Writes the contents of an in-memory stress log to the specified file.
 - [] dumpmd <arguments>                         Displays information about a MethodDesc structure at the specified address.
 - [] dumpmodule <arguments>                     Displays information about a EE module structure at the specified address.
-- [] dumpmt <arguments>                         Displays information about a method table at the specified address.
 - [] do, dumpobj <arguments>                    Displays info about an object at the specified address.
 - [] dumpvc <arguments>                         Displays info about the fields of a value class.
 - [] dso, dumpstackobjects <arguments>          Displays all managed objects found within the bounds of the current stack.
@@ -116,5 +116,4 @@ setsymbolserver, logging
 - [] watsonbuckets <arguments>                  Displays the Watson buckets.
 - [] comstate <arguments>                       Lists the COM apartment model for each thread.
 - [] gchandles <arguments>                      Provides statistics about GCHandles in the process.
-- [] objsize <arguments>                        Lists the sizes of the all the objects found on managed threads.
 - [] gchandleleaks <arguments>                  Helps in tracking down GCHandle leaks

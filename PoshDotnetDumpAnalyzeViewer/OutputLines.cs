@@ -38,14 +38,6 @@ public sealed record EEClassOutputLine(string Line, EEClassRanges Ranges) : Outp
     public ReadOnlyMemory<char> EEClassAddress => Line.AsMemory(Ranges.EEClass);
 }
 
-public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
-
-public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IAddress
-{
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
-}
-
 public record struct DumpObjectRanges(Range MethodTable, Range Field, Range Offset, Range Type, Range VT, Range Attr, Range Value, Range Name);
 
 public sealed record DumpObjectOutputLine(string Line, DumpObjectRanges Ranges) : OutputLine(Line), IMethodTable
@@ -60,9 +52,34 @@ public sealed record GCRootOutputLine(string Line, GCRootRanges Ranges) : Output
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
 }
 
+public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
+
+public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IAddress
+{
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
+}
+
 public record struct DumpHeapStatisticsRanges(Range MethodTable, Range Count, Range TotalSize, Range ClassName);
 
 public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatisticsRanges Ranges) : OutputLine(Line),
+    IMethodTable, ITypeName
+{
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.ClassName);
+}
+
+public record struct ObjSizeRanges(Range Address, Range MethodTable, Range Size);
+
+public sealed record ObjSizeOutputLine(string Line, ObjSizeRanges Ranges) : OutputLine(Line), IMethodTable, IAddress
+{
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
+}
+
+public record struct ObjSizeStatisticsRanges(Range MethodTable, Range Count, Range TotalSize, Range ClassName);
+
+public sealed record ObjSizeStatisticsOutputLine(string Line, ObjSizeStatisticsRanges Ranges) : OutputLine(Line),
     IMethodTable, ITypeName
 {
     public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
