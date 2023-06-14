@@ -1,9 +1,12 @@
+using PoshDotnetDumpAnalyzeViewer;
+using Xunit;
+
 namespace PoshDotnetAnalyzerViewerTests;
 
 public class DumpMethodTableParsing
 {
-    // TODO:
-    public void TestThatDumpMTIsParsedCorrectly()
+    [Fact]
+    public void TestThatDumpMethodTableIsParsedCorrectly()
     {
         var output = new[]
         {
@@ -20,5 +23,23 @@ public class DumpMethodTableParsing
             "Slots in VTable: 33",
             "Number of IFaces in IFaceMap: 1"
         };
+
+        var lines = OutputParserExtensions.ParseAll<DumpMethodTableParser>(output, Commands.DumpMethodTable);
+
+        Assert.True(lines is
+        [
+            {},
+            EEClassAddressOutputLine { EEClassAddress.Span: "00007F9F56DFCF48" },
+            ModuleAddressOutputLine { ModuleAddress.Span: "00007F9F55CB8278" },
+            TypeNameOutputLine { TypeName.Span: "System.Collections.Immutable.SortedInt32KeyNode`1[[System.Collections.Immutable.ImmutableDictionary`2+HashBucket[[System.String, System.Private.CoreLib],[Microsoft.Build.Execution.ProjectMetadataInstance, Microsoft.Build]], System.Collections.Immutable]]" },
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+        ]);
     }
 }

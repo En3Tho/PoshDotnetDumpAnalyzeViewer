@@ -35,6 +35,12 @@ public static class App
             new ClrThreadsCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SyncBlockCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new DumpObjectCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new DumpAssemblyCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new DumpClassCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new DumpMethodTableCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new DumpDomainCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new DumpModuleCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new Name2EECommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new GCRootCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             (SosCommandOutputViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new DefaultCommandOutputViewFactory(clipboard)

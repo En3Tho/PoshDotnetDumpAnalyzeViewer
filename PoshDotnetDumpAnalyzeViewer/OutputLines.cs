@@ -5,11 +5,6 @@ public record OutputLine(string Line) : IOutputLine
     public sealed override string ToString() => Line;
 }
 
-public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpCommand
-{
-    public string[] Commands => HelpParser.GetCommandsFromLine(Line);
-}
-
 public record struct ObjectAddressRanges(Range Address);
 
 public sealed record ObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IAddress
@@ -31,11 +26,37 @@ public sealed record MethodTableOutputLine(string Line, MethodTableRanges Ranges
     public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
 }
 
-public record struct EEClassRanges(Range EEClass);
+public record struct EEClassAddressRanges(Range EEClass);
 
-public sealed record EEClassOutputLine(string Line, EEClassRanges Ranges) : OutputLine(Line), IEEClassAddress
+public sealed record EEClassAddressOutputLine(string Line, EEClassAddressRanges Ranges) : OutputLine(Line), IEEClassAddress
 {
     public ReadOnlyMemory<char> EEClassAddress => Line.AsMemory(Ranges.EEClass);
+}
+
+public record struct ModuleAddressRanges(Range Module);
+
+public sealed record ModuleAddressOutputLine(string Line, ModuleAddressRanges Ranges) : OutputLine(Line), IModuleAddress
+{
+    public ReadOnlyMemory<char> ModuleAddress => Line.AsMemory(Ranges.Module);
+}
+
+public record struct AssemblyAddressRanges(Range Assembly);
+
+public sealed record AssemblyAddressOutputLine(string Line, AssemblyAddressRanges Ranges) : OutputLine(Line), IAssemblyAddress
+{
+    public ReadOnlyMemory<char> AssemblyAddress => Line.AsMemory(Ranges.Assembly);
+}
+
+public record struct DomainAddressRanges(Range Domain);
+
+public sealed record DomainAddressOutputLine(string Line, DomainAddressRanges Ranges) : OutputLine(Line), IDomainAddress
+{
+    public ReadOnlyMemory<char> DomainAddress => Line.AsMemory(Ranges.Domain);
+}
+
+public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpCommand
+{
+    public string[] Commands => HelpParser.GetCommandsFromLine(Line);
 }
 
 public record struct DumpObjectRanges(Range MethodTable, Range Field, Range Offset, Range Type, Range VT, Range Attr, Range Value, Range Name);

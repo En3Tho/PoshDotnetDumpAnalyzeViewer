@@ -149,7 +149,7 @@ public static class GroupExtensions
         return
             @this.ValueSpan.Length == 0
                 ? new Range()
-                : new(@this.Index, @this.Length + @this.Index);
+                : new(@this.Index, @this.Index + @this.Length);
     }
 }
 
@@ -158,11 +158,14 @@ public static class MatchExtensions
     public static void CopyGroupsRangesTo(this Match @this, Span<Range> ranges)
     {
         var i = 0;
-        foreach (var group in @this.Groups.Cast<Group>().Skip(1))
+        foreach (var group in @this.Groups.Cast<Group>().Skip(1).Take(ranges.Length))
         {
             var range = group.GetRange();
             ranges[i++] = range;
         }
+
+        if (i != ranges.Length)
+            throw new ArgumentException("Ranges length is different from match groups count");
     }
 }
 

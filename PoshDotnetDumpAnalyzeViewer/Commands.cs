@@ -28,6 +28,12 @@ public static partial class Commands
     public const string DumpConcurrentDictionary = "dumparray";
     public const string DumpConcurrentQueue = "dumparray";
 
+    public const string DumpClass = "dumpclass";
+    public const string DumpModule = "dumpmodule";
+    public const string DumpAssembly = "dumpasssembly";
+    public const string DumpDomain = "dumpdomain";
+    public const string Name2EE = "name2ee";
+
     public const string DumpMemory = "d";
     public const string DumpMemoryAsBytes = "db";
     public const string DumpMemoryAsChars = "dc";
@@ -37,8 +43,6 @@ public static partial class Commands
     public const string DumpMemoryAsDoubleWords = "dd";
     public const string DumpMemoryAsPointers = "dp";
     public const string DumpMemoryAsQuadWords = "dq";
-
-    public const string DumpClass = "dumpclass";
 
     public const string Sos = "sos";
     public const string Ext = "ext";

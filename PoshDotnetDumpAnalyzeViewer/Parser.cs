@@ -98,7 +98,7 @@ static class RegexPatterns
     /// <summary>
     /// Type name optional group
     /// </summary>
-    private const string Tgo = $"({T})";
+    private const string Tgo = $"({T})*";
 
     // cmd (..,cmd)? <arg>? Description
     // S
@@ -166,6 +166,73 @@ static class RegexPatterns
         // "MT  Field   Offset  Type VT     Attr            Value Name",
         // "Ag  Hg      Dg      Tg   Dg     Sg              Hg      Sg",
         public const string Main = $"{Ag}{WS}{Hg}{WS}{Dg}{WS}{Tg}{WS}{Dg}{WS}{Sg}{WS}{Hg}{WS}{Sg}";
+    }
+
+    public static class DumpMethodTable
+    {
+        public const string EEClass =
+            $"EEClass:{WSo}{Ag}";
+
+        public const string TypeName =
+            $"Name:{WSo}{Tg}";
+
+        public const string Module =
+            $"Module:{WSo}{Tg}";
+    }
+
+    public static class DumpClass
+    {
+        public const string TypeName =
+            $"Class Name:{WSo}{Tg}";
+
+        public const string ParentClass =
+            $"Parent Class:{WSo}{Tg}";
+
+        public const string Module =
+            $"Module:{WSo}{Tg}";
+
+        public const string MethodTable =
+            $"Method Table:{WSo}{Ag}";
+    }
+
+    public static class DumpModule
+    {
+        public const string Assembly =
+            $"Assembly:{WSo}{Ag}";
+    }
+
+    public static class DumpAssembly
+    {
+        public const string ParentDomain =
+            $"Parent Domain:{WSo}{Ag}";
+
+        // 00007f003dfe4020    /usr/share/dotnet/shared/Microsoft.NETCore.App/5.0.17/System.Private.CoreLib.dll
+        public const string Module =
+            $"^{WSo}{Ag}{WSo}{T}{WSo}";
+    }
+
+    public static class DumpDomain
+    {
+        public const string Assembly =
+            $"Assembly:{WSo}{Ag}";
+
+        public const string Module =
+            $"^{WSo}{Ag}{WSo}{Tgo}";
+    }
+
+    public static class Name2EE
+    {
+        public const string Module =
+            $"Module:{WSo}{Ag}";
+
+        public const string MethodTable =
+            $"MethodTable:{WSo}{Ag}";
+
+        public const string EEClass =
+            $"EEClass:{WSo}{Ag}";
+
+        public const string TypeName =
+            $"Name:{WSo}{Tg}";
     }
 }
 
@@ -380,6 +447,37 @@ public partial class SyncBlockParser : IOutputParser
     }
 }
 
+public partial class GCRootParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.GCRoot)]
+    public static partial Regex Regex();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetRanges(line) is { } ranges)
+        {
+            if (line.AsSpan()[ranges.TypeName].Contains("strong handle", StringComparison.Ordinal))
+                return new ObjectAddressOutputLine(line, new(ranges.Address));
+
+            return new GCRootOutputLine(line, ranges);
+        }
+
+        return new(line);
+    }
+
+    public static GCRootRanges? GetRanges(string line)
+    {
+        if (Regex().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[2];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1]);
+        }
+
+        return default;
+    }
+}
+
 public partial class DumpObjectParser : IOutputParser
 {
     [GeneratedRegex(RegexPatterns.DumpObject.CmdWithAddress)]
@@ -412,7 +510,7 @@ public partial class DumpObjectParser : IOutputParser
             return new TypeNameOutputLine(line, typeNameRanges);
 
         if (GetEEClassRanges(line) is {} eeClassRanges)
-            return new EEClassOutputLine(line, eeClassRanges);
+            return new EEClassAddressOutputLine(line, eeClassRanges);
 
         return new(line);
     }
@@ -453,7 +551,7 @@ public partial class DumpObjectParser : IOutputParser
         return default;
     }
 
-    public static EEClassRanges? GetEEClassRanges(string line)
+    public static EEClassAddressRanges? GetEEClassRanges(string line)
     {
         if (EEClass().Match(line) is { Success: true } match)
         {
@@ -478,31 +576,337 @@ public partial class DumpObjectParser : IOutputParser
     }
 }
 
-public partial class GCRootParser : IOutputParser
+public partial class DumpMethodTableParser : IOutputParser
 {
-    [GeneratedRegex(RegexPatterns.GCRoot)]
-    public static partial Regex Regex();
+    [GeneratedRegex(RegexPatterns.DumpMethodTable.Module)]
+    public static partial Regex ModuleAddress();
+
+    [GeneratedRegex(RegexPatterns.DumpMethodTable.EEClass)]
+    public static partial Regex EEClass();
+    
+    [GeneratedRegex(RegexPatterns.DumpMethodTable.TypeName)]
+    public static partial Regex TypeName();
 
     public static OutputLine Parse(string line, string _)
     {
-        if (GetRanges(line) is { } ranges)
-        {
-            if (line.AsSpan()[ranges.TypeName].Contains("strong handle", StringComparison.Ordinal))
-                return new ObjectAddressOutputLine(line, new(ranges.Address));
+        if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
+            return new ModuleAddressOutputLine(line, moduleAddressRanges);
 
-            return new GCRootOutputLine(line, ranges);
-        }
+        if (GetTypeNameRanges(line) is {} typeNameRanges)
+            return new TypeNameOutputLine(line, typeNameRanges);
+
+        if (GetEEClassRanges(line) is {} eeClassRanges)
+            return new EEClassAddressOutputLine(line, eeClassRanges);
 
         return new(line);
     }
 
-    public static GCRootRanges? GetRanges(string line)
+    public static ModuleAddressRanges? GetModuleAddressRanges(string line)
     {
-        if (Regex().Match(line) is { Success: true } match)
+        if (ModuleAddress().Match(line) is { Success: true } match)
         {
-            var ranges = new Range[2];
+            var ranges = new Range[1];
             match.CopyGroupsRangesTo(ranges);
-            return new(ranges[0], ranges[1]);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static TypeNameRanges? GetTypeNameRanges(string line)
+    {
+        if (TypeName().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static EEClassAddressRanges? GetEEClassRanges(string line)
+    {
+        if (EEClass().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+}
+
+public partial class DumpClassParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.DumpClass.Module)]
+    public static partial Regex Module();
+
+    [GeneratedRegex(RegexPatterns.DumpClass.ParentClass)]
+    public static partial Regex ParentClass();
+
+    [GeneratedRegex(RegexPatterns.DumpClass.TypeName)]
+    public static partial Regex TypeName();
+
+    [GeneratedRegex(RegexPatterns.DumpClass.MethodTable)]
+    public static partial Regex MethodTable();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
+            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+
+        if (GetTypeNameRanges(line) is {} typeNameRanges)
+            return new TypeNameOutputLine(line, typeNameRanges);
+
+        if (GetParentClassRanges(line) is {} eeClassRanges)
+            return new EEClassAddressOutputLine(line, eeClassRanges);
+        
+        if (GetMethodTableRanges(line) is {} methodTableRanges)
+            return new MethodTableOutputLine(line, methodTableRanges);
+        
+        return new(line);
+    }
+
+    public static ModuleAddressRanges? GetModuleAddressRanges(string line)
+    {
+        if (Module().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static TypeNameRanges? GetTypeNameRanges(string line)
+    {
+        if (TypeName().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static EEClassAddressRanges? GetParentClassRanges(string line)
+    {
+        if (ParentClass().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+    
+    public static MethodTableRanges? GetMethodTableRanges(string line)
+    {
+        if (MethodTable().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+}
+
+public partial class DumpModuleParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.DumpModule.Assembly)]
+    public static partial Regex AssemblyAddress();
+
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetAssemblyAddressRanges(line) is {} assemblyAddressRanges)
+            return new AssemblyAddressOutputLine(line, assemblyAddressRanges);
+
+        return new(line);
+    }
+
+    public static AssemblyAddressRanges? GetAssemblyAddressRanges(string line)
+    {
+        if (AssemblyAddress().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+}
+
+public partial class DumpAssemblyParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.DumpAssembly.Module)]
+    public static partial Regex ModuleAddress();
+
+    [GeneratedRegex(RegexPatterns.DumpAssembly.ParentDomain)]
+    public static partial Regex ParentDomain();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
+            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+
+        if (GetDomainAddressRanges(line) is {} domainAddressRanges)
+            return new DomainAddressOutputLine(line, domainAddressRanges);
+
+        return new(line);
+    }
+
+    public static ModuleAddressRanges? GetModuleAddressRanges(string line)
+    {
+        if (ModuleAddress().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static DomainAddressRanges? GetDomainAddressRanges(string line)
+    {
+        if (ParentDomain().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+}
+
+public partial class DumpDomainParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.DumpDomain.Module)]
+    public static partial Regex Module();
+
+    [GeneratedRegex(RegexPatterns.DumpDomain.Assembly)]
+    public static partial Regex Assembly();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
+            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+
+        if (GetAssemblyAddressRanges(line) is {} assemblyAddressRanges)
+            return new AssemblyAddressOutputLine(line, assemblyAddressRanges);
+
+        return new(line);
+    }
+
+    public static ModuleAddressRanges? GetModuleAddressRanges(string line)
+    {
+        if (Module().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static AssemblyAddressRanges? GetAssemblyAddressRanges(string line)
+    {
+        if (Assembly().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+}
+
+public partial class Name2EEParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.Name2EE.Module)]
+    public static partial Regex Module();
+
+    [GeneratedRegex(RegexPatterns.Name2EE.EEClass)]
+    public static partial Regex EEClass();
+
+    [GeneratedRegex(RegexPatterns.Name2EE.TypeName)]
+    public static partial Regex TypeName();
+
+    [GeneratedRegex(RegexPatterns.Name2EE.MethodTable)]
+    public static partial Regex MethodTable();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
+            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+
+        if (GetTypeNameRanges(line) is {} typeNameRanges)
+            return new TypeNameOutputLine(line, typeNameRanges);
+
+        if (GetParentClassRanges(line) is {} eeClassRanges)
+            return new EEClassAddressOutputLine(line, eeClassRanges);
+
+        if (GetMethodTableRanges(line) is {} methodTableRanges)
+            return new MethodTableOutputLine(line, methodTableRanges);
+
+        return new(line);
+    }
+
+    public static ModuleAddressRanges? GetModuleAddressRanges(string line)
+    {
+        if (Module().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static TypeNameRanges? GetTypeNameRanges(string line)
+    {
+        if (TypeName().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static EEClassAddressRanges? GetParentClassRanges(string line)
+    {
+        if (EEClass().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static MethodTableRanges? GetMethodTableRanges(string line)
+    {
+        if (MethodTable().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
         }
 
         return default;

@@ -102,6 +102,48 @@ public sealed record DumpObjectCommandOutputViewFactory
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpObject);
 }
 
+public sealed record DumpMethodTableCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpMethodTableParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpMethodTable);
+}
+
+public sealed record DumpModuleCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpModuleParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpModule);
+}
+
+public sealed record DumpClassCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpClassParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpClass);
+}
+
+public sealed record DumpDomainCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpDomainParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpDomain);
+}
+
+public sealed record DumpAssemblyCommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpAssemblyParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpAssembly);
+}
+
+public sealed record Name2EECommandOutputViewFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<Name2EEParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Name2EE);
+}
+
 public sealed record GCRootCommandOutputViewFactory
     (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<GCRootParser>(
         TopLevelViews, Clipboard, CommandQueue)

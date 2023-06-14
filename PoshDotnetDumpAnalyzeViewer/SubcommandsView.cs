@@ -67,6 +67,21 @@ public interface IEEClassAddress
     ReadOnlyMemory<char> EEClassAddress { get; }
 }
 
+public interface IModuleAddress
+{
+    ReadOnlyMemory<char> ModuleAddress { get; }
+}
+
+public interface IAssemblyAddress
+{
+    ReadOnlyMemory<char> AssemblyAddress { get; }
+}
+
+public interface IDomainAddress
+{
+    ReadOnlyMemory<char> DomainAddress { get; }
+}
+
 public static class SubcommandsView
 {
 #pragma warning disable CA1069
@@ -89,7 +104,7 @@ public static class SubcommandsView
 
     private record ButtonFactory(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue)
     {
-        private readonly Dialog _dialog = new ("Available commands");
+        private readonly Dialog _dialog = new("Available commands");
 
         private Button MakeButton(string title, Action onClick, Action onTab)
         {
@@ -146,10 +161,12 @@ public static class SubcommandsView
             yield return (
                 Priority.GcRoot,
                 MakeCommandButton("Find GC root", $"{Commands.GCRoot} {data}"));
-
-            yield return (Priority.DumpObjects,
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Calculate object size", $"{Commands.ObjSize} {data}"));
+            yield return (
+                Priority.DumpObjects,
                 MakeCommandButton("Dump object", $"{Commands.DumpObject} {data}"));
-
             yield return (
                 Priority.DumpMemory,
                 MakeCommandButton("Dump memory", $"{Commands.DumpMemory} {data}"));
@@ -186,6 +203,9 @@ public static class SubcommandsView
 
             var data = threadState.SyncBlockOwnerAddress.ToString();
             yield return (
+                Priority.Copy,
+                MakeButton("Copy syncblock owner address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
                 Priority.DumpObjects,
                 MakeCommandButton("Dump syncblock owner", $"{Commands.DumpObject} {data}"));
         }
@@ -197,21 +217,69 @@ public static class SubcommandsView
 
             var data = syncBlockAddress.SyncBlockAddress.ToString();
             yield return (
+                Priority.Copy,
+                MakeButton("Copy syncblock address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
                 Priority.DumpObjects,
-                MakeCommandButton("Dump syncblock memory", $"{Commands.DumpMemory} {data}"));
+                MakeCommandButton("Dump syncblock", $"{Commands.DumpMemory} {data}"));
         }
 
         private IEnumerable<(Priority, Button)> GetEEClassAddressButtons(OutputLine line)
         {
-            if (line is not IEEClassAddress threadState)
+            if (line is not IEEClassAddress eeClassAddress)
                 yield break;
 
-            var data = threadState.EEClassAddress.ToString();
+            var data = eeClassAddress.EEClassAddress.ToString();
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy EEClass address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
                 Priority.DumpObjects,
                 MakeCommandButton("Dump EEClass", $"{Commands.DumpClass} {data}"));
         }
+        
+        private IEnumerable<(Priority, Button)> GetDomainAddressButtons(OutputLine line)
+        {
+            if (line is not IDomainAddress domainAddress)
+                yield break;
 
+            var data = domainAddress.DomainAddress.ToString();
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy Domain address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump Domain", $"{Commands.DumpDomain} {data}"));
+        }
+        
+        private IEnumerable<(Priority, Button)> GetAssemblyAddressButtons(OutputLine line)
+        {
+            if (line is not IAssemblyAddress assemblyAddress)
+                yield break;
+
+            var data = assemblyAddress.AssemblyAddress.ToString();
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy Assembly address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump Assembly", $"{Commands.DumpAssembly} {data}"));
+        }
+        
+        private IEnumerable<(Priority, Button)> GetModuleAddressButtons(OutputLine line)
+        {
+            if (line is not IModuleAddress moduleAddress)
+                yield break;
+
+            var data = moduleAddress.ModuleAddress.ToString();
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy Module address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Dump Module", $"{Commands.DumpModule} {data}"));
+        }
+        
         private IEnumerable<(Priority, Button)> GetMethodTableButtons(OutputLine line)
         {
             if (line is not IMethodTable methodTable)
@@ -250,10 +318,25 @@ public static class SubcommandsView
             var data = typeName.SyncBlockOwnerTypeName.ToString();
             yield return (
                 Priority.Copy,
-                MakeButton("Copy sync block type name", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+                MakeButton("Copy sync block owner type name", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
                 Priority.DumpHeap,
-                MakeCommandButton("Dump heap (sync block type)", $"{Commands.DumpHeap} -type {data}"));
+                MakeCommandButton("Dump heap (sync block owner type)", $"{Commands.DumpHeap} -type {data}"));
+        }
+
+        private IEnumerable<(Priority, Button)> GetSyncBlockIndexButtons(OutputLine line)
+        {
+            if (line is not ISyncBlockIndex syncBlockIndex)
+                yield break;
+
+            var data = syncBlockIndex.SyncBlockIndex.ToString();
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy sync block index", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+
+            yield return (
+                Priority.SyncBlock,
+                MakeCommandButton("Show syncblock info", $"{Commands.SyncBlock} {data}"));
         }
 
         private IEnumerable<(Priority, Button)> GetClrThreadButtons(OutputLine line)
@@ -262,7 +345,7 @@ public static class SubcommandsView
             // There can exist a mapping between clr thread id and os thread id. Can use it behind the scenes
             if (line is not IClrThreadId clrThreadId)
                 yield break;
-        
+
             var data = clrThreadId.ClrThreadId.ToString();
             yield return (
                 Priority.Copy,
@@ -275,7 +358,7 @@ public static class SubcommandsView
             // It might be useful to filter out native-only ones
             if (line is not IOsThreadId osThreadId)
                 yield break;
-            
+
             var data = osThreadId.OsThreadId.ToString();
             data = data.PadLeft(data.Length + data.Length % 4, '0');
             var idAsInt = Convert.ToInt32(data, 16);
@@ -332,7 +415,7 @@ public static class SubcommandsView
                         });
                         return views;
                     })
-                );
+            );
         }
 
         private IEnumerable<(Priority, Button)> GetThreadsStateButtons(OutputLine line)
@@ -346,34 +429,24 @@ public static class SubcommandsView
                 MakeCommandButton("Pretty print thread state", $"{Commands.ThreadState} {data}"));
         }
 
-        private IEnumerable<(Priority, Button)> GetSyncBlockIndexButtons(OutputLine line)
-        {
-            if (line is not ISyncBlockIndex syncBlockIndex)
-                yield break;
-
-            var data = syncBlockIndex.SyncBlockIndex.ToString();
-            yield return (
-                Priority.Copy,
-                MakeButton("Copy sync block index", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
-
-            yield return (
-                Priority.SyncBlock,
-                MakeCommandButton("Show syncblock info", $"{Commands.SyncBlock} {data}"));
-        }
-
         private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
         {
-            return new[] {
+            return new[]
+            {
                 GetAddressButtons,
                 GetSyncBlockAddressButtons,
                 GetSyncBlockOwnerAddressButtons,
                 GetMethodTableButtons,
                 GetTypeNameButtons,
                 GetSyncBlockOwnerTypeNameButtons,
+                GetSyncBlockIndexButtons,
                 GetClrThreadButtons,
                 GetOsThreadIdButtons,
                 GetThreadsStateButtons,
-                GetEEClassAddressButtons
+                GetEEClassAddressButtons,
+                GetModuleAddressButtons,
+                GetAssemblyAddressButtons,
+                GetDomainAddressButtons
             };
         }
 
@@ -406,7 +479,7 @@ public static class SubcommandsView
             return _dialog;
         }
     }
-    
+
     public static Dialog? TryGetSubcommandsDialog(
         TopLevelViews topLevelViews,
         OutputLine line,

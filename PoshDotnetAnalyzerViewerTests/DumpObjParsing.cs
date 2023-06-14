@@ -36,7 +36,7 @@ public class DumpObjParsing
             ObjectAddressOutputLine { Address.Span: "00007f9f1bfff138" },
             TypeNameOutputLine { TypeName.Span: "System.StackOverflowException" },
             MethodTableOutputLine { MethodTable.Span: "00007f9f540ff000" },
-            EEClassOutputLine { EEClassAddress.Span: "00007f9f540d81a8" },
+            EEClassAddressOutputLine { EEClassAddress.Span: "00007f9f540d81a8" },
             {}, // eew
             {},
             {},
