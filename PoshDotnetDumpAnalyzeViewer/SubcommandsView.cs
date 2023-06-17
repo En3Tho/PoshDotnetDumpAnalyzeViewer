@@ -12,7 +12,7 @@ public interface IClrThreadId
     ReadOnlyMemory<char> ClrThreadId { get; }
 }
 
-public interface IAddress
+public interface IObjectAddress
 {
     ReadOnlyMemory<char> Address { get; }
 }
@@ -151,7 +151,7 @@ public static class SubcommandsView
 
         private IEnumerable<(Priority, Button)> GetAddressButtons(OutputLine line)
         {
-            if (line is not IAddress address)
+            if (line is not IObjectAddress address)
                 yield break;
 
             var data = address.Address.ToString();

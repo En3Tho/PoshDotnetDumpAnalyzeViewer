@@ -7,7 +7,7 @@ public record OutputLine(string Line) : IOutputLine
 
 public record struct ObjectAddressRanges(Range Address);
 
-public sealed record ObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IAddress
+public sealed record ObjectObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IObjectAddress
 {
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
 }
@@ -67,7 +67,7 @@ public sealed record DumpObjectOutputLine(string Line, DumpObjectRanges Ranges) 
 }
 
 public record struct GCRootRanges(Range Address, Range TypeName);
-public sealed record GCRootOutputLine(string Line, GCRootRanges Ranges) : OutputLine(Line), IAddress, ITypeName
+public sealed record GCRootOutputLine(string Line, GCRootRanges Ranges) : OutputLine(Line), IObjectAddress, ITypeName
 {
     public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.TypeName);
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
@@ -75,7 +75,7 @@ public sealed record GCRootOutputLine(string Line, GCRootRanges Ranges) : Output
 
 public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
 
-public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IAddress
+public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IObjectAddress
 {
     public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
@@ -92,7 +92,7 @@ public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatistic
 
 public record struct ObjSizeRanges(Range Address, Range MethodTable, Range Size);
 
-public sealed record ObjSizeOutputLine(string Line, ObjSizeRanges Ranges) : OutputLine(Line), IMethodTable, IAddress
+public sealed record ObjSizeOutputLine(string Line, ObjSizeRanges Ranges) : OutputLine(Line), IMethodTable, IObjectAddress
 {
     public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);

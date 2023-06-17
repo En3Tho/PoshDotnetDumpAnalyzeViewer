@@ -34,9 +34,9 @@ public class GCRootParsing
 
         Assert.True(lines is
         [
-            not (GCRootOutputLine or ObjectAddressOutputLine),
-            not (GCRootOutputLine or ObjectAddressOutputLine),
-            ObjectAddressOutputLine { Address.Span: "00007f00b6771cf0" },
+            not (GCRootOutputLine or ObjectObjectAddressOutputLine),
+            not (GCRootOutputLine or ObjectObjectAddressOutputLine),
+            ObjectObjectAddressOutputLine { Address.Span: "00007f00b6771cf0" },
             GCRootOutputLine { Address.Span: "00007efc28036bc8", TypeName.Span: "System.Object[]" },
             GCRootOutputLine { Address.Span: "00007ef6283fa0a8", TypeName.Span: "System.Threading.SemaphoreSlim" },
             GCRootOutputLine { Address.Span: "00007ef653217720", TypeName.Span: "System.Threading.SemaphoreSlim+TaskNode" },
@@ -50,8 +50,8 @@ public class GCRootParsing
             GCRootOutputLine { Address.Span: "00007ef6513ff060", TypeName.Span: "System.Threading.Tasks.TaskExceptionHolder" },
             GCRootOutputLine { Address.Span: "00007ef6513ff090", TypeName.Span: "System.Collections.Generic.List<System.Runtime.ExceptionServices.ExceptionDispatchInfo>" },
             GCRootOutputLine { Address.Span: "00007ef6513ff0b0", TypeName.Span: "System.Runtime.ExceptionServices.ExceptionDispatchInfo[]" },
-            not (GCRootOutputLine or ObjectAddressOutputLine),
-            not (GCRootOutputLine or ObjectAddressOutputLine)
+            not (GCRootOutputLine or ObjectObjectAddressOutputLine),
+            not (GCRootOutputLine or ObjectObjectAddressOutputLine)
         ]);
     }
 }

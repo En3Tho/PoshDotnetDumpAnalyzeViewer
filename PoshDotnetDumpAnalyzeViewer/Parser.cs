@@ -457,7 +457,7 @@ public partial class GCRootParser : IOutputParser
         if (GetRanges(line) is { } ranges)
         {
             if (line.AsSpan()[ranges.TypeName].Contains("strong handle", StringComparison.Ordinal))
-                return new ObjectAddressOutputLine(line, new(ranges.Address));
+                return new ObjectObjectAddressOutputLine(line, new(ranges.Address));
 
             return new GCRootOutputLine(line, ranges);
         }
@@ -501,7 +501,7 @@ public partial class DumpObjectParser : IOutputParser
             return new DumpObjectOutputLine(line, mainRanges);
 
         if (GetObjectAddressRanges(line) is {} objectAddressRanges)
-            return new ObjectAddressOutputLine(line, objectAddressRanges);
+            return new ObjectObjectAddressOutputLine(line, objectAddressRanges);
 
         if (GetMethodTableRanges(line) is {} methodTableRanges)
             return new MethodTableOutputLine(line, methodTableRanges);
