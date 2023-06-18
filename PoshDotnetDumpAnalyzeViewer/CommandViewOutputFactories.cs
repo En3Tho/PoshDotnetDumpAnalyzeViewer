@@ -158,6 +158,13 @@ public sealed record PrintExceptionOutputFactory
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.PrintException);
 }
 
+public sealed record DumpExceptionOutputFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<DumpExceptionsParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpExceptions);
+}
+
 public sealed record SosCommandOutputViewFactory
     (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue, ICommandOutputViewFactory[] Factories) : CommandOutputViewFactoryBase(Clipboard)
 {

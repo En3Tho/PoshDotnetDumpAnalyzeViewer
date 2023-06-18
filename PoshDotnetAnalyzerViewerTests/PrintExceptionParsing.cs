@@ -6,7 +6,7 @@ namespace PoshDotnetAnalyzerViewerTests;
 public class PrintExceptionParsing
 {
     [Fact]
-    public void TestThatObjSizeDefaultOutputIsParsedCorrectly()
+    public void TestThatPrintExceptionOutputIsParsedCorrectly()
     {
         var output = new[]
         {
@@ -50,7 +50,7 @@ public class PrintExceptionParsing
     }
 
     [Fact]
-    public void TestThatObjSizeDefaultOutputIsParsedCorrectly2()
+    public void TestThatPrintExceptionOOutputIsParsedCorrectly2()
     {
         var output = new[]
         {

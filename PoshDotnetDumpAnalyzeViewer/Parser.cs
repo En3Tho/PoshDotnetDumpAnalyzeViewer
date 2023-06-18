@@ -149,6 +149,11 @@ static class RegexPatterns
     public const string GCRoot =
         $@"{WSo}(?:{WS}->{WS})?{Ag}{WS}(\(strong handle\)|{S}){WSo}";
 
+    // Address MethodTable TypeName
+    // Ag      Ag          Tg
+    public const string DumpExceptions =
+        $@"{WSo}{Ag}{WSo}{Ag}{WSo}{Tg}{WSo}";
+
     public static class DumpObject
     {
         public const string CmdWithAddress =
@@ -484,6 +489,34 @@ public partial class GCRootParser : IOutputParser
             var ranges = new Range[2];
             match.CopyGroupsRangesTo(ranges);
             return new(ranges[0], ranges[1]);
+        }
+
+        return default;
+    }
+}
+
+public partial class DumpExceptionsParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.DumpExceptions)]
+    public static partial Regex Regex();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetRanges(line) is { } ranges)
+        {
+            return new DumpExceptionsOutputLine(line, ranges);
+        }
+
+        return new(line);
+    }
+
+    public static DumpExceptionRanges? GetRanges(string line)
+    {
+        if (Regex().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[3];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0], ranges[1], ranges[2]);
         }
 
         return default;

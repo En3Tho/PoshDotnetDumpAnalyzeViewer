@@ -157,6 +157,14 @@ public sealed record GCRootOutputLine(string Line, GCRootRanges Ranges) : Output
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
 }
 
+public record struct DumpExceptionRanges(Range Address, Range MethodTable, Range TypeName);
+public sealed record DumpExceptionsOutputLine(string Line, DumpExceptionRanges Ranges) : OutputLine(Line), IExceptionObjectAddress, IMethodTable, ITypeName
+{
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
+    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.TypeName);
+}
+
 public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
 
 public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IObjectAddress

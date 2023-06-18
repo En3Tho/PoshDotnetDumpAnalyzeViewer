@@ -14,6 +14,7 @@ public static partial class Commands
     public const string PrintException = "printexception";
 
     public const string ObjSize = "objsize";
+    public const string DumpExceptions = "dumpexceptions";
 
     public const string SetThread = "setthread";
     public const string Threads = "threads";
