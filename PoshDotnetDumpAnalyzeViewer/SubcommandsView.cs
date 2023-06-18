@@ -2,86 +2,6 @@
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public interface IOutputLine
-{
-    string Line { get; }
-}
-
-public interface IClrThreadId
-{
-    ReadOnlyMemory<char> ClrThreadId { get; }
-}
-
-public interface IObjectAddress
-{
-    ReadOnlyMemory<char> Address { get; }
-}
-
-public interface IMethodTable
-{
-    ReadOnlyMemory<char> MethodTable { get; }
-}
-
-public interface ITypeName
-{
-    ReadOnlyMemory<char> TypeName { get; }
-}
-
-public interface IHelpCommand
-{
-    string[] Commands { get; }
-}
-
-public interface IOsThreadId
-{
-    ReadOnlyMemory<char> OsThreadId { get; }
-}
-
-public interface ISyncBlockIndex
-{
-    ReadOnlyMemory<char> SyncBlockIndex { get; }
-}
-
-public interface IThreadState
-{
-    ReadOnlyMemory<char> ThreadState { get; }
-}
-
-public interface ISyncBlockAddress
-{
-    ReadOnlyMemory<char> SyncBlockAddress { get; }
-}
-
-public interface ISyncBlockOwnerAddress
-{
-    ReadOnlyMemory<char> SyncBlockOwnerAddress { get; }
-}
-
-public interface ISyncBlockOwnerTypeName
-{
-    ReadOnlyMemory<char> SyncBlockOwnerTypeName { get; }
-}
-
-public interface IEEClassAddress
-{
-    ReadOnlyMemory<char> EEClassAddress { get; }
-}
-
-public interface IModuleAddress
-{
-    ReadOnlyMemory<char> ModuleAddress { get; }
-}
-
-public interface IAssemblyAddress
-{
-    ReadOnlyMemory<char> AssemblyAddress { get; }
-}
-
-public interface IDomainAddress
-{
-    ReadOnlyMemory<char> DomainAddress { get; }
-}
-
 public static class SubcommandsView
 {
 #pragma warning disable CA1069
@@ -89,6 +9,7 @@ public static class SubcommandsView
     {
         Copy = 0,
         DumpHeap = 1,
+        PrintException = 1,
         GcRoot = 2,
         DumpObjects = 3,
         DumpMethodTable = 4,
@@ -149,7 +70,7 @@ public static class SubcommandsView
                 MakePasteAction(command));
         }
 
-        private IEnumerable<(Priority, Button)> GetAddressButtons(OutputLine line)
+        private IEnumerable<(Priority, Button)> GetObjectAddressButtons(OutputLine line)
         {
             if (line is not IObjectAddress address)
                 yield break;
@@ -194,6 +115,17 @@ public static class SubcommandsView
             yield return (
                 Priority.DumpMemory,
                 MakeCommandButton("Dump memory as longs", $"{Commands.DumpMemoryAsQuadWords} {data}"));
+        }
+
+        private IEnumerable<(Priority, Button)> GetExceptionObjectAddressButtons(OutputLine line)
+        {
+            if (line is not IExceptionObjectAddress address)
+                yield break;
+
+            var data = address.Address.ToString();
+            yield return (
+                Priority.PrintException,
+                MakeCommandButton("Print Exception", $"{Commands.PrintException} {data}"));
         }
 
         private IEnumerable<(Priority, Button)> GetSyncBlockOwnerAddressButtons(OutputLine line)
@@ -433,7 +365,8 @@ public static class SubcommandsView
         {
             return new[]
             {
-                GetAddressButtons,
+                GetObjectAddressButtons,
+                GetExceptionObjectAddressButtons,
                 GetSyncBlockAddressButtons,
                 GetSyncBlockOwnerAddressButtons,
                 GetMethodTableButtons,

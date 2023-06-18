@@ -4,14 +4,14 @@ namespace PoshDotnetDumpAnalyzeViewer;
 
 public static class ProcessUtil
 {
-    public static async Task<Process> StartDotnetDumpAnalyze(string analyzeArgs)
+    public static async Task<Process> StartDotnetDumpAnalyze(string fileName, string analyzeArgs)
     {
         if (File.Exists(analyzeArgs))
             analyzeArgs = new FileInfo(analyzeArgs).FullName;
 
         var dotnetDumpStartInfo = new ProcessStartInfo
         {
-            FileName = "dotnet-dump",
+            FileName = fileName,
             Arguments = $"analyze {analyzeArgs}",
             RedirectStandardError = true,
             RedirectStandardInput = true,

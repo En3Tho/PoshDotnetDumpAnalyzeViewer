@@ -4,9 +4,11 @@ namespace PoshDotnetDumpAnalyzeViewer;
 
 public static class App
 {
-    public static async Task Run(string analyzeArgs)
+    public const string DotnetDumpToolName = "dotnet-dump";
+
+    public static async Task Run(string fileName, string analyzeArgs)
     {
-        var process = await ProcessUtil.StartDotnetDumpAnalyze(analyzeArgs);
+        var process = await ProcessUtil.StartDotnetDumpAnalyze(fileName, analyzeArgs);
         Application.Init();
 
         var source = new CancellationTokenSource();
@@ -42,6 +44,7 @@ public static class App
             new DumpModuleCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new Name2EECommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new GCRootCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new PrintExceptionOutputFactory(topLevelViews, clipboard, commandQueue),
             (SosCommandOutputViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new DefaultCommandOutputViewFactory(clipboard)
         };

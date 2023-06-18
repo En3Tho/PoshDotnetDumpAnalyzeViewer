@@ -11,6 +11,7 @@ public static partial class Commands
     public const string DumpHeap = "dumpheap";
     public const string DumpMethodTable = "dumpmt";
     public const string GCRoot = "gcroot";
+    public const string PrintException = "printexception";
 
     public const string ObjSize = "objsize";
 

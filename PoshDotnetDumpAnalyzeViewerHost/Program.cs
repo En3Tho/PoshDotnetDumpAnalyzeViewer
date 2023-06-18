@@ -9,7 +9,9 @@ if (args.Length == 0)
 
 try
 {
-    await App.Run(args[0]);
+    const string fileName = @"G:\source\repos\dotnet\diagnostics\artifacts\bin\dotnet-dump\Release\net6.0\dotnet-dump.exe";
+    var analyzeArgs = args[0];
+    await App.Run(fileName, analyzeArgs);
 }
 catch (Exception exn)
 {

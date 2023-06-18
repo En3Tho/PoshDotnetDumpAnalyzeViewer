@@ -8,13 +8,17 @@ public class GetDotnetDumpAnalyzeViewerCommand : Cmdlet
 {
     [Parameter(Position = 0, Mandatory = true)]
     [ValidateNotNullOrEmpty]
-    public string AnalyzeArgs { get; set; } = null!;
+    public string AnalyzeArgs { get; init; } = null!;
+
+    [Parameter]
+    public string? FileName { get; init; } = null!;
 
     protected override void ProcessRecord()
     {
         try
         {
-            App.Run(AnalyzeArgs).GetAwaiter().GetResult();
+            var fileName = FileName ?? App.DotnetDumpToolName;
+            App.Run(fileName, AnalyzeArgs).GetAwaiter().GetResult();
         }
         finally
         {

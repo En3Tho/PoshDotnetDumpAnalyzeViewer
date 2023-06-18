@@ -33,7 +33,7 @@ public class DumpObjParsing
 
         Assert.True(lines is
         [
-            ObjectObjectAddressOutputLine { Address.Span: "00007f9f1bfff138" },
+            ObjectAddressOutputLine { Address.Span: "00007f9f1bfff138" },
             TypeNameOutputLine { TypeName.Span: "System.StackOverflowException" },
             MethodTableOutputLine { MethodTable.Span: "00007f9f540ff000" },
             EEClassAddressOutputLine { EEClassAddress.Span: "00007f9f540d81a8" },

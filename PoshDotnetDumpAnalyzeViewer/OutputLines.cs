@@ -1,13 +1,97 @@
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public record OutputLine(string Line) : IOutputLine
+public interface IClrThreadId
+{
+    ReadOnlyMemory<char> ClrThreadId { get; }
+}
+
+public interface IObjectAddress
+{
+    ReadOnlyMemory<char> Address { get; }
+}
+
+public interface IExceptionObjectAddress : IObjectAddress
+{
+}
+
+public interface IMethodTable
+{
+    ReadOnlyMemory<char> MethodTable { get; }
+}
+
+public interface ITypeName
+{
+    ReadOnlyMemory<char> TypeName { get; }
+}
+
+public interface IHelpCommand
+{
+    string[] Commands { get; }
+}
+
+public interface IOsThreadId
+{
+    ReadOnlyMemory<char> OsThreadId { get; }
+}
+
+public interface ISyncBlockIndex
+{
+    ReadOnlyMemory<char> SyncBlockIndex { get; }
+}
+
+public interface IThreadState
+{
+    ReadOnlyMemory<char> ThreadState { get; }
+}
+
+public interface ISyncBlockAddress
+{
+    ReadOnlyMemory<char> SyncBlockAddress { get; }
+}
+
+public interface ISyncBlockOwnerAddress
+{
+    ReadOnlyMemory<char> SyncBlockOwnerAddress { get; }
+}
+
+public interface ISyncBlockOwnerTypeName
+{
+    ReadOnlyMemory<char> SyncBlockOwnerTypeName { get; }
+}
+
+public interface IEEClassAddress
+{
+    ReadOnlyMemory<char> EEClassAddress { get; }
+}
+
+public interface IModuleAddress
+{
+    ReadOnlyMemory<char> ModuleAddress { get; }
+}
+
+public interface IAssemblyAddress
+{
+    ReadOnlyMemory<char> AssemblyAddress { get; }
+}
+
+public interface IDomainAddress
+{
+    ReadOnlyMemory<char> DomainAddress { get; }
+}
+
+public record OutputLine(string Line)
 {
     public sealed override string ToString() => Line;
 }
 
 public record struct ObjectAddressRanges(Range Address);
 
-public sealed record ObjectObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IObjectAddress
+public sealed record ObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IObjectAddress
+{
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
+}
+
+public sealed record ExceptionObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IExceptionObjectAddress
 {
     public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
 }

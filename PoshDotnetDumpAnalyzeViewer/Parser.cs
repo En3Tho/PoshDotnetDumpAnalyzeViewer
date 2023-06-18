@@ -234,6 +234,18 @@ static class RegexPatterns
         public const string TypeName =
             $"Name:{WSo}{Tg}";
     }
+
+    public static class PrintException
+    {
+        public const string ExceptionObject =
+            $"Exception object:{WSo}{Ag}";
+
+        public const string ExceptionType =
+            $"Exception type:{WSo}{Tg}";
+
+        public const string InnerException =
+            $"InnerException:{C}Use printexception{WSo}{Ag}{C}";
+    }
 }
 
 public partial class HelpParser : IOutputParser
@@ -457,7 +469,7 @@ public partial class GCRootParser : IOutputParser
         if (GetRanges(line) is { } ranges)
         {
             if (line.AsSpan()[ranges.TypeName].Contains("strong handle", StringComparison.Ordinal))
-                return new ObjectObjectAddressOutputLine(line, new(ranges.Address));
+                return new ObjectAddressOutputLine(line, new(ranges.Address));
 
             return new GCRootOutputLine(line, ranges);
         }
@@ -501,7 +513,7 @@ public partial class DumpObjectParser : IOutputParser
             return new DumpObjectOutputLine(line, mainRanges);
 
         if (GetObjectAddressRanges(line) is {} objectAddressRanges)
-            return new ObjectObjectAddressOutputLine(line, objectAddressRanges);
+            return new ObjectAddressOutputLine(line, objectAddressRanges);
 
         if (GetMethodTableRanges(line) is {} methodTableRanges)
             return new MethodTableOutputLine(line, methodTableRanges);
@@ -903,6 +915,68 @@ public partial class Name2EEParser : IOutputParser
     public static MethodTableRanges? GetMethodTableRanges(string line)
     {
         if (MethodTable().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+}
+
+public partial class PrintExceptionParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.PrintException.ExceptionObject)]
+    public static partial Regex ExceptionObject();
+
+    [GeneratedRegex(RegexPatterns.PrintException.ExceptionType)]
+    public static partial Regex ExceptionType();
+
+    [GeneratedRegex(RegexPatterns.PrintException.InnerException)]
+    public static partial Regex InnerException();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetExceptionObjectRanges(line) is {} exceptionObjectRanges)
+            return new ExceptionObjectAddressOutputLine(line, exceptionObjectRanges);
+
+        if (GetExceptionTypeRanges(line) is {} typeNameRanges)
+            return new TypeNameOutputLine(line, typeNameRanges);
+
+        if (GetInnerExceptionRanges(line) is {} innerExceptionRanges)
+            return new ExceptionObjectAddressOutputLine(line, innerExceptionRanges);
+
+        return new(line);
+    }
+
+    public static ObjectAddressRanges? GetExceptionObjectRanges(string line)
+    {
+        if (ExceptionObject().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static TypeNameRanges? GetExceptionTypeRanges(string line)
+    {
+        if (ExceptionType().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
+
+    public static ObjectAddressRanges? GetInnerExceptionRanges(string line)
+    {
+        if (InnerException().Match(line) is { Success: true } match)
         {
             var ranges = new Range[1];
             match.CopyGroupsRangesTo(ranges);
