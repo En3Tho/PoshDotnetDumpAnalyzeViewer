@@ -11,7 +11,7 @@ It's able to list output of all supported SOS commands and additionally custom p
     Get-DotnetDumpAnalyzeViewer "path-to-dump-file"
 ```
 
-Note that this viewer is completely dependent on dotnet-dump and it does not bundle sos or anything like that.
+Note that this viewer is completely dependent on dotnet-dump (tested on 7.0.421801) and it does not bundle sos or anything like that.
 
 Command field:
 - Enter -> invoke command or get already existing tab

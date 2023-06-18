@@ -34,7 +34,7 @@ public sealed class UITask
 
     internal void SetContinuation(Action cont)
     {
-        continuation = () => Application.MainLoop.Invoke(cont);
+        continuation = cont;
     }
 
     public GuiCsTaskAwaiter GetAwaiter() => new(this);
@@ -67,6 +67,8 @@ public sealed class UITask
                 case Exception ex:
                     ExceptionDispatchInfo.Throw(ex);
                     break;
+                case null:
+                    throw new("Synchronous awaits are not supported");
             }
         }
     }

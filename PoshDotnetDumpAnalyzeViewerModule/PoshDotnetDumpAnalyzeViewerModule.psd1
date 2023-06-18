@@ -4,7 +4,7 @@
 RootModule = 'PoshDotnetDumpAnalyzeViewerModule.dll'
 
 # Version number of this module.
-ModuleVersion = '0.0.4'
+ModuleVersion = '0.0.5'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
