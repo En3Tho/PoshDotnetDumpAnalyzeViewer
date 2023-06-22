@@ -114,4 +114,3 @@ public sealed class UITask
         public UITask Task { get; }
     }
 }
-
