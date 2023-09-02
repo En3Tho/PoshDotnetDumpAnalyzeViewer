@@ -12,7 +12,7 @@ public static class ProcessUtil
         var dotnetDumpStartInfo = new ProcessStartInfo
         {
             FileName = fileName,
-            Arguments = $"analyze {analyzeArgs}",
+            Arguments = $"analyze \"{analyzeArgs}\"",
             RedirectStandardError = true,
             RedirectStandardInput = true,
             RedirectStandardOutput = true
