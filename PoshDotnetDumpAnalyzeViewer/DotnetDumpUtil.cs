@@ -6,7 +6,7 @@ public static class ProcessUtil
 {
     public static async Task<Process> StartDotnetDumpAnalyze(string fileName, string analyzeArgs)
     {
-        if (File.Exists(analyzeArgs))
+        if (new FileInfo(analyzeArgs) is { Exists: true })
             analyzeArgs = new FileInfo(analyzeArgs).FullName;
 
         var dotnetDumpStartInfo = new ProcessStartInfo
