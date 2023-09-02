@@ -33,7 +33,7 @@ static class RegexPatterns
     /// Any amount of characters
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
-    private const string C = @".+";
+    private const string C = ".+";
 
     /// <summary>
     /// a to z and numbers
@@ -45,7 +45,7 @@ static class RegexPatterns
     /// Any amount of characters optional
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
-    private const string Co = @".*";
+    private const string Co = ".*";
 
     /// <summary>
     /// White space
@@ -250,6 +250,15 @@ static class RegexPatterns
 
         public const string InnerException =
             $"InnerException:{C}Use printexception{WSo}{Ag}{C}";
+    }
+
+    public static class ParallelStacks
+    {
+        public const string ThreadCount =
+            $"^{WS}{Dg}{WS}{C}";
+
+        public const string ThreadNames =
+            $"{WS}~~~~{C}";
     }
 }
 
@@ -1018,4 +1027,34 @@ public partial class PrintExceptionParser : IOutputParser
 
         return default;
     }
+}
+
+public partial class ParallelStacksParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.ParallelStacks.ThreadCount)]
+    public static partial Regex ThreadCount();
+
+    [GeneratedRegex(RegexPatterns.ParallelStacks.ThreadNames)]
+    public static partial Regex ThreadNames();
+
+    public static OutputLine Parse(string line, string command)
+    {
+        return new ParallelStacksOutputLine(line);
+    }
+
+    public static bool TryParseThreadCount(string line, out int threadCount)
+    {
+        if (ThreadCount().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            threadCount = int.Parse(line.AsMemory(ranges[0]).Span);
+            return true;
+        }
+
+        threadCount = 0;
+        return false;
+    }
+
+    public static bool IsThreadNames(string line) => ThreadNames().IsMatch(line);
 }

@@ -165,10 +165,58 @@ public sealed record DumpExceptionOutputFactory
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpExceptions);
 }
 
+public sealed record ParallelStacksOutputFactory
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : DefaultViewsOutputViewFactoryBase<ParallelStacksParser>(
+        TopLevelViews, Clipboard, CommandQueue)
+{
+    public static string[] ShrinkParallelStacksOutput(string[] lines)
+    {
+        var reducedStack = new List<string>(lines.Length / 10);
+        var currentThreadCount = -1;
+        var lastLine = "";
+        foreach (var line in lines)
+        {
+            if (ParallelStacksParser.IsThreadNames(line))
+            {
+                reducedStack.Add(lastLine);
+                reducedStack.Add(line);
+                currentThreadCount = -1;
+                continue;
+            }
+
+            if (ParallelStacksParser.TryParseThreadCount(line, out var threadCount))
+            {
+                if (currentThreadCount != -1 && currentThreadCount != threadCount)
+                {
+                    reducedStack.Add(lastLine);
+                }
+
+                currentThreadCount = threadCount;
+                lastLine = line;
+                continue;
+            }
+
+            reducedStack.Add(line);
+        }
+
+        return reducedStack.ToArray();
+    }
+
+    // special case pstacks for this viewer
+    protected override CommandOutputViews CreateView(CommandOutput output)
+    {
+        var lines = output.Lines;
+        Array.Reverse(lines);
+        return base.CreateView(output);
+    }
+
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ParallelStacks);
+}
+
 public sealed record SosCommandOutputViewFactory
     (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue, ICommandOutputViewFactory[] Factories) : CommandOutputViewFactoryBase(Clipboard)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Sos);
+    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Sos, Commands.Ext);
 
     protected override CommandOutputViews CreateView(CommandOutput output)
     {

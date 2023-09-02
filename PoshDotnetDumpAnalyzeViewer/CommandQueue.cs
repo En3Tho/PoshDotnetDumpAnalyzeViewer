@@ -53,7 +53,7 @@ public record CommandQueueWorker(
                 }
             }
 
-            var _ = RunTicker(cts.Token);
+            _ = RunTicker(cts.Token);
             var result = await cts.AwaitAndCancel(DotnetDump.PerformCommand(command));
 
             TopLevelViews.CommandInput.Text = $"{command} ... processing output";

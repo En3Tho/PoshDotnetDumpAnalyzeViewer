@@ -361,6 +361,33 @@ public static class SubcommandsView
                 MakeCommandButton("Pretty print thread state", $"{Commands.ThreadState} {data}"));
         }
 
+        private IEnumerable<(Priority, Button)> GetParallelStacksButtons(OutputLine line)
+        {
+            if (line is not ParallelStacksOutputLine)
+                yield break;
+
+            yield return (
+                Priority.PStacks,
+                MakeCommandButton("Shrink call stacks",
+                    $"{Commands.ParallelStacks} -a",
+                    forceRefresh: true,
+                    customAction: views =>
+                    {
+                        var source = views.OutputListView.Source;
+                        var shrinkedSource = ParallelStacksOutputFactory.ShrinkParallelStacksOutput(source);
+                        views.OutputListView.SetSource(shrinkedSource);
+                        return views;
+                    })
+            );
+
+            yield return (
+                Priority.PStacks,
+                MakeCommandButton("Restore call stacks",
+                    $"{Commands.ParallelStacks} -a",
+                    forceRefresh: true)
+            );
+        }
+
         private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
         {
             return new[]
@@ -379,7 +406,8 @@ public static class SubcommandsView
                 GetEEClassAddressButtons,
                 GetModuleAddressButtons,
                 GetAssemblyAddressButtons,
-                GetDomainAddressButtons
+                GetDomainAddressButtons,
+                GetParallelStacksButtons
             };
         }
 

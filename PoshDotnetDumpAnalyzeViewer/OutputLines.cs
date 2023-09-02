@@ -238,3 +238,5 @@ public sealed record SyncBlockZeroOutputLine(string Line, SyncBlockZeroRanges Ra
     public ReadOnlyMemory<char> SyncBlockOwnerAddress => Line.AsMemory(Ranges.SyncBlockOwnerAddress);
     public ReadOnlyMemory<char> SyncBlockOwnerTypeName => Line.AsMemory(Ranges.SyncBlockOwnerType);
 }
+
+public sealed record ParallelStacksOutputLine(string Line) : OutputLine(Line);
