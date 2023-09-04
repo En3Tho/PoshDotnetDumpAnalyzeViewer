@@ -4,7 +4,7 @@ using PoshDotnetDumpAnalyzeViewer;
 namespace PoshDotnetDumpAnalyzeViewerModule;
 
 [Cmdlet(VerbsCommon.Get, "DotnetDumpAnalyzeViewer")]
-public class GetDotnetDumpAnalyzeViewerCommand : Cmdlet
+public class GetDotnetDumpAnalyzeViewerCommand : PSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true)]
     [ValidateNotNullOrEmpty]
@@ -17,8 +17,9 @@ public class GetDotnetDumpAnalyzeViewerCommand : Cmdlet
     {
         try
         {
+            var analyzeArgs = SessionState.Path.GetUnresolvedProviderPathFromPSPath(AnalyzeArgs);
             var fileName = FileName ?? App.DotnetDumpToolName;
-            App.Run(fileName, AnalyzeArgs).GetAwaiter().GetResult();
+            App.Run(fileName, analyzeArgs).GetAwaiter().GetResult();
         }
         finally
         {

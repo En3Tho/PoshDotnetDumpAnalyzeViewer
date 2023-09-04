@@ -5,4 +5,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <CmdletVersion>0.0.7</CmdletVersion>
+    </PropertyGroup>
 </Project>

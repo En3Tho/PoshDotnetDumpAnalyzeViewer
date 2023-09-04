@@ -30,7 +30,7 @@ public static class App
         var viewFactories = new ICommandOutputViewFactory[]
         {
             new QuitCommandOutputViewFactory(clipboard),
-            new HelpCommandOutputViewFactory(clipboard, commandQueue),
+            new HelpCommandOutputViewFactory(clipboard, commandQueue, topLevelViews),
             new DumpHeapCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new ObjSizeCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
             new SetThreadCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),

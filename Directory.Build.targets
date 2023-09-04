@@ -1,0 +1,7 @@
+<Project>
+    <PropertyGroup>
+        <PackageVersion>$(CmdletVersion)</PackageVersion>
+        <AssemblyVersion>$(CmdletVersion)</AssemblyVersion>
+        <FileVersion>$(CmdletVersion)</FileVersion>
+    </PropertyGroup>
+</Project>

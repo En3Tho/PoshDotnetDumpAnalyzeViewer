@@ -31,7 +31,7 @@ public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : Comman
 }
 
 public sealed record HelpCommandOutputViewFactory
-    (IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
+    (IClipboard Clipboard, CommandQueue CommandQueue, TopLevelViews TopLevelViews) : CommandOutputViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Help);
 
@@ -50,7 +50,16 @@ public sealed record HelpCommandOutputViewFactory
                 if (views.OutputListView.TryParseLine<HelpParser>(Commands.Help) is HelpOutputLine line)
                 {
                     var command = line.Commands[0];
-                    CommandQueue.SendCommand($"help {command}");
+                    var existingCommand = TopLevelViews.CommandInput.Text;
+
+                    CommandQueue.SendCommand($"help {command}", customAction: views =>
+                    {
+                        // this text gets cleared by the worker
+                        // TODO: fix
+                        TopLevelViews.CommandInput.Text = existingCommand;
+                        return views;
+                    });
+
                     args.Handled = true;
                 }
             }
