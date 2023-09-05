@@ -15,11 +15,11 @@ public class GetDotnetDumpAnalyzeViewerCommand : PSCmdlet
 
     protected override void ProcessRecord()
     {
+        using var _ = new CurrentDirectoryScope(SessionState.Path.CurrentLocation.Path);
         try
         {
-            var analyzeArgs = SessionState.Path.GetUnresolvedProviderPathFromPSPath(AnalyzeArgs);
             var fileName = FileName ?? App.DotnetDumpToolName;
-            App.Run(fileName, analyzeArgs).GetAwaiter().GetResult();
+            App.Run(fileName, AnalyzeArgs).GetAwaiter().GetResult();
         }
         finally
         {

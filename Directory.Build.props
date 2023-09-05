@@ -7,6 +7,6 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <CmdletVersion>0.0.7</CmdletVersion>
+        <CmdletVersion>0.0.8</CmdletVersion>
     </PropertyGroup>
 </Project>

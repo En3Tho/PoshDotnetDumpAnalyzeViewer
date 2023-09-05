@@ -10,6 +10,7 @@ public static class ProcessUtil
         {
             FileName = fileName,
             Arguments = $"analyze \"{analyzeArgs}\"",
+            WorkingDirectory = Environment.CurrentDirectory,
             RedirectStandardError = true,
             RedirectStandardInput = true,
             RedirectStandardOutput = true
