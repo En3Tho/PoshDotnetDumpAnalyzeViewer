@@ -44,22 +44,12 @@ public sealed record HelpCommandOutputViewFactory
 
         views.OutputListView.KeyPress += args =>
         {
-            // To function ?
             if (args.KeyEvent.Key == Key.Enter)
             {
                 if (views.OutputListView.TryParseLine<HelpParser>(Commands.Help) is HelpOutputLine line)
                 {
                     var command = line.Commands[0];
-                    var existingCommand = TopLevelViews.CommandInput.Text;
-
-                    CommandQueue.SendCommand($"help {command}", customAction: views =>
-                    {
-                        // this text gets cleared by the worker
-                        // TODO: fix
-                        TopLevelViews.CommandInput.Text = existingCommand;
-                        return views;
-                    });
-
+                    CommandQueue.SendCommand($"help {command}");
                     args.Handled = true;
                 }
             }

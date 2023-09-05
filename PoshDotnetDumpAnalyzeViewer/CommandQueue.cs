@@ -23,10 +23,25 @@ public record CommandQueueWorker(
         TabManager.SetSelected(tabToUpdate);
     }
 
+    TabView.Tab GetOrCreateTabForCommand(string command, CommandOutputViews views)
+    {
+        if (TabManager.TryGetTab(command) is { } tabToUpgrade)
+        {
+            tabToUpgrade.Tab.View = views.Window;
+            TabManager.SetSelected(tabToUpgrade.Tab);
+            return tabToUpgrade.Tab;
+        }
+
+        var newTab = new TabView.Tab(command, views.Window);
+        TabManager.AddTab(command, views, newTab,  true);
+        return newTab;
+    }
+
     // TODO: rewrite this to di based commands maybe ?
     // TODO: too many booleans? -_-
     public async UITask Process(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
+        var textToRestore = TopLevelViews.CommandInput.Text;
         try
         {
             TopLevelViews.CommandInput.Text = command;
@@ -71,29 +86,14 @@ public record CommandQueueWorker(
             }
 
             CommandHistory.Add(command);
-
-            TabView.Tab tab;
-            if (TabManager.TryGetTab(command) is { } tabToUpgrade)
-            {
-                tabToUpgrade.Tab.View = views.Window;
-                TabManager.SetSelected(tabToUpgrade.Tab);
-                tab = tabToUpgrade.Tab;
-            }
-            else
-            {
-                var newTab = new TabView.Tab(command, views.Window);
-                TabManager.AddTab(command, views, newTab,  true);
-                tab = newTab;
-            }
-
-            // wait for ui to initialize
+            var tab = GetOrCreateTabForCommand(command, views);
             if (result.IsOk)
                 UpdateCommandViews(tab, views, ignoreOutput, customAction);
         }
         finally
         {
             TopLevelViews.CommandInput.ReadOnly = false;
-            TopLevelViews.CommandInput.Text = ustring.Empty;
+            TopLevelViews.CommandInput.Text = textToRestore;
         }
     }
 }
