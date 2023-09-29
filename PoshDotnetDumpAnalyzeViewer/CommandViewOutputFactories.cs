@@ -205,7 +205,7 @@ public sealed record ParallelStacksOutputFactory
     protected override CommandOutputViews CreateView(CommandOutput output)
     {
         var lines = output.Lines;
-        Array.Reverse(lines);
+        lines.AsSpan(1).Reverse();
         return base.CreateView(output);
     }
 

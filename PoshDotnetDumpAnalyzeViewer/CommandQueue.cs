@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using NStack;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
@@ -12,6 +11,20 @@ public record CommandQueueWorker(
     TabManager TabManager,
     IEnumerable<ICommandOutputViewFactory> ViewFactories)
 {
+    private void UpdateTab(TabView.Tab tabToUpdate, CommandOutputViews views)
+    {
+        var oldViews = tabToUpdate.View;
+        if (!ReferenceEquals(oldViews, views.Window))
+        {
+            // this one removes tab interface for some reason in 1.5
+            // and in 1.14 windows just hangs
+            // dunno if this is needed at all
+            //oldViews.Dispose();
+        }
+        tabToUpdate.View = views.Window;
+        TabManager.SetSelected(tabToUpdate);
+    }
+
     void UpdateCommandViews(TabView.Tab tabToUpdate, CommandOutputViews views, bool ignoreOutput, Func<CommandOutputViews, CommandOutputViews>? customAction)
     {
         // in case we need something from resulting view
@@ -19,16 +32,14 @@ public record CommandQueueWorker(
         if (ignoreOutput)
             return;
 
-        tabToUpdate.View = updatedView.Window;
-        TabManager.SetSelected(tabToUpdate);
+        UpdateTab(tabToUpdate, updatedView);
     }
 
     TabView.Tab GetOrCreateTabForCommand(string command, CommandOutputViews views)
     {
         if (TabManager.TryGetTab(command) is { } tabToUpgrade)
         {
-            tabToUpgrade.Tab.View = views.Window;
-            TabManager.SetSelected(tabToUpgrade.Tab);
+            UpdateTab(tabToUpgrade.Tab, views);
             return tabToUpgrade.Tab;
         }
 
@@ -41,7 +52,9 @@ public record CommandQueueWorker(
     // TODO: too many booleans? -_-
     public async UITask Process(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
-        var textToRestore = TopLevelViews.CommandInput.Text;
+        var textToRestore = TopLevelViews.CommandInput.Text?.ToString();
+        if (command.Equals(textToRestore)) textToRestore = "";
+
         try
         {
             TopLevelViews.CommandInput.Text = command;
@@ -82,6 +95,7 @@ public record CommandQueueWorker(
             {
                 // in case we need something from resulting view
                 customAction?.Invoke(views);
+                views.Window.Dispose();
                 return;
             }
 
