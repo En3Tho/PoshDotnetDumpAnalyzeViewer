@@ -145,9 +145,10 @@ public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpComman
 
 public record struct DumpObjectRanges(Range MethodTable, Range Field, Range Offset, Range Type, Range VT, Range Attr, Range Value, Range Name);
 
-public sealed record DumpObjectOutputLine(string Line, DumpObjectRanges Ranges) : OutputLine(Line), IMethodTable
+public sealed record DumpObjectOutputLine(string Line, DumpObjectRanges Ranges) : OutputLine(Line), IMethodTable, IObjectAddress
 {
     public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
+    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Value);
 }
 
 public record struct GCRootRanges(Range Address, Range TypeName);

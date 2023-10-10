@@ -33,7 +33,7 @@ public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard) : ICom
     protected abstract CommandOutputViews CreateView(CommandOutput output);
 }
 
-public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
+public abstract record ParsedCommandOutputViewFactoryBase<TParser>(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
     where TParser : IOutputParser, new()
 {
     protected override CommandOutputViews CreateView(CommandOutput output)
@@ -54,9 +54,8 @@ public abstract record DefaultViewsOutputViewFactoryBase<TParser>(TopLevelViews 
                             return true;
                         });
                     }
-
-                    args.Handled = true;
                 }
+                args.Handled = true;
             }
         };
 

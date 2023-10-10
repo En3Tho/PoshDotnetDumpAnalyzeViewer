@@ -47,6 +47,7 @@ public static class App
             new PrintExceptionOutputFactory(topLevelViews, clipboard, commandQueue),
             new DumpExceptionOutputFactory(topLevelViews, clipboard, commandQueue),
             new ParallelStacksOutputFactory(topLevelViews, clipboard, commandQueue),
+            new ClrStackOutputViewFactory(topLevelViews, clipboard, commandQueue),
             (SosCommandOutputViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new DefaultCommandOutputViewFactory(clipboard)
         };

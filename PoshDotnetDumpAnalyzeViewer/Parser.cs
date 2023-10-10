@@ -260,6 +260,12 @@ static class RegexPatterns
         public const string ThreadNames =
             $"{WS}~~~~{C}";
     }
+
+    public static class ClrStack
+    {
+        public const string ParameterOrLocalAddress =
+            $"{WS}{C}{WS}={WS}{Hg}";
+    }
 }
 
 public partial class HelpParser : IOutputParser
@@ -1057,4 +1063,30 @@ public partial class ParallelStacksParser : IOutputParser
     }
 
     public static bool IsThreadNames(string line) => ThreadNames().IsMatch(line);
+}
+
+public partial class ClrStackParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.ClrStack.ParameterOrLocalAddress)]
+    public static partial Regex ParameterOrLocalAddress();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (ParameterOrLocalAddressRanges(line) is {} objectAddressRanges)
+            return new ObjectAddressOutputLine(line, objectAddressRanges);
+
+        return new(line);
+    }
+
+    public static ObjectAddressRanges? ParameterOrLocalAddressRanges(string line)
+    {
+        if (ParameterOrLocalAddress().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
+    }
 }

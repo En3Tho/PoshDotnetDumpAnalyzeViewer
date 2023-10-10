@@ -50,7 +50,7 @@ public record CommandQueueWorker(
 
     // TODO: rewrite this to di based commands maybe ?
     // TODO: too many booleans? -_-
-    public async UITask Process(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+    public async UITask Process(string command, string commandTabName, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
         var textToRestore = TopLevelViews.CommandInput.Text?.ToString();
         if (command.Equals(textToRestore)) textToRestore = "";
@@ -60,7 +60,7 @@ public record CommandQueueWorker(
             TopLevelViews.CommandInput.Text = command;
             TopLevelViews.CommandInput.ReadOnly = true;
 
-            if (!forceRefresh && TabManager.TryGetTab(command) is { } tabToUpdate)
+            if (!forceRefresh && TabManager.TryGetTab(commandTabName) is { } tabToUpdate)
             {
                 UpdateCommandViews(tabToUpdate.Tab, tabToUpdate.Views, ignoreOutput, customAction);
                 return;
@@ -100,7 +100,7 @@ public record CommandQueueWorker(
             }
 
             CommandHistory.Add(command);
-            var tab = GetOrCreateTabForCommand(command, views);
+            var tab = GetOrCreateTabForCommand(commandTabName, views);
             if (result.IsOk)
                 UpdateCommandViews(tab, views, ignoreOutput, customAction);
         }
@@ -114,22 +114,27 @@ public record CommandQueueWorker(
 
 public record CommandQueue(Action<Exception> ExceptionHandler)
 {
-    private readonly Channel<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)> _channel =
-        Channel.CreateUnbounded<(string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)>(new() { SingleReader = true});
+    private readonly Channel<(string, string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)> _channel =
+        Channel.CreateUnbounded<(string, string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?)>(new() { SingleReader = true});
 
-    public void SendCommand(string command,  bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+    public void SendCommand(string command, string commandTabName,  bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
     {
-        _channel.Writer.TryWrite((command, forceRefresh, ignoreOutput, customAction));
+        _channel.Writer.TryWrite((command, commandTabName, forceRefresh, ignoreOutput, customAction));
+    }
+
+    public void SendCommand(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+    {
+        _channel.Writer.TryWrite((command, command, forceRefresh, ignoreOutput, customAction));
     }
 
     public void Start(CommandQueueWorker worker, CancellationToken token) => Task.Run(async () =>
     {
         var reader = _channel.Reader;
-        await foreach (var (command, forceRefresh, ignoreOutput, customAction) in reader.ReadAllAsync(token))
+        await foreach (var (command, commandTabName, forceRefresh, ignoreOutput, customAction) in reader.ReadAllAsync(token))
         {
             try
             {
-                await worker.Process(Commands.NormalizeCommand(command), forceRefresh, ignoreOutput, customAction);
+                await worker.Process(Commands.NormalizeCommand(command), commandTabName, forceRefresh, ignoreOutput, customAction);
             }
             catch (Exception exn)
             {

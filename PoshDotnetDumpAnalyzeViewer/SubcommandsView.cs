@@ -310,18 +310,18 @@ public static class SubcommandsView
                     ignoreOutput: true,
                     customAction: views =>
                     {
-                        CommandQueue.SendCommand($"{Commands.ClrStack}", forceRefresh: true);
+                        CommandQueue.SendCommand($"{Commands.ClrStack}", $"{Commands.ClrStack} ({idAsInt})", forceRefresh: true);
                         return views;
                     }));
 
             yield return (
                 Priority.SetThread,
-                MakeCommandButton("Set as current thread and display call stack (full info)",
+                MakeCommandButton("Set as current thread and display call stack (full)",
                     $"{Commands.SetThread} -t {idAsInt}",
                     ignoreOutput: true,
                     customAction: views =>
                     {
-                        CommandQueue.SendCommand($"{Commands.ClrStack} -a", forceRefresh: true);
+                        CommandQueue.SendCommand($"{Commands.ClrStack} -a", $"{Commands.ClrStack} -a ({idAsInt})", forceRefresh: true);
                         return views;
                     }));
 

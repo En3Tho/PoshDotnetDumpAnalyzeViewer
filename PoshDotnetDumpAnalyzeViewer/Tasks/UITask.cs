@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using Terminal.Gui;
 
@@ -29,11 +30,13 @@ public sealed class UITask
 
     internal void Start()
     {
+        Debug.Assert(_moveNext is {});
         Application.MainLoop.Invoke(_moveNext);
     }
 
     internal void SetContinuation(Action cont)
     {
+        Debug.Assert(continuation is null);
         continuation = cont;
     }
 
