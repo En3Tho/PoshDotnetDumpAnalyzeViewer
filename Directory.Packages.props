@@ -1,7 +1,9 @@
 ﻿<Project>
+
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageVersion Include="System.Runtime.Experimental" Version="6.0.2" />
     <PackageVersion Include="Terminal.Gui" Version="1.14.0" />
@@ -11,4 +13,9 @@
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.3" />
     <PackageVersion Include="coverlet.collector" Version="3.1.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <GlobalPackageReference Include="Microsoft.Build.CopyOnWrite" Version="1.0.282" />
+  </ItemGroup>
+
 </Project>
