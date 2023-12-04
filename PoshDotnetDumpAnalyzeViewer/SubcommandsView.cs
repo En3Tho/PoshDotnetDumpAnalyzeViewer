@@ -84,7 +84,7 @@ public static class SubcommandsView
                 MakeCommandButton("Find GC root", $"{Commands.GCRoot} {data}"));
             yield return (
                 Priority.DumpObjects,
-                MakeCommandButton("Calculate object size", $"{Commands.ObjSize} {data}"));
+                MakeCommandButton("Calculate retained memory", $"{Commands.ObjSize} {data}"));
             yield return (
                 Priority.DumpObjects,
                 MakeCommandButton("Dump object", $"{Commands.DumpObject} {data}"));
@@ -220,6 +220,9 @@ public static class SubcommandsView
             yield return (
                 Priority.Copy,
                 MakeButton("Copy method table", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+            yield return (
+                Priority.DumpObjects,
+                MakeCommandButton("Calculate retained memory", $"{Commands.ObjSize} -mt {data}"));
             yield return (
                 Priority.DumpHeap,
                 MakeCommandButton("Dump heap (method table)", $"{Commands.DumpHeap} -mt {data}"));

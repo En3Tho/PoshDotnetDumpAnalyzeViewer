@@ -15,11 +15,11 @@ public readonly struct UITask
     public TaskAwaiter GetAwaiter() => _task.GetAwaiter();
 }
 
-public static class GuiCsSynchronizationContext
+public static class UISynchronizationContext
 {
-    public static SynchronizationContext Context { get; private set; } = null!;
+    public static SynchronizationContext Value { get; private set; } = null!;
 
-    public static void SetSynchronizationContext(SynchronizationContext context) => Context = context;
+    public static void Set(SynchronizationContext context) => Value = context;
 }
 
 public struct FakeAwaiter : ICriticalNotifyCompletion
@@ -44,7 +44,7 @@ public struct UITaskMethodBuilder
 
     public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine
     {
-        var ctx = GuiCsSynchronizationContext.Context;
+        var ctx = UISynchronizationContext.Value;
         if (ReferenceEquals(SynchronizationContext.Current, ctx))
         {
             _methodBuilder.Start(ref stateMachine);

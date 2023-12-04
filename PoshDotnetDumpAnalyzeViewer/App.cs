@@ -10,7 +10,7 @@ public static class App
     {
         var process = await ProcessUtil.StartDotnetDumpAnalyze(fileName, analyzeArgs);
         Application.Init();
-        GuiCsSynchronizationContext.SetSynchronizationContext(SynchronizationContext.Current
+        UISynchronizationContext.Set(SynchronizationContext.Current
                                                               ?? throw new InvalidOperationException("SynchronizationContext.Current is null"));
 
         var source = new CancellationTokenSource();
