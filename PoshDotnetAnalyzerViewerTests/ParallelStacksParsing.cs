@@ -142,7 +142,7 @@ public class ParallelStacksParsing
             "________________________________________________",
             "",
             "",
-            "    3 System.Threading.ThreadPoolWorkQueue.Dispatch()",
+            "    3 System.Threading.PortableThreadPool+WorkerThread.WorkerThreadStart()",
             "    3 System.Threading.ThreadPoolWorkQueue.Dispatch()",
             "         2 System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task ByRef, Thread)",
             "         2 System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(Thread, ExecutionContext, ContextCallback, Object)",

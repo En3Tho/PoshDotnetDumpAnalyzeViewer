@@ -30,6 +30,9 @@ public static class CommandViewsExtensions
     public static CommandOutputViews SetupLogic(this CommandOutputViews @this, IClipboard clipboard,
         CommandOutput output)
     {
+        var filterHistory = new HistoryList<string>();
+        var lastFilter = "";
+
         @this.OutputListView.SetSource(output.Lines);
 
         @this.OutputListView.KeyPress += args =>
@@ -49,11 +52,20 @@ public static class CommandViewsExtensions
                     ProcessTabKey();
                     args.Handled = true;
                     break;
+                case Key.CtrlMask | Key.Enter:
+                    ProcessEnterKey();
+                    args.Handled = true;
+                    break;
+                default:
+                    // delegate simple number and letter keystrokes to filter
+                    if (args.KeyEvent.Key is >= Key.Space and <= Key.z or Key.Backspace)
+                    {
+                        @this.FilterTextField.ProcessKey(args.KeyEvent);
+                        args.Handled = true;
+                    }
+                    break;
             }
         };
-
-        var filterHistory = new HistoryList<string>();
-        var lastFilter = "";
 
         void ProcessEnterKey()
         {

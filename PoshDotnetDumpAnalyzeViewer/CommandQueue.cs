@@ -13,14 +13,6 @@ public record CommandQueueWorker(
 {
     private void UpdateTab(TabView.Tab tabToUpdate, CommandOutputViews views)
     {
-        var oldViews = tabToUpdate.View;
-        if (!ReferenceEquals(oldViews, views.Window))
-        {
-            // this one removes tab interface for some reason in 1.5
-            // and in 1.14 windows just hangs
-            // dunno if this is needed at all
-            //oldViews.Dispose();
-        }
         tabToUpdate.View = views.Window;
         TabManager.SetSelected(tabToUpdate);
     }
@@ -39,7 +31,6 @@ public record CommandQueueWorker(
     {
         if (TabManager.TryGetTab(command) is { } tabToUpgrade)
         {
-            UpdateTab(tabToUpgrade.Tab, views);
             return tabToUpgrade.Tab;
         }
 
@@ -62,11 +53,13 @@ public record CommandQueueWorker(
 
             if (!forceRefresh && TabManager.TryGetTab(commandTabName) is { } tabToUpdate)
             {
-                UpdateCommandViews(tabToUpdate.Tab, tabToUpdate.Views, ignoreOutput, customAction);
+                var updatedView = customAction?.Invoke(tabToUpdate.Views) ?? tabToUpdate.Views;
+                if (ignoreOutput)
+                    return;
+
+                UpdateTab(tabToUpdate.Tab, updatedView);
                 return;
             }
-
-            var viewFactory = ViewFactories.First(x => x.IsSupported(command));
 
             using var cts = new CancellationTokenSource();
             async UITask RunTicker(CancellationToken token)
@@ -82,27 +75,30 @@ public record CommandQueueWorker(
             }
 
             _ = RunTicker(cts.Token);
-            var result = await cts.AwaitAndCancel(DotnetDump.PerformCommand(command));
-
-            TopLevelViews.CommandInput.Text = $"{command} ... processing output";
+            var result = await cts.AwaitAndCancel(Task.Run(() => DotnetDump.PerformCommand(command)));
             var output = new CommandOutput(command, result.Output);
-            var views =
-                result.IsOk
-                    ? viewFactory.HandleOutput(output)
-                    : UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
 
-            if (ignoreOutput && result.IsOk)
+            if (!result.IsOk)
+            {
+                var errorViews = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
+                GetOrCreateTabForCommand(commandTabName, errorViews);
+                return;
+            }
+
+            var viewFactory = ViewFactories.First(x => x.IsSupported(command));
+            var views = viewFactory.HandleOutput(output);
+            var updatedViews = customAction?.Invoke(views) ?? views;
+
+            if (ignoreOutput)
             {
                 // in case we need something from resulting view
-                customAction?.Invoke(views);
-                views.Window.Dispose();
+                updatedViews.Window.Dispose();
                 return;
             }
 
             CommandHistory.Add(command);
-            var tab = GetOrCreateTabForCommand(commandTabName, views);
-            if (result.IsOk)
-                UpdateCommandViews(tab, views, ignoreOutput, customAction);
+            var tab = GetOrCreateTabForCommand(commandTabName, updatedViews);
+            UpdateTab(tab, updatedViews);
         }
         finally
         {

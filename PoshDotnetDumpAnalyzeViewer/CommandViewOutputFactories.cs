@@ -191,15 +191,18 @@ public sealed record ParallelStacksOutputFactory
                 if (currentThreadCount != -1 && currentThreadCount != threadCount)
                 {
                     reducedStack.Add(firstLine);
-                    reducedStack.Add(lastLine);
+                    if (!ReferenceEquals(firstLine, lastLine))
+                    {
+                        reducedStack.Add(lastLine);
+                    }
                 }
 
                 if (currentThreadCount != threadCount)
                 {
                     firstLine = line;
+                    currentThreadCount = threadCount;
                 }
 
-                currentThreadCount = threadCount;
                 lastLine = line;
                 continue;
             }
