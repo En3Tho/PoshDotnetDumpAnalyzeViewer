@@ -85,20 +85,14 @@ public class DotnetDumpAnalyzeBridge
 
         await _dotnetDump.StandardInput.WriteLineAsync(command);
 
-        while (true)
+        await foreach (var line in _dotnetDump.StandardOutput.ReadAllLinesToEndAsync().WithCancellation(_cancellationToken))
         {
-            var line = await _dotnetDump.StandardOutput.ReadLineAsync(_cancellationToken);
             if (line is Constants.EndCommandErrorAnchor)
             {
-                await foreach (var error in _dotnetDump.StandardError.ReadAllLinesToEndAsync().WithCancellation(_cancellationToken))
-                {
-                    values.Add(error);
-                }
-
                 return (values.ToArray(), false);
             }
 
-            if (line is null or Constants.EndCommandOutputAnchor)
+            if (line is Constants.EndCommandOutputAnchor)
                 break;
 
             values.Add(line);
