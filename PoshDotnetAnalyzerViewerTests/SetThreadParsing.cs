@@ -15,7 +15,8 @@ public class SetThreadParsing
             " 1 0x0008 (8)",
             " 2 0x0009 (9)",
             " 3 0x000A (10)",
-            " 4 0x000B (11)"
+            " 4 0x000B (11)",
+            "*0 0x838C (33676)"
         };
 
         var lines = OutputParserExtensions.ParseAll<SetThreadParser>(output, Commands.SetThread);
@@ -27,8 +28,21 @@ public class SetThreadParsing
             SetThreadOutputLine { OsThreadId.Span: "0x0008" },
             SetThreadOutputLine { OsThreadId.Span: "0x0009" },
             SetThreadOutputLine { OsThreadId.Span: "0x000A" },
-            SetThreadOutputLine { OsThreadId.Span: "0x000B" }
+            SetThreadOutputLine { OsThreadId.Span: "0x000B" },
+            SetThreadOutputLine { OsThreadId.Span: "0x838C" },
         ]);
+
+        var idsOsThreadIds = lines.Select(l => l as SetThreadOutputLine is {} line ? line.GetIntOsThreadId() : -1).ToArray();
+        Assert.True(idsOsThreadIds is
+            [
+                -1,
+                1,
+                8,
+                9,
+                10,
+                11,
+                33676
+            ]);
     }
 
     [Fact]

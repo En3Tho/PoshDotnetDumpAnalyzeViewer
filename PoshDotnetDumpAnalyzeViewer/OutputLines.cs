@@ -240,4 +240,9 @@ public sealed record SyncBlockZeroOutputLine(string Line, SyncBlockZeroRanges Ra
     public ReadOnlyMemory<char> SyncBlockOwnerTypeName => Line.AsMemory(Ranges.SyncBlockOwnerType);
 }
 
-public sealed record ParallelStacksOutputLine(string Line) : OutputLine(Line);
+public record struct ParallelStacksRanges(Range OsThreadIds);
+
+public sealed record ParallelStacksOutputLine(string Line, ParallelStacksRanges Ranges) : OutputLine(Line)
+{
+    public ReadOnlyMemory<char> OsThreadIds => Line.AsMemory(Ranges.OsThreadIds);
+}

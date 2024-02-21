@@ -11,9 +11,9 @@ public static class SubcommandsView
         DumpHeap = 1,
         PrintException = 1,
         GcRoot = 2,
-        DumpObjects = 3,
+        DumpObject = 3,
         DumpMethodTable = 4,
-        PStacks = 5,
+        ParallelStacks = 5,
         SetThread = 5,
         ThreadState = 9,
         SyncBlock = 9,
@@ -83,10 +83,10 @@ public static class SubcommandsView
                 Priority.GcRoot,
                 MakeCommandButton("Find GC root", $"{Commands.GCRoot} {data}"));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Calculate retained memory", $"{Commands.ObjSize} {data}"));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Dump object", $"{Commands.DumpObject} {data}"));
             yield return (
                 Priority.DumpMemory,
@@ -138,7 +138,7 @@ public static class SubcommandsView
                 Priority.Copy,
                 MakeButton("Copy syncblock owner address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Dump syncblock owner", $"{Commands.DumpObject} {data}"));
         }
 
@@ -152,7 +152,7 @@ public static class SubcommandsView
                 Priority.Copy,
                 MakeButton("Copy syncblock address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Dump syncblock", $"{Commands.DumpMemory} {data}"));
         }
 
@@ -166,7 +166,7 @@ public static class SubcommandsView
                 Priority.Copy,
                 MakeButton("Copy EEClass address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Dump EEClass", $"{Commands.DumpClass} {data}"));
         }
         
@@ -180,7 +180,7 @@ public static class SubcommandsView
                 Priority.Copy,
                 MakeButton("Copy Domain address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Dump Domain", $"{Commands.DumpDomain} {data}"));
         }
         
@@ -194,7 +194,7 @@ public static class SubcommandsView
                 Priority.Copy,
                 MakeButton("Copy Assembly address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Dump Assembly", $"{Commands.DumpAssembly} {data}"));
         }
         
@@ -208,7 +208,7 @@ public static class SubcommandsView
                 Priority.Copy,
                 MakeButton("Copy Module address", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Dump Module", $"{Commands.DumpModule} {data}"));
         }
         
@@ -221,7 +221,7 @@ public static class SubcommandsView
                 Priority.Copy,
                 MakeButton("Copy method table", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
             yield return (
-                Priority.DumpObjects,
+                Priority.DumpObject,
                 MakeCommandButton("Calculate retained memory", $"{Commands.ObjSize} -mt {data}"));
             yield return (
                 Priority.DumpHeap,
@@ -295,8 +295,7 @@ public static class SubcommandsView
                 yield break;
 
             var data = osThreadId.OsThreadId.ToString();
-            data = data.PadLeft(data.Length + data.Length % 4, '0');
-            var idAsInt = Convert.ToInt32(data, 16);
+            var idAsInt = osThreadId.GetIntOsThreadId();
 
             yield return (
                 Priority.Copy,
@@ -329,9 +328,9 @@ public static class SubcommandsView
                     }));
 
             yield return (
-                Priority.PStacks,
+                Priority.ParallelStacks,
                 MakeCommandButton("Find thread in parallel stacks",
-                    $"{Commands.ParallelStacks} -a",
+                    $"{Commands.ParallelStacks} -a -r",
                     customAction: views =>
                     {
                         var normalizedOsId = Convert.ToString(idAsInt, 16);
@@ -366,13 +365,13 @@ public static class SubcommandsView
 
         private IEnumerable<(Priority, Button)> GetParallelStacksButtons(OutputLine line)
         {
-            if (line is not ParallelStacksOutputLine)
+            if (line is not ParallelStacksOutputLine parallelStacksOutputLine)
                 yield break;
 
             yield return (
-                Priority.PStacks,
+                Priority.ParallelStacks,
                 MakeCommandButton("Shrink call stacks",
-                    $"{Commands.ParallelStacks} -a",
+                    $"{Commands.ParallelStacks} -a -r",
                     forceRefresh: true,
                     customAction: views =>
                     {
@@ -384,11 +383,45 @@ public static class SubcommandsView
             );
 
             yield return (
-                Priority.PStacks,
+                Priority.ParallelStacks,
                 MakeCommandButton("Restore call stacks",
-                    $"{Commands.ParallelStacks} -a",
+                    $"{Commands.ParallelStacks} -a -r",
                     forceRefresh: true)
             );
+
+            if (!parallelStacksOutputLine.OsThreadIds.IsEmpty)
+            {
+                foreach (var osThreadId in parallelStacksOutputLine.OsThreadIds.ToString().Split(','))
+                {
+                    var idAsInt = Utilities.GetIntOsThreadId(osThreadId);
+
+                    yield return (
+                        Priority.SetThread,
+                        MakeCommandButton($"[{osThreadId}] Set as current thread", $"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true));
+
+                    yield return (
+                        Priority.SetThread,
+                        MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack",
+                            $"{Commands.SetThread} -t {idAsInt}",
+                            ignoreOutput: true,
+                            customAction: views =>
+                            {
+                                CommandQueue.SendCommand($"{Commands.ClrStack}", $"{Commands.ClrStack} ({idAsInt})", forceRefresh: true);
+                                return views;
+                            }));
+
+                    yield return (
+                        Priority.SetThread,
+                        MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack (full)",
+                            $"{Commands.SetThread} -t {idAsInt}",
+                            ignoreOutput: true,
+                            customAction: views =>
+                            {
+                                CommandQueue.SendCommand($"{Commands.ClrStack} -a", $"{Commands.ClrStack} -a ({idAsInt})", forceRefresh: true);
+                                return views;
+                            }));
+                }
+            }
         }
 
         private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()

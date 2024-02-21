@@ -12,10 +12,16 @@ static class RegexPatterns
     private const string D = @"-?\d+";
 
     /// <summary>
+    /// HexChars only
+    /// </summary>
+    [StringSyntax(StringSyntaxAttribute.Regex)]
+    private const string HChars = @"0-9a-fA-F";
+
+    /// <summary>
     /// Hex
     /// </summary>
     [StringSyntax(StringSyntaxAttribute.Regex)]
-    private const string H = @"(?:0[xX])?[0-9a-fA-F]+";
+    private const string H = @$"(?:0[xX])?[${HChars}]+";
 
     /// <summary>
     /// Address
@@ -258,7 +264,7 @@ static class RegexPatterns
             $"^{WS}{Dg}{WS}{C}";
 
         public const string ThreadNames =
-            $"{WS}~~~~{C}";
+            $"{WS}~~~~{WSo}([{HChars},]+)";
     }
 
     public static class ClrStack
@@ -1045,7 +1051,8 @@ public partial class ParallelStacksParser : IOutputParser
 
     public static OutputLine Parse(string line, string command)
     {
-        return new ParallelStacksOutputLine(line);
+        var ranges = ThreadNamesRanges(line) ?? default;
+        return new ParallelStacksOutputLine(line, ranges);
     }
 
     public static bool TryParseThreadCount(string line, out int threadCount)
@@ -1060,6 +1067,18 @@ public partial class ParallelStacksParser : IOutputParser
 
         threadCount = 0;
         return false;
+    }
+
+    public static ParallelStacksRanges? ThreadNamesRanges(string line)
+    {
+        if (ThreadNames().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
     }
 
     public static bool IsThreadNames(string line) => ThreadNames().IsMatch(line);
