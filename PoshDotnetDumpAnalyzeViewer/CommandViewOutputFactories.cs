@@ -239,6 +239,11 @@ public sealed record SosCommandOutputViewFactory
     protected override CommandOutputViews CreateView(CommandOutput output)
     {
         var trimmedCommand = output.Command.TrimStart('s', 'o', 's', 'e', 'x', 't', ' ');
-        return Factories.First(x => x.IsSupported(trimmedCommand)).HandleOutput(output);
+        if (Factories.FirstOrDefault(x => x.IsSupported(trimmedCommand)) is {} factory)
+        {
+            return factory.HandleOutput(output);
+        }
+
+        return UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
     }
 }

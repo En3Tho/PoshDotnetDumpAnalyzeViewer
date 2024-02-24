@@ -27,8 +27,7 @@ public record CommandOutputViews(
 
 public static class CommandViewsExtensions
 {
-    public static CommandOutputViews SetupLogic(this CommandOutputViews @this, IClipboard clipboard,
-        CommandOutput output)
+    public static CommandOutputViews SetupLogic(this CommandOutputViews @this, IClipboard clipboard, CommandOutput output)
     {
         var filterHistory = new HistoryList<string>();
         var lastFilter = "";

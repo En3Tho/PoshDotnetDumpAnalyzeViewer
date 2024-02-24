@@ -62,11 +62,12 @@ public static class SubcommandsView
             string command,
             bool ignoreOutput = false,
             bool forceRefresh = false,
-            Func<CommandOutputViews, CommandOutputViews>? customAction = null)
+            Func<CommandOutputViews, CommandOutputViews>? mapView = null,
+            Func<string[], string[]>? mapOutput = null)
         {
             return MakeButton(
                 title,
-                () => CommandQueue.SendCommand(command, forceRefresh, ignoreOutput, customAction),
+                () => CommandQueue.SendCommand(command, forceRefresh, ignoreOutput, mapView, mapOutput),
                 MakePasteAction(command));
         }
 
@@ -310,7 +311,7 @@ public static class SubcommandsView
                 MakeCommandButton("Set as current thread and display call stack",
                     $"{Commands.SetThread} -t {idAsInt}",
                     ignoreOutput: true,
-                    customAction: views =>
+                    mapView: views =>
                     {
                         CommandQueue.SendCommand($"{Commands.ClrStack}", $"{Commands.ClrStack} ({idAsInt})", forceRefresh: true);
                         return views;
@@ -321,7 +322,7 @@ public static class SubcommandsView
                 MakeCommandButton("Set as current thread and display call stack (full)",
                     $"{Commands.SetThread} -t {idAsInt}",
                     ignoreOutput: true,
-                    customAction: views =>
+                    mapView: views =>
                     {
                         CommandQueue.SendCommand($"{Commands.ClrStack} -a", $"{Commands.ClrStack} -a ({idAsInt})", forceRefresh: true);
                         return views;
@@ -331,7 +332,7 @@ public static class SubcommandsView
                 Priority.ParallelStacks,
                 MakeCommandButton("Find thread in parallel stacks",
                     $"{Commands.ParallelStacks} -a -r",
-                    customAction: views =>
+                    mapView: views =>
                     {
                         var normalizedOsId = Convert.ToString(idAsInt, 16);
                         views.FilterTextField.Text = normalizedOsId;
@@ -373,13 +374,7 @@ public static class SubcommandsView
                 MakeCommandButton("Shrink call stacks",
                     $"{Commands.ParallelStacks} -a -r",
                     forceRefresh: true,
-                    customAction: views =>
-                    {
-                        var source = views.OutputListView.Source;
-                        var shrinkedSource = ParallelStacksOutputFactory.ShrinkParallelStacksOutput(source);
-                        views.OutputListView.SetSource(shrinkedSource);
-                        return views;
-                    })
+                    mapOutput: ParallelStacksOutputFactory.ShrinkParallelStacksOutput)
             );
 
             yield return (
@@ -404,7 +399,7 @@ public static class SubcommandsView
                         MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack",
                             $"{Commands.SetThread} -t {idAsInt}",
                             ignoreOutput: true,
-                            customAction: views =>
+                            mapView: views =>
                             {
                                 CommandQueue.SendCommand($"{Commands.ClrStack}", $"{Commands.ClrStack} ({idAsInt})", forceRefresh: true);
                                 return views;
@@ -415,7 +410,7 @@ public static class SubcommandsView
                         MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack (full)",
                             $"{Commands.SetThread} -t {idAsInt}",
                             ignoreOutput: true,
-                            customAction: views =>
+                            mapView: views =>
                             {
                                 CommandQueue.SendCommand($"{Commands.ClrStack} -a", $"{Commands.ClrStack} -a ({idAsInt})", forceRefresh: true);
                                 return views;
