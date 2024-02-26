@@ -220,7 +220,7 @@ public class UI
 
         var listView = new ArrayListView<string>(Array.Empty<string>())
         {
-            Height = Dim.Fill() - Dim.Sized(3),
+            Height = Dim.Fill() - Dim.Sized(2),
             Width = Dim.Fill()
         };
 
