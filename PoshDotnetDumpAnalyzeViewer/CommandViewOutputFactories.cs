@@ -241,7 +241,8 @@ public sealed record SosCommandOutputViewFactory
         var trimmedCommand = output.Command.TrimStart('s', 'o', 's', 'e', 'x', 't', ' ');
         if (Factories.FirstOrDefault(x => x.IsSupported(trimmedCommand)) is {} factory)
         {
-            return factory.HandleOutput(output);
+            var trimmedOutput = output with { Command = trimmedCommand };
+            return factory.HandleOutput(trimmedOutput);
         }
 
         return UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);

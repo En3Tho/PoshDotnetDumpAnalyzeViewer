@@ -23,16 +23,16 @@ public class SetThreadParsing
 
         Assert.True(lines is
         [
-            not SetThreadOutputLine,
-            SetThreadOutputLine { OsThreadId.Span: "0x0001" },
-            SetThreadOutputLine { OsThreadId.Span: "0x0008" },
-            SetThreadOutputLine { OsThreadId.Span: "0x0009" },
-            SetThreadOutputLine { OsThreadId.Span: "0x000A" },
-            SetThreadOutputLine { OsThreadId.Span: "0x000B" },
-            SetThreadOutputLine { OsThreadId.Span: "0x838C" },
+            not OsThreadIdOutputLine,
+            OsThreadIdOutputLine { OsThreadId.Span: "0x0001" },
+            OsThreadIdOutputLine { OsThreadId.Span: "0x0008" },
+            OsThreadIdOutputLine { OsThreadId.Span: "0x0009" },
+            OsThreadIdOutputLine { OsThreadId.Span: "0x000A" },
+            OsThreadIdOutputLine { OsThreadId.Span: "0x000B" },
+            OsThreadIdOutputLine { OsThreadId.Span: "0x838C" },
         ]);
 
-        var idsOsThreadIds = lines.Select(l => l as SetThreadOutputLine is {} line ? line.GetIntOsThreadId() : -1).ToArray();
+        var idsOsThreadIds = lines.Select(l => l as OsThreadIdOutputLine is {} line ? line.GetIntOsThreadId() : -1).ToArray();
         Assert.True(idsOsThreadIds is
             [
                 -1,
@@ -72,22 +72,22 @@ public class SetThreadParsing
 
         Assert.True(lines is
         [
-            not SetThreadOutputLine,
-            SetThreadOutputLine { OsThreadId.Span: "0x0001" },
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            SetThreadOutputLine { OsThreadId.Span: "0x0008" },
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            SetThreadOutputLine { OsThreadId.Span: "0x0009" },
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            not SetThreadOutputLine,
-            not SetThreadOutputLine
+            not OsThreadIdOutputLine,
+            OsThreadIdOutputLine { OsThreadId.Span: "0x0001" },
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            OsThreadIdOutputLine { OsThreadId.Span: "0x0008" },
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            OsThreadIdOutputLine { OsThreadId.Span: "0x0009" },
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine,
+            not OsThreadIdOutputLine
         ]);
     }
 }

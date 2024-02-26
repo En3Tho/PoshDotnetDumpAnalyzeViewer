@@ -288,27 +288,15 @@ public static class SubcommandsView
                 MakeButton("Copy CLR thread id", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
         }
 
-        private IEnumerable<(Priority, Button)> GetOsThreadIdButtons(OutputLine line)
+        private IEnumerable<(Priority, Button)> GetSetAsCurrentThreadButtons(string osThreadId, int idAsInt)
         {
-            // Not all OSThreadIds are linked with CLR
-            // It might be useful to filter out native-only ones
-            if (line is not IOsThreadId osThreadId)
-                yield break;
-
-            var data = osThreadId.OsThreadId.ToString();
-            var idAsInt = osThreadId.GetIntOsThreadId();
-
             yield return (
-                Priority.Copy,
-                MakeButton("Copy OS thread id", () => Clipboard.SetClipboardData(data), MakePasteAction(data)));
+                Priority.SetThread,
+                MakeCommandButton($"[{osThreadId}] Set as current thread", $"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true));
 
             yield return (
                 Priority.SetThread,
-                MakeCommandButton("Set as current thread", $"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true));
-
-            yield return (
-                Priority.SetThread,
-                MakeCommandButton("Set as current thread and display call stack",
+                MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack",
                     $"{Commands.SetThread} -t {idAsInt}",
                     ignoreOutput: true,
                     mapView: views =>
@@ -319,7 +307,7 @@ public static class SubcommandsView
 
             yield return (
                 Priority.SetThread,
-                MakeCommandButton("Set as current thread and display call stack (full)",
+                MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack (full)",
                     $"{Commands.SetThread} -t {idAsInt}",
                     ignoreOutput: true,
                     mapView: views =>
@@ -327,6 +315,24 @@ public static class SubcommandsView
                         CommandQueue.SendCommand($"{Commands.ClrStack} -a", $"{Commands.ClrStack} -a ({idAsInt})", forceRefresh: true);
                         return views;
                     }));
+        }
+
+        private IEnumerable<(Priority, Button)> GetOsThreadIdButtons(OutputLine line)
+        {
+            // Not all OSThreadIds are linked with CLR
+            // It might be useful to filter out native-only ones
+            if (line is not IOsThreadId osThreadIdLine)
+                yield break;
+
+            var osThreadId = osThreadIdLine.OsThreadId.ToString();
+            var idAsInt = osThreadIdLine.GetIntOsThreadId();
+
+            yield return (
+                Priority.Copy,
+                MakeButton("Copy OS thread id", () => Clipboard.SetClipboardData(osThreadId), MakePasteAction(osThreadId)));
+
+            foreach (var button in GetSetAsCurrentThreadButtons(osThreadId, idAsInt))
+                yield return button;
 
             yield return (
                 Priority.ParallelStacks,
@@ -374,7 +380,15 @@ public static class SubcommandsView
                 MakeCommandButton("Shrink call stacks",
                     $"{Commands.ParallelStacks} -a -r",
                     forceRefresh: true,
-                    mapOutput: ParallelStacksOutputFactory.ShrinkParallelStacksOutput)
+                    mapOutput: strings =>
+                    {
+                        // TODO: this is horrible but ParallelStacks reverses output by default so we have to reverse it twice here
+                        // I'm too lazy to fix it
+                        strings.AsSpan(1).Reverse();
+                        var result = ParallelStacksOutputFactory.ShrinkParallelStacksOutput(strings);
+                        result.AsSpan().Reverse();
+                        return result;
+                    })
             );
 
             yield return (
@@ -390,31 +404,8 @@ public static class SubcommandsView
                 {
                     var idAsInt = Utilities.GetIntOsThreadId(osThreadId);
 
-                    yield return (
-                        Priority.SetThread,
-                        MakeCommandButton($"[{osThreadId}] Set as current thread", $"{Commands.SetThread} -t {idAsInt}", ignoreOutput: true));
-
-                    yield return (
-                        Priority.SetThread,
-                        MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack",
-                            $"{Commands.SetThread} -t {idAsInt}",
-                            ignoreOutput: true,
-                            mapView: views =>
-                            {
-                                CommandQueue.SendCommand($"{Commands.ClrStack}", $"{Commands.ClrStack} ({idAsInt})", forceRefresh: true);
-                                return views;
-                            }));
-
-                    yield return (
-                        Priority.SetThread,
-                        MakeCommandButton($"[{osThreadId}] Set as current thread and display call stack (full)",
-                            $"{Commands.SetThread} -t {idAsInt}",
-                            ignoreOutput: true,
-                            mapView: views =>
-                            {
-                                CommandQueue.SendCommand($"{Commands.ClrStack} -a", $"{Commands.ClrStack} -a ({idAsInt})", forceRefresh: true);
-                                return views;
-                            }));
+                    foreach (var button in GetSetAsCurrentThreadButtons(osThreadId, idAsInt))
+                        yield return button;
                 }
             }
         }

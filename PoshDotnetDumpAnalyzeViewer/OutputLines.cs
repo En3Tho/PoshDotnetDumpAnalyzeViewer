@@ -138,6 +138,13 @@ public sealed record DomainAddressOutputLine(string Line, DomainAddressRanges Ra
     public ReadOnlyMemory<char> DomainAddress => Line.AsMemory(Ranges.Domain);
 }
 
+public record struct OsThreadIdRanges(Range OsThreadId);
+
+public sealed record OsThreadIdOutputLine(string Line, OsThreadIdRanges IdRanges) : OutputLine(Line), IOsThreadId
+{
+    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(IdRanges.OsThreadId);
+}
+
 public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpCommand
 {
     public string[] Commands => HelpParser.GetCommandsFromLine(Line);
@@ -198,13 +205,6 @@ public sealed record ObjSizeStatisticsOutputLine(string Line, ObjSizeStatisticsR
 {
     public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
     public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.ClassName);
-}
-
-public record struct SetThreadRanges(Range OsThreadId);
-
-public sealed record SetThreadOutputLine(string Line, SetThreadRanges Ranges) : OutputLine(Line), IOsThreadId
-{
-    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OsThreadId);
 }
 
 public record struct ClrThreadsRanges(Range Dbg, Range Id, Range OsId, Range ThreadObj, Range State, Range GcMode,

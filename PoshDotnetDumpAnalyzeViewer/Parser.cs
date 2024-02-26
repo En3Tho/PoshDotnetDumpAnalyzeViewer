@@ -152,9 +152,6 @@ static class RegexPatterns
     public const string SyncBlockZero =
         $"{WSo}{Dg}{WS}{Ag}{WS}{Dg}{WS}{Dg}{WS}{Ag}{WS}({H}|none){WS}{Ag}{WS}{Tg}{WSo}";
 
-    public const string GCRoot =
-        $@"{WSo}(?:{WS}->{WS})?{Ag}{WS}(\(strong handle\)|{S}){WSo}";
-
     // Address MethodTable TypeName
     // Ag      Ag          Tg
     public const string DumpExceptions =
@@ -176,7 +173,17 @@ static class RegexPatterns
 
         // "MT  Field   Offset  Type VT     Attr            Value Name",
         // "Ag  Hg      Dg      Tg   Dg     Sg              Hg      Sg",
-        public const string Main = $"{Ag}{WS}{Hg}{WS}{Dg}{WS}{Tg}{WS}{Dg}{WS}{Sg}{WS}{Hg}{WS}{Sg}";
+        public const string Main = $"{Ag}{WS}{Hg}{WS}{Hg}{WS}{Tg}{WS}{Dg}{WS}{Sg}{WS}{Hg}{WS}{Sg}";
+    }
+
+    public static class GCRoot
+    {
+        public const string Root =
+            $@"{WSo}(?:{WS}->{WS})?{Ag}{WS}(\(strong handle\)|{S}){WSo}";
+
+        // Thread c6c8:
+        public const string ThreadId =
+            $"Thread{WS}{Hg}:{WSo}";
     }
 
     public static class DumpMethodTable
@@ -390,12 +397,12 @@ public partial class SetThreadParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetRanges(line) is {} ranges)
-            return new SetThreadOutputLine(line, ranges);
+            return new OsThreadIdOutputLine(line, ranges);
 
         return new(line);
     }
 
-    public static SetThreadRanges? GetRanges(string line)
+    public static OsThreadIdRanges? GetRanges(string line)
     {
         if (Regex().Match(line) is { Success: true } match)
         {
@@ -487,8 +494,11 @@ public partial class SyncBlockParser : IOutputParser
 
 public partial class GCRootParser : IOutputParser
 {
-    [GeneratedRegex(RegexPatterns.GCRoot)]
-    public static partial Regex Regex();
+    [GeneratedRegex(RegexPatterns.GCRoot.Root)]
+    public static partial Regex StrongHandleRegex();
+
+    [GeneratedRegex(RegexPatterns.GCRoot.ThreadId)]
+    public static partial Regex ThreadIdRegex();
 
     public static OutputLine Parse(string line, string _)
     {
@@ -500,12 +510,27 @@ public partial class GCRootParser : IOutputParser
             return new GCRootOutputLine(line, ranges);
         }
 
+        if (GetOsThreadIdRanges(line) is { } osThreadIdRanges)
+            return new OsThreadIdOutputLine(line, osThreadIdRanges);
+
         return new(line);
+    }
+
+    public static OsThreadIdRanges? GetOsThreadIdRanges(string line)
+    {
+        if (ThreadIdRegex().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default;
     }
 
     public static GCRootRanges? GetRanges(string line)
     {
-        if (Regex().Match(line) is { Success: true } match)
+        if (StrongHandleRegex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[2];
             match.CopyGroupsRangesTo(ranges);
