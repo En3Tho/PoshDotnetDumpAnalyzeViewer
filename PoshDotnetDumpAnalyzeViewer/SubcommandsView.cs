@@ -30,7 +30,7 @@ public static class SubcommandsView
             Title = "Available commands",
         };
 
-        private Button MakeButton(string title, Action onClick, Action onTab)
+        private Button MakeButton(string title, Action onEnter, Action onTab)
         {
             var button = new Button
             {
@@ -50,19 +50,13 @@ public static class SubcommandsView
                         break;
                     case KeyCode.Enter:
                         Application.RequestStop(_window);
-                        onClick();
+                        onEnter();
                         args.Handled = true;
                         break;
                     case KeyCode.Esc:
                         Application.RequestStop(_window);
                         break;
                 }
-            };
-
-            button.MouseClick += (_, _) =>
-            {
-                Application.RequestStop(_window);
-                onClick();
             };
 
             return button;

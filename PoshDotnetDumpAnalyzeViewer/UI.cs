@@ -61,7 +61,8 @@ public static class CommandViewsExtensions
                     break;
                 case KeyCode.PageDown:
                     var jumpSize = @this.OutputListView.Frame.Height;
-                    if (@this.OutputListView.TopItem + jumpSize > @this.OutputListView.Source.Length - 1 - jumpSize)
+                    var jumpPoint = Math.Max(@this.OutputListView.TopItem, @this.OutputListView.SelectedItem);
+                    if (jumpPoint + jumpSize > @this.OutputListView.Source.Length - 1 - @this.OutputListView.Frame.Height)
                     {
                         goto case KeyCode.End;
                     }
