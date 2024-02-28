@@ -104,35 +104,35 @@ public static class ArrayListViewExtensions
         if (@this.Source is not { Length: > 0 } source)
             return;
 
-        bool SetSelectedItem(int index)
+        bool SetSelectedItem(int start, int end)
         {
-            while (index < source.Length)
+            while (start < end)
             {
-                if (filter(source[index]))
+                if (filter(source[start]))
                 {
                     if (!@this.HasFocus)
                         @this.SetFocus();
                     // display this item in the middle of the list if there is enough space left
                     var linesInList = @this.Bounds.Height;
                     var topItemIndex =
-                        index < linesInList - 1
+                        start < linesInList - 1
                             ? 0
-                            : index - linesInList / 2;
+                            : start - linesInList / 2;
 
                     @this.TopItem = topItemIndex;
-                    @this.SelectedItem = index;
+                    @this.SelectedItem = start;
                     return true;
                 }
 
-                index++;
+                start++;
             }
 
             return false;
         }
 
         var index = @this.SelectedItem + 1;
-        if (!SetSelectedItem(index))
-            SetSelectedItem(0);
+        if (!SetSelectedItem(index, source.Length))
+            SetSelectedItem(0, @this.SelectedItem);
     }
 }
 

@@ -32,19 +32,20 @@ public static class CommandViewsExtensions
         var filterHistory = new HistoryList<string>();
         var lastFilter = "";
 
-        @this.OutputListView.SetSource(output.Lines);
+        var outputListView = @this.OutputListView;
+        outputListView.SetSource(output.Lines);
 
-        @this.OutputListView.KeyDown += (_, args) =>
+        outputListView.KeyDown += (_, args) =>
         {
             switch (args.KeyCode)
             {
                 case KeyCode.CtrlMask | KeyCode.C:
-                    clipboard.SetClipboardData(@this.OutputListView.Source[@this.OutputListView.SelectedItem]);
+                    clipboard.SetClipboardData(outputListView.Source[outputListView.SelectedItem]);
                     args.Handled = true;
                     break;
 
                 case KeyCode.CtrlMask | KeyCode.ShiftMask | KeyCode.C:
-                    clipboard.SetClipboardData(string.Join(Environment.NewLine, @this.OutputListView.Source));
+                    clipboard.SetClipboardData(string.Join(Environment.NewLine, outputListView.Source));
                     args.Handled = true;
                     break;
                 case KeyCode.Tab:
@@ -56,15 +57,19 @@ public static class CommandViewsExtensions
                     args.Handled = true;
                     break;
                 case KeyCode.End:
-                    @this.OutputListView.TopItem = Math.Max(0, @this.OutputListView.Source.Length - 1 - @this.OutputListView.Frame.Height);
-                    @this.OutputListView.SelectedItem = @this.OutputListView.Source.Length - 1;
+                    outputListView.SelectedItem = outputListView.Source.Length - 1;
+                    outputListView.TopItem = Math.Max(0, outputListView.Source.Length - outputListView.Frame.Height);
+                    args.Handled = true;
                     break;
                 case KeyCode.PageDown:
-                    var jumpSize = @this.OutputListView.Frame.Height;
-                    var jumpPoint = Math.Max(@this.OutputListView.TopItem, @this.OutputListView.SelectedItem);
-                    if (jumpPoint + jumpSize > @this.OutputListView.Source.Length - 1 - @this.OutputListView.Frame.Height)
+                    var jumpSize = outputListView.Frame.Height;
+                    var jumpPoint = outputListView.SelectedItem;
+                    var jumpMax = outputListView.Source.Length - outputListView.Frame.Height;
+                    if (jumpPoint + jumpSize > jumpMax)
                     {
-                        goto case KeyCode.End;
+                        outputListView.SelectedItem = Math.Min(outputListView.Source.Length - 1, jumpPoint + jumpSize);
+                        outputListView.TopItem = Math.Max(0, jumpMax);
+                        args.Handled = true;
                     }
                     break;
                 default:
@@ -86,7 +91,7 @@ public static class CommandViewsExtensions
 
             if (string.IsNullOrEmpty(filter))
             {
-                @this.OutputListView.SetSource(output.Lines);
+                outputListView.SetSource(output.Lines);
             }
             else
             {
@@ -95,7 +100,7 @@ public static class CommandViewsExtensions
                         .Where(line => line.Contains(filter, StringComparison.OrdinalIgnoreCase))
                         .ToArray();
 
-                @this.OutputListView.SetSource(filteredOutput);
+                outputListView.SetSource(filteredOutput);
                 filterHistory.Add(filter);
             }
 
@@ -109,7 +114,7 @@ public static class CommandViewsExtensions
             if (string.IsNullOrWhiteSpace(filter))
                 return;
 
-            @this.OutputListView.TryFindItemAndSetSelected(x => x.Contains(filter, StringComparison.OrdinalIgnoreCase));
+            outputListView.TryFindItemAndSetSelected(x => x.Contains(filter, StringComparison.OrdinalIgnoreCase));
         }
 
         @this.FilterTextField
