@@ -3,24 +3,19 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public interface ICommandOutputViewFactory
-{
-    CommandOutputViews HandleOutput(CommandOutput output);
-    ImmutableArray<string> SupportedCommands { get; }
-    bool IsSupported(string command);
-}
-
 public interface IOutputParser
 {
     static abstract OutputLine Parse(string line, string command);
 }
 
-public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard) : ICommandOutputViewFactory
+public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard)
 {
     public abstract ImmutableArray<string> SupportedCommands { get; }
 
     public virtual bool IsSupported(string command) => SupportedCommands.Any(supportedCommand =>
         command.StartsWith(supportedCommand, StringComparison.OrdinalIgnoreCase));
+
+    public virtual string NormalizeCommand(string command) => command;
 
     public CommandOutputViews HandleOutput(CommandOutput output)
     {
@@ -40,9 +35,9 @@ public abstract record ParsedCommandOutputViewFactoryBase<TParser>(TopLevelViews
     {
         var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
 
-        views.OutputListView.KeyPress += args =>
+        views.OutputListView.KeyDown += (_, args) =>
         {
-            if (args.KeyEvent.Key == Key.Enter)
+            if (args.KeyCode == KeyCode.Enter)
             {
                 if (views.OutputListView.TryParseLine<TParser>(output.Command) is { } line)
                 {

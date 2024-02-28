@@ -6,20 +6,20 @@ namespace PoshDotnetDumpAnalyzeViewer;
 public static class TextFieldExtensions
 {
     public static TextField AddClipboard(this TextField @this, IClipboard clipboard,
-        Key copyKey = Key.CtrlMask | Key.C, Key pasteKey = Key.CtrlMask | Key.V)
+        KeyCode copyKey = KeyCode.CtrlMask | KeyCode.C, KeyCode pasteKey = KeyCode.CtrlMask | KeyCode.V)
     {
-        @this.KeyPress += args =>
+        @this.KeyDown += (_, key) =>
         {
-            if (args.KeyEvent.Key == copyKey)
+            if (key.KeyCode == copyKey)
             {
                 @this.Copy(clipboard);
-                args.Handled = true;
+                key.Handled = true;
             }
-            else if (args.KeyEvent.Key == pasteKey)
+            else if (key.KeyCode == pasteKey)
             {
                 if (clipboard.GetClipboardData() is { } clipboardData)
                     @this.Paste(clipboardData);
-                args.Handled = true;
+                key.Handled = true;
             }
         };
 
@@ -27,20 +27,21 @@ public static class TextFieldExtensions
     }
 
     public static TextField AddCommandHistory(this TextField @this, HistoryList<string> historyList,
-        Key previousCommandKey = Key.CursorUp, Key nextCommandKey = Key.CursorDown)
+        KeyCode previousCommandKey = KeyCode.CursorUp, KeyCode nextCommandKey = KeyCode.CursorDown)
     {
-        @this.KeyPress += args =>
+        @this.KeyDown += (_, key) =>
         {
-            if (args.KeyEvent.Key == previousCommandKey)
+            if (key.KeyCode == previousCommandKey)
             {
                 if (historyList.Previous() is { } previousCommand)
                     @this.Text = previousCommand;
-                args.Handled = true;
+
+                key.Handled = true;
             }
-            else if (args.KeyEvent.Key == nextCommandKey)
+            else if (key.KeyCode == nextCommandKey)
             {
                 @this.Text = historyList.Next() ?? "";
-                args.Handled = true;
+                key.Handled = true;
             }
         };
 
@@ -50,8 +51,8 @@ public static class TextFieldExtensions
     public static void Copy(this TextField @this, IClipboard clipboard)
     {
         clipboard.SetClipboardData(@this.SelectedText is { Length: > 0 }
-            ? @this.SelectedText.ToString()
-            : @this.Text?.ToString());
+            ? @this.SelectedText
+            : @this.Text);
     }
 
     public static void Paste(this TextField @this, string text)
@@ -64,14 +65,22 @@ public static class TextFieldExtensions
         else if (@this.SelectedText is { Length: > 0 })
         {
             var start = @this.SelectedStart;
-            @this.Text = @this.Text.Replace(@this.SelectedText, text, 1);
+            var originalText = @this.Text;
+            var result = string.Create(originalText.Length - start + text.Length, (originalText, start, text), (span, state) =>
+            {
+                state.originalText.AsSpan(0, state.start).CopyTo(span);
+                state.text.AsSpan().CopyTo(span[state.start..]);
+                state.originalText.AsSpan(state.start + @this.SelectedLength).CopyTo(span[(state.start + state.text.Length)..]);
+            });
+
+            @this.Text = result;
             @this.ClearAllSelection();
             @this.CursorPosition = start + text.Length;
         }
         else
         {
             var originalPosition = @this.CursorPosition;
-            var originalText = @this.Text.ToString()!;
+            var originalText = @this.Text;
             @this.Text = originalText.Insert(originalPosition, text);
             @this.CursorPosition = originalPosition + text.Length;
         }
@@ -185,7 +194,7 @@ public static class ViewExtensions
 
 public static class SpanExtensions
 {
-    public static void Map<TIn, TOut>(this Span<TIn> @this, Span<TOut> result, Func<TIn, TOut> mapper)
+    public static void Map<TIn, TOut>(this ReadOnlySpan<TIn> @this, Span<TOut> result, Func<TIn, TOut> mapper)
     {
         if (@this.Length != result.Length)
             throw new ArgumentException("Span's lengths are different");
@@ -193,6 +202,9 @@ public static class SpanExtensions
         for (var i = 0; i < @this.Length; i++)
             result[i] = mapper(@this[i]);
     }
+
+    public static void Map<TIn, TOut>(this Span<TIn> @this, Span<TOut> result, Func<TIn, TOut> mapper) =>
+        Map((ReadOnlySpan<TIn>)@this, result, mapper);
 }
 
 public static class ArrayExtensions

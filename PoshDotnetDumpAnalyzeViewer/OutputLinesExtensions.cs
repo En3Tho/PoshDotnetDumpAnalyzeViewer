@@ -12,6 +12,7 @@ public static class Utilities
 {
     public static int GetIntOsThreadId(ReadOnlySpan<char> span)
     {
+        span = span.Trim();
         if (span.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
         {
             span = span[2..];

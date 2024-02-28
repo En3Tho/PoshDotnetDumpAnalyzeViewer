@@ -9,22 +9,27 @@ public record CommandQueueWorker(
     TopLevelViews TopLevelViews,
     HistoryList<string> CommandHistory,
     TabManager TabManager,
-    IEnumerable<ICommandOutputViewFactory> ViewFactories)
+    IEnumerable<CommandOutputViewFactoryBase> ViewFactories)
 {
-    private void UpdateTab(TabView.Tab tabToUpdate, CommandOutputViews views)
+    private void UpdateTab(Tab tabToUpdate, CommandOutputViews views)
     {
         tabToUpdate.View = views.Window;
         TabManager.SetSelected(tabToUpdate);
     }
 
-    TabView.Tab GetOrCreateTabForCommand(string command, CommandOutputViews views)
+    Tab GetOrCreateTabForCommand(string command, CommandOutputViews views)
     {
         if (TabManager.TryGetTab(command) is { } tabToUpgrade)
         {
             return tabToUpgrade.Tab;
         }
 
-        var newTab = new TabView.Tab(command, views.Window);
+        var newTab = new Tab
+        {
+            DisplayText = command,
+            View = views.Window
+        };
+
         TabManager.AddTab(command, views, newTab,  true);
         return newTab;
     }
@@ -35,11 +40,14 @@ public record CommandQueueWorker(
         Func<CommandOutputViews, CommandOutputViews>? mapView = null,
         Func<string[], string[]>? mapOutput = null)
     {
-        var textToRestore = TopLevelViews.CommandInput.Text?.ToString();
+        var textToRestore = TopLevelViews.CommandInput.Text;
         if (command.Equals(textToRestore)) textToRestore = "";
 
         try
         {
+            var viewFactory = ViewFactories.First(x => x.IsSupported(command));
+            command = viewFactory.NormalizeCommand(command);
+
             TopLevelViews.CommandInput.Text = command;
             TopLevelViews.CommandInput.ReadOnly = true;
 
@@ -69,7 +77,6 @@ public record CommandQueueWorker(
             _ = RunTicker(cts.Token);
             var result = await cts.AwaitAndCancel(Task.Run(() => DotnetDump.PerformCommand(command)));
 
-
             if (!result.IsOk)
             {
                 var errorOutput = new CommandOutput(command, result.Output);
@@ -80,7 +87,6 @@ public record CommandQueueWorker(
 
             var lines = mapOutput?.Invoke(result.Output) ?? result.Output;
             var output = new CommandOutput(command, lines);
-            var viewFactory = ViewFactories.First(x => x.IsSupported(command));
             var views = viewFactory.HandleOutput(output);
             var updatedViews = mapView?.Invoke(views) ?? views;
 

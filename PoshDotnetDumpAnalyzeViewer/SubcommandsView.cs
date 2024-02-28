@@ -25,25 +25,43 @@ public static class SubcommandsView
 
     private record ButtonFactory(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue)
     {
-        private readonly Dialog _dialog = new("Available commands");
+        private readonly Window _window = new()
+        {
+            Title = "Available commands",
+        };
 
         private Button MakeButton(string title, Action onClick, Action onTab)
         {
-            var button = new Button(0, 0, title);
-
-            button.KeyPress += args =>
+            var button = new Button
             {
-                if (args.KeyEvent.Key == Key.Tab)
+                X = 0,
+                Y = 0,
+                Title = title
+            };
+
+            button.KeyDown += (_, args) =>
+            {
+                switch (args.KeyCode)
                 {
-                    Application.RequestStop(_dialog);
-                    onTab();
-                    args.Handled = true;
+                    case KeyCode.Tab:
+                        Application.RequestStop(_window);
+                        onTab();
+                        args.Handled = true;
+                        break;
+                    case KeyCode.Enter:
+                        Application.RequestStop(_window);
+                        onClick();
+                        args.Handled = true;
+                        break;
+                    case KeyCode.Esc:
+                        Application.RequestStop(_window);
+                        break;
                 }
             };
 
-            button.Clicked += () =>
+            button.MouseClick += (_, _) =>
             {
-                Application.RequestStop(_dialog);
+                Application.RequestStop(_window);
                 onClick();
             };
 
@@ -412,8 +430,8 @@ public static class SubcommandsView
 
         private Func<OutputLine, IEnumerable<(Priority priority, Button button)>>[] GetFactories()
         {
-            return new[]
-            {
+            return
+            [
                 GetObjectAddressButtons,
                 GetExceptionObjectAddressButtons,
                 GetSyncBlockAddressButtons,
@@ -430,10 +448,10 @@ public static class SubcommandsView
                 GetAssemblyAddressButtons,
                 GetDomainAddressButtons,
                 GetParallelStacksButtons
-            };
+            ];
         }
 
-        public Dialog? TryGetSubcommandsDialog(OutputLine line)
+        public Toplevel? TryGetSubcommandsDialog(OutputLine line)
         {
             var buttons =
                 GetFactories()
@@ -445,7 +463,6 @@ public static class SubcommandsView
             if (buttons.Length is 0)
                 return null;
 
-            // 6 and 2 are pop-up dialog borders
             var width = buttons.MaxBy(values => values.Text.Length)!.Text.Length + 6;
             var height = buttons.Length + 2;
 
@@ -453,17 +470,17 @@ public static class SubcommandsView
             {
                 var button = buttons[i];
                 button.Y = i;
-                _dialog.AddButton(button);
+                _window.Add(button);
             }
 
-            _dialog.Width = width;
-            _dialog.Height = height;
+            _window.Width = width;
+            _window.Height = height;
 
-            return _dialog;
+            return _window;
         }
     }
 
-    public static Dialog? TryGetSubcommandsDialog(
+    public static Toplevel? TryGetSubcommandsDialog(
         TopLevelViews topLevelViews,
         OutputLine line,
         IClipboard clipboard,

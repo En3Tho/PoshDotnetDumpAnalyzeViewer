@@ -42,9 +42,9 @@ public sealed record HelpCommandOutputViewFactory
     {
         var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
 
-        views.OutputListView.KeyPress += args =>
+        views.OutputListView.KeyDown += (_, args) =>
         {
-            if (args.KeyEvent.Key == Key.Enter)
+            if (args.KeyCode == KeyCode.Enter)
             {
                 if (views.OutputListView.TryParseLine<HelpParser>(Commands.Help) is HelpOutputLine line)
                 {
@@ -78,6 +78,26 @@ public sealed record SetThreadCommandOutputViewFactory
         TopLevelViews, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SetThread, Commands.Threads);
+    public override string NormalizeCommand(string command)
+    {
+        var start = command[0] == 's' ? Commands.SetThread.Length : Commands.Threads.Length;
+        var span = command.AsSpan(start).Trim();
+
+        if (span.StartsWith("-t"))
+        {
+            try
+            {
+                var threadId = Utilities.GetIntOsThreadId(span[2..]);
+                return $"{(command[0] == 's' ? Commands.SetThread : Commands.Threads)} -t {threadId}";
+            }
+            catch
+            {
+                return base.NormalizeCommand(command);
+            }
+        }
+
+        return base.NormalizeCommand(command);
+    }
 }
 
 public sealed record ClrThreadsCommandOutputViewFactory
@@ -232,7 +252,7 @@ public sealed record ClrStackOutputViewFactory
 }
 
 public sealed record SosCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue, ICommandOutputViewFactory[] Factories) : CommandOutputViewFactoryBase(Clipboard)
+    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue, CommandOutputViewFactoryBase[] Factories) : CommandOutputViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Sos, Commands.Ext);
 

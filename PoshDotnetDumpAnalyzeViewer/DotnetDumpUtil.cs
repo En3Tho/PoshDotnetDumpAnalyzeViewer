@@ -80,19 +80,18 @@ public class DotnetDumpAnalyzeBridge
 
     public async Task<(string[] Output, bool IsOk)> PerformCommand(string command)
     {
-        // TODO: jagged array?
         List<string> values = new(8192);
 
         await _dotnetDump.StandardInput.WriteLineAsync(command);
 
         await foreach (var line in _dotnetDump.StandardOutput.ReadAllLinesToEndAsync().WithCancellation(_cancellationToken))
         {
-            if (line is Constants.EndCommandErrorAnchor)
+            if (line.EndsWith(Constants.EndCommandErrorAnchor, StringComparison.Ordinal))
             {
                 return (values.ToArray(), false);
             }
 
-            if (line is Constants.EndCommandOutputAnchor)
+            if (line.EndsWith(Constants.EndCommandOutputAnchor, StringComparison.Ordinal))
                 break;
 
             values.Add(line);

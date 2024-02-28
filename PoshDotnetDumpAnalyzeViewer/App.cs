@@ -20,7 +20,7 @@ public static class App
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
         var historyList = new HistoryList<string>();
 
-        Application.Top.Closing += _ =>
+        Application.Top.Closing += (_, _) =>
         {
             source.Cancel();
             process.Kill(true);
@@ -29,8 +29,8 @@ public static class App
         var exceptionHandler = UI.MakeExceptionHandler(tabManager, clipboard);
         var commandQueue = new CommandQueue(exn => exceptionHandler(exn));
 
-        var viewFactories = new ICommandOutputViewFactory[]
-        {
+        CommandOutputViewFactoryBase[] viewFactories =
+        [
             new QuitCommandOutputViewFactory(clipboard),
             new HelpCommandOutputViewFactory(clipboard, commandQueue, topLevelViews),
             new DumpHeapCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
@@ -52,7 +52,7 @@ public static class App
             new ClrStackOutputViewFactory(topLevelViews, clipboard, commandQueue),
             (SosCommandOutputViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new DefaultCommandOutputViewFactory(clipboard)
-        };
+        ];
 
         viewFactories[^2] = new SosCommandOutputViewFactory(topLevelViews, clipboard, commandQueue, viewFactories);
 
@@ -62,7 +62,7 @@ public static class App
 
         commandQueue.Start(commandQueueWorker, source.Token);
 
-        Application.Top.Loaded += () =>
+        Application.Top.Loaded += (_, _) =>
         {
             commandQueue.SendCommand("help");
         };

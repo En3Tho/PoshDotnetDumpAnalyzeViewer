@@ -74,25 +74,18 @@ public class HistoryList<T>
     }
 }
 
-public class TabManager
+public class TabManager(TabView tabView)
 {
-    private readonly Dictionary<string, (TabView.Tab Tab, CommandOutputViews Views, bool IsOk)> _tabMap =
+    private readonly Dictionary<string, (Tab Tab, CommandOutputViews Views, bool IsOk)> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly TabView _tabView;
-
-    public TabManager(TabView tabView)
-    {
-        _tabView = tabView;
-    }
-
-    public (TabView.Tab Tab, CommandOutputViews Views, bool IsOk)? TryGetTab(string command)
+    public (Tab Tab, CommandOutputViews Views, bool IsOk)? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
         return default;
     }
 
-    public string? TryGetCommand(TabView.Tab tab)
+    public string? TryGetCommand(Tab tab)
     {
         foreach (var commandsAndKeys in _tabMap)
         {
@@ -103,7 +96,7 @@ public class TabManager
         return null;
     }
 
-    public void RemoveTab(TabView.Tab tab)
+    public void RemoveTab(Tab tab)
     {
         var command = TryGetCommand(tab);
 
@@ -115,22 +108,22 @@ public class TabManager
     {
         if (_tabMap.TryGetValue(command, out var result))
         {
-            _tabView.RemoveTab(result.Tab);
+            tabView.RemoveTab(result.Tab);
         }
 
         _tabMap.Remove(command);
     }
 
-    public void AddTab(string command, CommandOutputViews views, TabView.Tab tab, bool isOk)
+    public void AddTab(string command, CommandOutputViews views, Tab tab, bool isOk)
     {
         RemoveTab(command);
         _tabMap[command] = (tab, views, isOk);
-        _tabView.AddTab(tab, true);
+        tabView.AddTab(tab, true);
     }
 
-    public void SetSelected(TabView.Tab tab)
+    public void SetSelected(Tab tab)
     {
-        _tabView.SelectedTab = tab;
+        tabView.SelectedTab = tab;
     }
 }
 

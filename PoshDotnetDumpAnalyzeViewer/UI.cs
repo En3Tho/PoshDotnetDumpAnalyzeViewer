@@ -34,32 +34,37 @@ public static class CommandViewsExtensions
 
         @this.OutputListView.SetSource(output.Lines);
 
-        @this.OutputListView.KeyPress += args =>
+        @this.OutputListView.KeyDown += (_, args) =>
         {
-            switch (args.KeyEvent.Key)
+            switch (args.KeyCode)
             {
-                case Key.CtrlMask | Key.C:
+                case KeyCode.CtrlMask | KeyCode.C:
                     clipboard.SetClipboardData(@this.OutputListView.Source[@this.OutputListView.SelectedItem]);
                     args.Handled = true;
                     break;
 
-                case Key.CtrlMask | Key.ShiftMask | Key.C:
+                case KeyCode.CtrlMask | KeyCode.ShiftMask | KeyCode.C:
                     clipboard.SetClipboardData(string.Join(Environment.NewLine, @this.OutputListView.Source));
                     args.Handled = true;
                     break;
-                case Key.Tab:
+                case KeyCode.Tab:
                     ProcessTabKey();
                     args.Handled = true;
                     break;
-                case Key.CtrlMask | Key.Enter:
+                case KeyCode.CtrlMask | KeyCode.Enter:
                     ProcessEnterKey();
                     args.Handled = true;
                     break;
+                case KeyCode.Home:
+                case KeyCode.PageDown:
+                    // Here I want to prevent it from scrolling all the way to the bottom leaving only 1 item at the top. This is stupid
+                    // Seems like it is handled for CursorDown
+                    break;
                 default:
                     // delegate simple number and letter keystrokes to filter
-                    if (args.KeyEvent.Key is >= Key.Space and <= Key.z or Key.Backspace)
+                    if (args.KeyCode is >= KeyCode.Space and <= KeyCode.Z or KeyCode.Backspace)
                     {
-                        @this.FilterTextField.ProcessKey(args.KeyEvent);
+                        @this.FilterTextField.OnProcessKeyDown(args.KeyCode);
                         args.Handled = true;
                     }
                     break;
@@ -68,7 +73,7 @@ public static class CommandViewsExtensions
 
         void ProcessEnterKey()
         {
-            var filter = @this.FilterTextField.Text?.ToString();
+            var filter = @this.FilterTextField.Text;
             if (lastFilter.Equals(filter)) return;
 
             if (string.IsNullOrEmpty(filter))
@@ -91,7 +96,7 @@ public static class CommandViewsExtensions
 
         void ProcessTabKey()
         {
-            var filter = @this.FilterTextField.Text?.ToString();
+            var filter = @this.FilterTextField.Text;
 
             if (string.IsNullOrWhiteSpace(filter))
                 return;
@@ -102,15 +107,15 @@ public static class CommandViewsExtensions
         @this.FilterTextField
             .AddClipboard(clipboard)
             .AddCommandHistory(filterHistory)
-            .KeyPress += args =>
+            .KeyDown += (_, args) =>
         {
-            switch (args.KeyEvent.Key)
+            switch (args.KeyCode)
             {
-                case Key.Enter:
+                case KeyCode.Enter:
                     ProcessEnterKey();
                     args.Handled = true;
                     break;
-                case Key.Tab:
+                case KeyCode.Tab:
                     ProcessTabKey();
                     args.Handled = true;
                     break;
@@ -126,22 +131,22 @@ public static class ViewsExtensions
     public static TopLevelViews SetupLogic(this TopLevelViews @this, TabManager tabManager, CommandQueue commandQueue, IClipboard clipboard,
         HistoryList<string> commandHistory)
     {
-        @this.TabView.KeyPress += args =>
+        @this.TabView.KeyDown += (_, args) =>
         {
-            switch (args.KeyEvent.Key)
+            switch (args.KeyCode)
             {
-                case Key.CtrlMask | Key.W:
+                case KeyCode.CtrlMask | KeyCode.W:
                 {
                     // special case help
-                    if (@this.TabView is { SelectedTab: {} selectedTab} && selectedTab.Text.ToString() is not "help")
+                    if (@this.TabView is { SelectedTab: { Text: not "help" } selectedTab})
                         tabManager.RemoveTab(selectedTab);
                     args.Handled = true;
                     break;
                 }
-                case Key.CtrlMask | Key.R:
+                case KeyCode.CtrlMask | KeyCode.R:
                 {
                     // special case help
-                    if (@this.TabView is { SelectedTab: {} selectedTab } && selectedTab.Text.ToString()! is not "help" and var tabText)
+                    if (@this.TabView is { SelectedTab.Text: not "help" and var tabText})
                     {
                         if (tabManager.TryGetTab(tabText) is { IsOk: true })
                         {
@@ -156,7 +161,7 @@ public static class ViewsExtensions
 
         void ProcessEnterKey(bool forceRefresh)
         {
-            var command = @this.CommandInput.Text?.ToString();
+            var command = @this.CommandInput.Text;
             if (string.IsNullOrWhiteSpace(command)) return;
             commandQueue.SendCommand(command, forceRefresh: forceRefresh);
         }
@@ -164,20 +169,15 @@ public static class ViewsExtensions
         @this.CommandInput
             .AddClipboard(clipboard)
             .AddCommandHistory(commandHistory)
-            .KeyPress += args =>
+            .KeyDown += (_, args) =>
         {
-            // TODO: check if this is a bug and try to fix it
-            // TODO: try to fix double finger scroll in gui.cs?
-            // not sure why but enter key press on filter text filed triggers this one too. A bug?
-            if (!@this.CommandInput.HasFocus) return;
-
-            switch (args.KeyEvent.Key)
+            switch (args.KeyCode)
             {
-                case Key.CtrlMask | Key.Enter:
+                case KeyCode.CtrlMask | KeyCode.Enter:
                     ProcessEnterKey(true);
                     args.Handled = true;
                     break;
-                case Key.Enter:
+                case KeyCode.Enter:
                     ProcessEnterKey(false);
                     args.Handled = true;
                     break;
@@ -203,7 +203,11 @@ public class UI
                 MakeDefaultCommandViews(commandOutput)
                     .SetupLogic(clipboard, commandOutput);
 
-            var tab = new TabView.Tab("Unhandled exception", commandViews.Window);
+            var tab = new Tab
+            {
+                Title = "Unhandled exception",
+                View = commandViews.Window
+            };
             tabManager.AddTab(exn.Message, commandViews, tab, false);
 
             return true;
@@ -221,11 +225,12 @@ public class UI
         var listView = new ArrayListView<string>(Array.Empty<string>())
         {
             Height = Dim.Fill() - Dim.Sized(2),
-            Width = Dim.Fill()
+            Width = Dim.Fill(),
         };
 
-        var filterFrame = new FrameView("Filter")
+        var filterFrame = new FrameView
         {
+            Title = "Filter",
             Y = Pos.Bottom(listView),
             Height = 3,
             Width = Dim.Fill()
@@ -256,11 +261,12 @@ public class UI
         var tabView = new TabView
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill() - Dim.Sized(3),
+            Height = Dim.Fill() - Dim.Sized(3)
         };
 
-        var commandFrame = new FrameView("Command")
+        var commandFrame = new FrameView
         {
+            Title = "Command",
             Y = Pos.Bottom(tabView),
             Height = 3,
             Width = Dim.Fill()

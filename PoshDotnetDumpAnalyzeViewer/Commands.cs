@@ -61,6 +61,6 @@ public static partial class Commands
             return $"{command[ranges[0]].ToLower()}{command[ranges[1]]}";
         }
 
-        return command;
+        return command.Trim();
     }
 }

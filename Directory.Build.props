@@ -1,12 +1,11 @@
 <Project>
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <LangVersion>11</LangVersion>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <PropertyGroup>
-        <CmdletVersion>0.0.8</CmdletVersion>
+        <CmdletVersion>8.0.0</CmdletVersion>
     </PropertyGroup>
 </Project>
