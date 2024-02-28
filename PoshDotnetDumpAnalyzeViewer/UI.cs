@@ -55,13 +55,20 @@ public static class CommandViewsExtensions
                     ProcessEnterKey();
                     args.Handled = true;
                     break;
-                case KeyCode.Home:
+                case KeyCode.End:
+                    @this.OutputListView.TopItem = Math.Max(0, @this.OutputListView.Source.Length - 1 - @this.OutputListView.Frame.Height);
+                    @this.OutputListView.SelectedItem = @this.OutputListView.Source.Length - 1;
+                    break;
                 case KeyCode.PageDown:
-                    // Here I want to prevent it from scrolling all the way to the bottom leaving only 1 item at the top. This is stupid
-                    // Seems like it is handled for CursorDown
+                    var jumpSize = @this.OutputListView.Frame.Height;
+                    if (@this.OutputListView.TopItem + jumpSize > @this.OutputListView.Source.Length - 1 - jumpSize)
+                    {
+                        goto case KeyCode.End;
+                    }
                     break;
                 default:
                     // delegate simple number and letter keystrokes to filter
+                    // TODO: backspace is not processed anymore in v2. A bug?
                     if (args.KeyCode is >= KeyCode.Space and <= KeyCode.Z or KeyCode.Backspace)
                     {
                         @this.FilterTextField.OnProcessKeyDown(args.KeyCode);

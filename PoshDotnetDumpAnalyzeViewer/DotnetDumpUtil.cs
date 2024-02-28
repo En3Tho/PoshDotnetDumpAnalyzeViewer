@@ -67,24 +67,15 @@ public static class StreamReaderExtensions
     }
 }
 
-public class DotnetDumpAnalyzeBridge
+public class DotnetDumpAnalyzeBridge(Process dotnetDump, CancellationToken cancellationToken)
 {
-    private readonly Process _dotnetDump;
-    private readonly CancellationToken _cancellationToken;
-
-    public DotnetDumpAnalyzeBridge(Process dotnetDump, CancellationToken cancellationToken)
-    {
-        _dotnetDump = dotnetDump;
-        _cancellationToken = cancellationToken;
-    }
-
     public async Task<(string[] Output, bool IsOk)> PerformCommand(string command)
     {
         List<string> values = new(8192);
 
-        await _dotnetDump.StandardInput.WriteLineAsync(command);
+        await dotnetDump.StandardInput.WriteLineAsync(command);
 
-        await foreach (var line in _dotnetDump.StandardOutput.ReadAllLinesToEndAsync().WithCancellation(_cancellationToken))
+        await foreach (var line in dotnetDump.StandardOutput.ReadAllLinesToEndAsync().WithCancellation(cancellationToken))
         {
             if (line.EndsWith(Constants.EndCommandErrorAnchor, StringComparison.Ordinal))
             {

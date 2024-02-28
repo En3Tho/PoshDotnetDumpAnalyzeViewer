@@ -3,16 +3,9 @@
 namespace PoshDotnetDumpAnalyzeViewer;
 
 [AsyncMethodBuilder(typeof(UITaskMethodBuilder))]
-public readonly struct UITask
+public readonly struct UITask(Task task)
 {
-    private readonly Task _task;
-
-    public UITask(Task task)
-    {
-        _task = task;
-    }
-
-    public TaskAwaiter GetAwaiter() => _task.GetAwaiter();
+    public TaskAwaiter GetAwaiter() => task.GetAwaiter();
 }
 
 public static class UISynchronizationContext
