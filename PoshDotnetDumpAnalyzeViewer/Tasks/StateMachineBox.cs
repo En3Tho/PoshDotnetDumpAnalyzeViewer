@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Tasks;
 
 internal abstract class StateMachineBox : IThreadPoolWorkItem
 {

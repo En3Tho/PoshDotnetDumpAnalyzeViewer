@@ -1,38 +1,12 @@
-﻿using PoshDotnetDumpAnalyzeViewer.Views;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
+using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer.Interactivity;
+namespace PoshDotnetDumpAnalyzeViewer.ViewBehavior;
 
-public static class ViewsExtensions
+public static class ArrayListViewExtensions
 {
-    public static ListView FixNavigationDown(this ListView @this)
-    {
-        @this.KeyDown += (_, args) =>
-        {
-            switch (args.KeyCode)
-            {
-                case KeyCode.End:
-                    @this.SelectedItem = @this.Source.Length - 1;
-                    @this.TopItem = Math.Max(0, @this.Source.Length - @this.Frame.Height);
-                    args.Handled = true;
-                    break;
-                case KeyCode.PageDown:
-                    var jumpSize = @this.Frame.Height;
-                    var jumpPoint = @this.SelectedItem;
-                    var jumpMax = @this.Source.Length - @this.Frame.Height;
-                    if (jumpPoint + jumpSize > jumpMax)
-                    {
-                        @this.SelectedItem = Math.Min(@this.Source.Length - 1, jumpPoint + jumpSize);
-                        @this.TopItem = Math.Max(0, jumpMax);
-                        args.Handled = true;
-                    }
-
-                    break;
-            }
-        };
-        return @this;
-    }
-
     public static ArrayListView<T> AddClipboard<T>(this ArrayListView<T> @this, IClipboard clipboard)
     {
         @this.KeyDown += (_, args) =>
@@ -149,81 +123,50 @@ public static class ViewsExtensions
 
         return @this;
     }
-}
 
-public static class CommandOutputViewExtensions
-{
-    public static CommandOutputView AddDefaultBehavior(this CommandOutputView @this, IClipboard clipboard)
+    public static OutputLine? TryParseLine<TParser>(this ArrayListView<string> @this, string command)
+        where TParser : IOutputParser
     {
-        @this.ListView
-            .AddClipboard(clipboard)
-            .LinkWithFilterField(@this.Filter, (line, filter) => line.Contains(filter, StringComparison.OrdinalIgnoreCase))
-            .FixNavigationDown();
+        var selectedItem = @this.SelectedItem;
+        if (@this.Source is { } source && selectedItem >= 0)
+            return TParser.Parse(source[selectedItem], command);
 
-        @this.Filter.AddClipboard(clipboard);
-
-        return @this;
+        return null;
     }
-}
 
-public static class MainLayoutExtensions
-{
-    public static MainLayout SetupLogic(this MainLayout @this, TabManager tabManager, CommandQueue commandQueue, IClipboard clipboard,
-        HistoryList<string> commandHistory)
+    public static void TryFindItemAndSetSelected<T>(this ArrayListView<T> @this, Func<T, bool> filter)
     {
-        @this.TabView.KeyDown += (_, args) =>
-        {
-            switch (args.KeyCode)
-            {
-                case KeyCode.CtrlMask | KeyCode.W:
-                {
-                    // special case help
-                    if (@this.TabView is { SelectedTab: { Text: not "help" } selectedTab})
-                        tabManager.RemoveTab(selectedTab);
-                    args.Handled = true;
-                    break;
-                }
-                case KeyCode.CtrlMask | KeyCode.R:
-                {
-                    // special case help
-                    if (@this.TabView is { SelectedTab.Text: not "help" and var tabText})
-                    {
-                        if (tabManager.TryGetTab(tabText) is { IsOk: true })
-                        {
-                            commandQueue.SendCommand(tabText, forceRefresh: true);
-                        }
-                    }
-                    args.Handled = true;
-                    break;
-                }
-            }
-        };
+        if (@this.Source is not { Length: > 0 } source)
+            return;
 
-        void ProcessEnterKey(bool forceRefresh)
+        bool SetSelectedItem(int start, int end)
         {
-            var command = @this.CommandInput.Text;
-            if (string.IsNullOrWhiteSpace(command)) return;
-            commandQueue.SendCommand(command, forceRefresh: forceRefresh);
+            while (start < end)
+            {
+                if (filter(source[start]))
+                {
+                    if (!@this.HasFocus)
+                        @this.SetFocus();
+                    // display this item in the middle of the list if there is enough space left
+                    var linesInList = @this.Bounds.Height;
+                    var topItemIndex =
+                        start < linesInList - 1
+                            ? 0
+                            : start - linesInList / 2;
+
+                    @this.TopItem = topItemIndex;
+                    @this.SelectedItem = start;
+                    return true;
+                }
+
+                start++;
+            }
+
+            return false;
         }
 
-        @this.CommandInput
-            .AddClipboard(clipboard)
-            .AddCommandHistory(commandHistory)
-            .KeyDown += (_, args) =>
-        {
-            switch (args.KeyCode)
-            {
-                case KeyCode.CtrlMask | KeyCode.Enter:
-                    ProcessEnterKey(true);
-                    args.Handled = true;
-                    break;
-                case KeyCode.Enter:
-                    ProcessEnterKey(false);
-                    args.Handled = true;
-                    break;
-            }
-        };
-
-        return @this;
+        var index = @this.SelectedItem + 1;
+        if (!SetSelectedItem(index, source.Length))
+            SetSelectedItem(0, @this.SelectedItem);
     }
 }

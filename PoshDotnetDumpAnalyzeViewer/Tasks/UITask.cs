@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Tasks;
 
 [AsyncMethodBuilder(typeof(UITaskMethodBuilder))]
 public readonly struct UITask(Task task)

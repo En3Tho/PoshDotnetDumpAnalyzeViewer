@@ -1,9 +1,12 @@
-﻿using PoshDotnetDumpAnalyzeViewer.Views;
+﻿using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
+using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
+using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public static class SubcommandsView
+public static class SubcommandsDialog
 {
 #pragma warning disable CA1069
     private enum Priority
@@ -417,7 +420,7 @@ public static class SubcommandsView
             {
                 foreach (var osThreadId in parallelStacksOutputLine.OsThreadIds.ToString().Split(','))
                 {
-                    var idAsInt = Utilities.GetIntOsThreadId(osThreadId);
+                    var idAsInt = OsThreadIdReader.Read(osThreadId);
 
                     foreach (var button in GetSetAsCurrentThreadButtons(osThreadId, idAsInt))
                         yield return button;
@@ -477,7 +480,7 @@ public static class SubcommandsView
         }
     }
 
-    public static Toplevel? TryGetSubcommandsDialog(
+    public static Toplevel? TryCreate(
         MainLayout mainLayout,
         OutputLine line,
         IClipboard clipboard,

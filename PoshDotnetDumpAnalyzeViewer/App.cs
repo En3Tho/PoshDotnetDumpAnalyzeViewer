@@ -1,4 +1,6 @@
-﻿using PoshDotnetDumpAnalyzeViewer.Interactivity;
+﻿using PoshDotnetDumpAnalyzeViewer.Tasks;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
+using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
 using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
@@ -27,7 +29,7 @@ public static class App
             process.Kill(true);
         };
 
-        var exceptionHandler = UI.MakeExceptionHandler(tabManager, clipboard);
+        var exceptionHandler = ViewExceptionHandler.Create(tabManager, clipboard);
         var commandQueue = new CommandQueue(exn => exceptionHandler(exn));
 
         CommandOutputViewFactoryBase[] viewFactories =
@@ -59,7 +61,7 @@ public static class App
 
         var commandQueueWorker = new CommandQueueWorker(clipboard, bridge, mainLayout, historyList, tabManager, viewFactories);
 
-        mainLayout.SetupLogic(tabManager, commandQueue, clipboard, historyList);
+        mainLayout.AddDefaultBehavior(tabManager, commandQueue, clipboard, historyList);
 
         commandQueue.Start(commandQueueWorker, source.Token);
 

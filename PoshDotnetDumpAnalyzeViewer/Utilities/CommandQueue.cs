@@ -1,9 +1,10 @@
 using System.Threading.Channels;
-using PoshDotnetDumpAnalyzeViewer.Interactivity;
+using PoshDotnetDumpAnalyzeViewer.Tasks;
+using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
 using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 
 public record CommandQueueWorker(
     IClipboard Clipboard,

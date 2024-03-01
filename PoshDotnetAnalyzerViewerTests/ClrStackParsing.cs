@@ -1,4 +1,6 @@
 ﻿using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Xunit;
 
 namespace PoshDotnetAnalyzerViewerTests;

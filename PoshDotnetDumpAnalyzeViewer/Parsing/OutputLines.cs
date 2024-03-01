@@ -1,4 +1,4 @@
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Parsing;
 
 public interface IClrThreadId
 {

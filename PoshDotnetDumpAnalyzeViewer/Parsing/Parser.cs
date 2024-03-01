@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
+using PoshDotnetDumpAnalyzeViewer.Views;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Parsing;
 
 static class RegexPatterns
 {

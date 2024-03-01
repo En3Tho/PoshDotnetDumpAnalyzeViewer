@@ -1,9 +1,10 @@
 using System.Collections.Immutable;
-using PoshDotnetDumpAnalyzeViewer.Interactivity;
-using PoshDotnetDumpAnalyzeViewer.Views;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
+using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Views;
 
 public interface IOutputParser
 {
@@ -44,7 +45,7 @@ public abstract record ParsedCommandOutputViewFactoryBase<TParser>(MainLayout Ma
             {
                 if (views.ListView.TryParseLine<TParser>(line) is { } outputLine)
                 {
-                    return SubcommandsView.TryGetSubcommandsDialog(MainLayout, outputLine, Clipboard, CommandQueue);
+                    return SubcommandsDialog.TryCreate(MainLayout, outputLine, Clipboard, CommandQueue);
                 }
 
                 return null;

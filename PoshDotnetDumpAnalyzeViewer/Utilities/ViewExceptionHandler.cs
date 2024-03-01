@@ -1,12 +1,12 @@
-﻿using PoshDotnetDumpAnalyzeViewer.Interactivity;
+﻿using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
 using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 
-public class UI
+public class ViewExceptionHandler
 {
-    public static Func<Exception, bool> MakeExceptionHandler(TabManager tabManager, IClipboard clipboard)
+    public static Func<Exception, bool> Create(TabManager tabManager, IClipboard clipboard)
     {
         return exn =>
         {

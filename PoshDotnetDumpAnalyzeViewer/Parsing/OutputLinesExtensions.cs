@@ -1,16 +1,16 @@
-﻿namespace PoshDotnetDumpAnalyzeViewer;
+﻿namespace PoshDotnetDumpAnalyzeViewer.Parsing;
 
 public static class OutputLinesExtensions
 {
     public static int GetIntOsThreadId(this IOsThreadId osThreadId)
     {
-        return Utilities.GetIntOsThreadId(osThreadId.OsThreadId.Span);
+        return OsThreadIdReader.Read(osThreadId.OsThreadId.Span);
     }
 }
 
-public static class Utilities
+public static class OsThreadIdReader
 {
-    public static int GetIntOsThreadId(ReadOnlySpan<char> span)
+    public static int Read(ReadOnlySpan<char> span)
     {
         span = span.Trim();
         if (span.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
