@@ -69,7 +69,7 @@ public static class StreamReaderExtensions
 
 public class DotnetDump(Process dotnetDump, CancellationToken cancellationToken)
 {
-    private readonly SemaphoreSlim _semaphore = new(0, 1);
+    private readonly SemaphoreSlim _semaphore = new(1);
 
     public async Task<(string[] Output, bool IsOk)> Run(string command)
     {
