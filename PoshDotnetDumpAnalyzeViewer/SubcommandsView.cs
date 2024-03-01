@@ -1,4 +1,5 @@
-﻿using Terminal.Gui;
+﻿using PoshDotnetDumpAnalyzeViewer.Views;
+using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
@@ -23,7 +24,7 @@ public static class SubcommandsView
     }
 #pragma warning restore CA1069
 
-    private record ButtonFactory(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue)
+    private record ButtonFactory(MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue)
     {
         private readonly Window _window = new()
         {
@@ -65,8 +66,8 @@ public static class SubcommandsView
         private Action MakePasteAction(string data) =>
             () =>
             {
-                TopLevelViews.CommandInput.Paste(data);
-                TopLevelViews.CommandInput.SetFocus();
+                MainLayout.CommandInput.Paste(data);
+                MainLayout.CommandInput.SetFocus();
             };
 
         private Button MakeCommandButton(
@@ -74,7 +75,7 @@ public static class SubcommandsView
             string command,
             bool ignoreOutput = false,
             bool forceRefresh = false,
-            Func<CommandOutputViews, CommandOutputViews>? mapView = null,
+            Func<View, View>? mapView = null,
             Func<string[], string[]>? mapOutput = null)
         {
             return MakeButton(
@@ -350,11 +351,13 @@ public static class SubcommandsView
                 Priority.ParallelStacks,
                 MakeCommandButton("Find thread in parallel stacks",
                     $"{Commands.ParallelStacks} -a -r",
-                    mapView: views =>
+                    mapView: view =>
                     {
+                        var pstacksView = (CommandOutputView) view;
+
                         var normalizedOsId = Convert.ToString(idAsInt, 16);
-                        views.FilterTextField.Text = normalizedOsId;
-                        views.OutputListView.TryFindItemAndSetSelected(x =>
+                        pstacksView.Filter.Text = normalizedOsId;
+                        pstacksView.ListView.TryFindItemAndSetSelected(x =>
                         {
                             const string ThreadAnchor = "~~~~ ";
                             if (x.IndexOf(ThreadAnchor, StringComparison.Ordinal) is not -1 and var index)
@@ -366,7 +369,7 @@ public static class SubcommandsView
 
                             return false;
                         });
-                        return views;
+                        return view;
                     })
             );
         }
@@ -475,12 +478,12 @@ public static class SubcommandsView
     }
 
     public static Toplevel? TryGetSubcommandsDialog(
-        TopLevelViews topLevelViews,
+        MainLayout mainLayout,
         OutputLine line,
         IClipboard clipboard,
         CommandQueue commandQueue)
     {
-        var factory = new ButtonFactory(topLevelViews, clipboard, commandQueue);
+        var factory = new ButtonFactory(mainLayout, clipboard, commandQueue);
         return factory.TryGetSubcommandsDialog(line);
     }
 }

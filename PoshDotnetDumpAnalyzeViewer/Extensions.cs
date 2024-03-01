@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;

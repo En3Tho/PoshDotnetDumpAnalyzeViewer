@@ -1,4 +1,6 @@
-﻿using Terminal.Gui;
+﻿using PoshDotnetDumpAnalyzeViewer.Interactivity;
+using PoshDotnetDumpAnalyzeViewer.Views;
+using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
@@ -10,13 +12,12 @@ public static class App
     {
         var process = await ProcessUtil.StartDotnetDumpAnalyze(fileName, analyzeArgs);
         Application.Init();
-        UISynchronizationContext.Set(SynchronizationContext.Current
-                                                              ?? throw new InvalidOperationException("SynchronizationContext.Current is null"));
+        UISynchronizationContext.Set(SynchronizationContext.Current ?? throw new InvalidOperationException("SynchronizationContext.Current is null"));
 
         var source = new CancellationTokenSource();
-        var bridge = new DotnetDumpAnalyzeBridge(process, source.Token);
-        var topLevelViews = UI.MakeViews(Application.Top);
-        var tabManager = new TabManager(topLevelViews.TabView);
+        var bridge = new DotnetDump(process, source.Token);
+        var mainLayout = new MainLayout();
+        var tabManager = new TabManager(mainLayout.TabView);
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
         var historyList = new HistoryList<string>();
 
@@ -32,33 +33,33 @@ public static class App
         CommandOutputViewFactoryBase[] viewFactories =
         [
             new QuitCommandOutputViewFactory(clipboard),
-            new HelpCommandOutputViewFactory(clipboard, commandQueue, topLevelViews),
-            new DumpHeapCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new ObjSizeCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new SetThreadCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new ClrThreadsCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new SyncBlockCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new DumpObjectCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new DumpAssemblyCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new DumpClassCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new DumpMethodTableCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new DumpDomainCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new DumpModuleCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new Name2EECommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new GCRootCommandOutputViewFactory(topLevelViews, clipboard, commandQueue),
-            new PrintExceptionOutputFactory(topLevelViews, clipboard, commandQueue),
-            new DumpExceptionOutputFactory(topLevelViews, clipboard, commandQueue),
-            new ParallelStacksOutputFactory(topLevelViews, clipboard, commandQueue),
-            new ClrStackOutputViewFactory(topLevelViews, clipboard, commandQueue),
+            new HelpCommandOutputViewFactory(clipboard, commandQueue, mainLayout),
+            new DumpHeapCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new ObjSizeCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new SetThreadCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new ClrThreadsCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new SyncBlockCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new DumpObjectCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new DumpAssemblyCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new DumpClassCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new DumpMethodTableCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new DumpDomainCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new DumpModuleCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new Name2EECommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new GCRootCommandOutputViewFactory(mainLayout, clipboard, commandQueue),
+            new PrintExceptionOutputFactory(mainLayout, clipboard, commandQueue),
+            new DumpExceptionOutputFactory(mainLayout, clipboard, commandQueue),
+            new ParallelStacksOutputFactory(mainLayout, clipboard, commandQueue),
+            new ClrStackOutputViewFactory(mainLayout, clipboard, commandQueue),
             (SosCommandOutputViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new DefaultCommandOutputViewFactory(clipboard)
         ];
 
-        viewFactories[^2] = new SosCommandOutputViewFactory(topLevelViews, clipboard, commandQueue, viewFactories);
+        viewFactories[^2] = new SosCommandOutputViewFactory(mainLayout, clipboard, commandQueue, viewFactories);
 
-        var commandQueueWorker = new CommandQueueWorker(clipboard, bridge, topLevelViews, historyList, tabManager, viewFactories);
+        var commandQueueWorker = new CommandQueueWorker(clipboard, bridge, mainLayout, historyList, tabManager, viewFactories);
 
-        topLevelViews.SetupLogic(tabManager, commandQueue, clipboard, historyList);
+        mainLayout.SetupLogic(tabManager, commandQueue, clipboard, historyList);
 
         commandQueue.Start(commandQueueWorker, source.Token);
 
@@ -67,7 +68,7 @@ public static class App
             commandQueue.SendCommand("help");
         };
 
-        Application.Run(topLevelViews.Toplevel, exceptionHandler);
+        Application.Run(Application.Top.With(mainLayout), exceptionHandler);
         Application.Shutdown();
     }
 }

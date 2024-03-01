@@ -2,9 +2,9 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
-public record MiniClipboard(IClipboard Clipboard) : IClipboard
+public class MiniClipboard(IClipboard clipboard) : IClipboard
 {
-    private string? _clipboard;
+    private string? _clipboardText;
 
     public string? GetClipboardData()
     {
@@ -14,16 +14,16 @@ public record MiniClipboard(IClipboard Clipboard) : IClipboard
 
     public bool TryGetClipboardData(out string? result)
     {
-        if (!Clipboard.TryGetClipboardData(out result))
-            result = _clipboard;
+        if (!clipboard.TryGetClipboardData(out result))
+            result = _clipboardText;
         return true;
     }
 
     public void SetClipboardData(string? text)
     {
         var trimmed = text?.Trim();
-        Clipboard.TrySetClipboardData(trimmed);
-        _clipboard = trimmed;
+        clipboard.TrySetClipboardData(trimmed);
+        _clipboardText = trimmed;
     }
 
     public bool TrySetClipboardData(string? text)
@@ -37,7 +37,7 @@ public record MiniClipboard(IClipboard Clipboard) : IClipboard
 
 public class HistoryList<T>
 {
-    private readonly List<T> _items = new();
+    private readonly List<T> _items = [];
     private int _currentIndex;
 
     private void Remove(T item)
@@ -76,10 +76,10 @@ public class HistoryList<T>
 
 public class TabManager(TabView tabView)
 {
-    private readonly Dictionary<string, (Tab Tab, CommandOutputViews Views, bool IsOk)> _tabMap =
+    private readonly Dictionary<string, (Tab Tab, View View, bool IsOk)> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public (Tab Tab, CommandOutputViews Views, bool IsOk)? TryGetTab(string command)
+    public (Tab Tab, View View, bool IsOk)? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
         return default;
@@ -114,10 +114,10 @@ public class TabManager(TabView tabView)
         _tabMap.Remove(command);
     }
 
-    public void AddTab(string command, CommandOutputViews views, Tab tab, bool isOk)
+    public void AddTab(string command, View view, Tab tab, bool isOk)
     {
         RemoveTab(command);
-        _tabMap[command] = (tab, views, isOk);
+        _tabMap[command] = (tab, view, isOk);
         tabView.AddTab(tab, true);
     }
 

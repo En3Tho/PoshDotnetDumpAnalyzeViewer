@@ -7,7 +7,7 @@ public class ParallelStacksParsing
 {
     // note: this is a reversed output
     private static readonly string[] Output =
-    {
+    [
         "==> 6 threads with 4 roots",
         "",
         "",
@@ -66,8 +66,8 @@ public class ParallelStacksParsing
         " ~~~~ 24d0",
         "________________________________________________",
         "",
-        "> pstacks -a",
-    };
+        "> pstacks -a"
+    ];
 
     [Fact]
     public void TestThatObjSizeDefaultOutputIsParsedCorrectly()

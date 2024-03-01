@@ -1,16 +1,18 @@
 ﻿using System.Collections.Immutable;
+using PoshDotnetDumpAnalyzeViewer.Interactivity;
+using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
 public sealed record DefaultCommandOutputViewFactory(IClipboard Clipboard) : CommandOutputViewFactoryBase(Clipboard)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = new();
+    public override ImmutableArray<string> SupportedCommands { get; } = [];
     public override bool IsSupported(string command) => true;
 
-    protected override CommandOutputViews CreateView(CommandOutput output)
+    protected override View CreateView(CommandOutput output)
     {
-        var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
+        var views = new CommandOutputView(output.Lines).AddDefaultBehavior(Clipboard);
         return views;
     }
 }
@@ -23,7 +25,7 @@ public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : Comman
     public override bool IsSupported(string command) =>
         SupportedCommands.Any(supportedCommand => command.Equals(supportedCommand, StringComparison.OrdinalIgnoreCase));
 
-    protected override CommandOutputViews CreateView(CommandOutput output)
+    protected override View CreateView(CommandOutput output)
     {
         Environment.Exit(0);
         return null;
@@ -31,22 +33,21 @@ public sealed record QuitCommandOutputViewFactory(IClipboard Clipboard) : Comman
 }
 
 public sealed record HelpCommandOutputViewFactory
-    (IClipboard Clipboard, CommandQueue CommandQueue, TopLevelViews TopLevelViews) : CommandOutputViewFactoryBase(Clipboard)
+    (IClipboard Clipboard, CommandQueue CommandQueue, MainLayout MainLayout) : CommandOutputViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Help);
 
     public override bool IsSupported(string command) =>
         command.Equals(Commands.Help, StringComparison.OrdinalIgnoreCase);
 
-    protected override CommandOutputViews CreateView(CommandOutput output)
+    protected override View CreateView(CommandOutput output)
     {
-        var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
-
-        views.OutputListView.KeyDown += (_, args) =>
+        var views = new CommandOutputView(output.Lines).AddDefaultBehavior(Clipboard);
+        views.ListView.KeyDown += (_, args) =>
         {
             if (args.KeyCode == KeyCode.Enter)
             {
-                if (views.OutputListView.TryParseLine<HelpParser>(Commands.Help) is HelpOutputLine line)
+                if (views.ListView.TryParseLine<HelpParser>(Commands.Help) is HelpOutputLine line)
                 {
                     var command = line.Commands[0];
                     CommandQueue.SendCommand($"help {command}");
@@ -60,22 +61,22 @@ public sealed record HelpCommandOutputViewFactory
 }
 
 public sealed record DumpHeapCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpHeapParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpHeapParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpHeap);
 }
 
 public sealed record ObjSizeCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ObjSizeParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ObjSizeParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ObjSize);
 }
 
 public sealed record SetThreadCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<SetThreadParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<SetThreadParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SetThread, Commands.Threads);
     public override string NormalizeCommand(string command)
@@ -101,92 +102,92 @@ public sealed record SetThreadCommandOutputViewFactory
 }
 
 public sealed record ClrThreadsCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ClrThreadsParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ClrThreadsParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ClrThreads);
 }
 
 public sealed record SyncBlockCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<SyncBlockParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<SyncBlockParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SyncBlock);
 }
 
 public sealed record DumpObjectCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpObjectParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpObjectParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpObject);
 }
 
 public sealed record DumpMethodTableCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpMethodTableParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpMethodTableParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpMethodTable);
 }
 
 public sealed record DumpModuleCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpModuleParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpModuleParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpModule);
 }
 
 public sealed record DumpClassCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpClassParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpClassParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpClass);
 }
 
 public sealed record DumpDomainCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpDomainParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpDomainParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpDomain);
 }
 
 public sealed record DumpAssemblyCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpAssemblyParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpAssemblyParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpAssembly);
 }
 
 public sealed record Name2EECommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<Name2EEParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<Name2EEParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Name2EE);
 }
 
 public sealed record GCRootCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<GCRootParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<GCRootParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.GCRoot);
 }
 
 public sealed record PrintExceptionOutputFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<PrintExceptionParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<PrintExceptionParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.PrintException);
 }
 
 public sealed record DumpExceptionOutputFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpExceptionsParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<DumpExceptionsParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpExceptions);
 }
 
 public sealed record ParallelStacksOutputFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ParallelStacksParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ParallelStacksParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public static string[] ShrinkParallelStacksOutput(string[] lines)
     {
@@ -234,7 +235,7 @@ public sealed record ParallelStacksOutputFactory
     }
 
     // special case pstacks for this viewer
-    protected override CommandOutputViews CreateView(CommandOutput output)
+    protected override View CreateView(CommandOutput output)
     {
         var lines = output.Lines;
         lines.AsSpan(1).Reverse();
@@ -245,18 +246,18 @@ public sealed record ParallelStacksOutputFactory
 }
 
 public sealed record ClrStackOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ClrStackParser>(
-        TopLevelViews, Clipboard, CommandQueue)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : ParsedCommandOutputViewFactoryBase<ClrStackParser>(
+        MainLayout, Clipboard, CommandQueue)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ClrStack);
 }
 
 public sealed record SosCommandOutputViewFactory
-    (TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue, CommandOutputViewFactoryBase[] Factories) : CommandOutputViewFactoryBase(Clipboard)
+    (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue, CommandOutputViewFactoryBase[] Factories) : CommandOutputViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Sos, Commands.Ext);
 
-    protected override CommandOutputViews CreateView(CommandOutput output)
+    protected override View CreateView(CommandOutput output)
     {
         var trimmedCommand = output.Command.TrimStart('s', 'o', 's', 'e', 'x', 't', ' ');
         if (Factories.FirstOrDefault(x => x.IsSupported(trimmedCommand)) is {} factory)
@@ -265,6 +266,6 @@ public sealed record SosCommandOutputViewFactory
             return factory.HandleOutput(trimmedOutput);
         }
 
-        return UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
+        return new CommandOutputView(output.Lines).AddDefaultBehavior(Clipboard);
     }
 }

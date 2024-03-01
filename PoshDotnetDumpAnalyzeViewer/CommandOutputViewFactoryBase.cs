@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using PoshDotnetDumpAnalyzeViewer.Interactivity;
+using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
@@ -17,7 +19,7 @@ public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard)
 
     public virtual string NormalizeCommand(string command) => command;
 
-    public CommandOutputViews HandleOutput(CommandOutput output)
+    public View HandleOutput(CommandOutput output)
     {
         if (!IsSupported(output.Command))
             throw new NotSupportedException($"{GetType().FullName} does not support command {output.Command}");
@@ -25,34 +27,33 @@ public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard)
         return CreateView(output);
     }
 
-    protected abstract CommandOutputViews CreateView(CommandOutput output);
+    protected abstract View CreateView(CommandOutput output);
 }
 
-public abstract record ParsedCommandOutputViewFactoryBase<TParser>(TopLevelViews TopLevelViews, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
+public abstract record ParsedCommandOutputViewFactoryBase<TParser>(MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
     where TParser : IOutputParser, new()
 {
-    protected override CommandOutputViews CreateView(CommandOutput output)
+    protected override View CreateView(CommandOutput output)
     {
-        var views = UI.MakeDefaultCommandViews(output).SetupLogic(Clipboard, output);
+        var views =
+            new CommandOutputView(output.Lines)
+                .AddDefaultBehavior(Clipboard);
 
-        views.OutputListView.KeyDown += (_, args) =>
-        {
-            if (args.KeyCode == KeyCode.Enter)
+        views.ListView.HandleEnter(
+            line =>
             {
-                if (views.OutputListView.TryParseLine<TParser>(output.Command) is { } line)
+                if (views.ListView.TryParseLine<TParser>(line) is { } outputLine)
                 {
-                    if (SubcommandsView.TryGetSubcommandsDialog(TopLevelViews, line, Clipboard, CommandQueue) is { } dialog)
-                    {
-                        Application.Run(dialog, ex =>
-                        {
-                            CommandQueue.ExceptionHandler(ex);
-                            return true;
-                        });
-                    }
+                    return SubcommandsView.TryGetSubcommandsDialog(MainLayout, outputLine, Clipboard, CommandQueue);
                 }
-                args.Handled = true;
-            }
-        };
+
+                return null;
+            },
+            ex =>
+            {
+                CommandQueue.ExceptionHandler(ex);
+                return true;
+            });
 
         return views;
     }

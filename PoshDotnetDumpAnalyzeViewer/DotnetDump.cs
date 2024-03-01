@@ -67,28 +67,39 @@ public static class StreamReaderExtensions
     }
 }
 
-public class DotnetDumpAnalyzeBridge(Process dotnetDump, CancellationToken cancellationToken)
+public class DotnetDump(Process dotnetDump, CancellationToken cancellationToken)
 {
-    public async Task<(string[] Output, bool IsOk)> PerformCommand(string command)
+    private readonly SemaphoreSlim _semaphore = new(0, 1);
+
+    public async Task<(string[] Output, bool IsOk)> Run(string command)
     {
-        List<string> values = new(8192);
-
-        await dotnetDump.StandardInput.WriteLineAsync(command);
-
-        await foreach (var line in dotnetDump.StandardOutput.ReadAllLinesToEndAsync().WithCancellation(cancellationToken))
+        await _semaphore.WaitAsync(cancellationToken);
+        try
         {
-            if (line.EndsWith(Constants.EndCommandErrorAnchor, StringComparison.Ordinal))
+            List<string> values = new(8192);
+
+            await dotnetDump.StandardInput.WriteLineAsync(command);
+
+            await foreach (var line in dotnetDump.StandardOutput.ReadAllLinesToEndAsync()
+                               .WithCancellation(cancellationToken))
             {
-                return (values.ToArray(), false);
+                if (line.EndsWith(Constants.EndCommandErrorAnchor, StringComparison.Ordinal))
+                {
+                    return (values.ToArray(), false);
+                }
+
+                if (line.EndsWith(Constants.EndCommandOutputAnchor, StringComparison.Ordinal))
+                    break;
+
+                values.Add(line);
             }
 
-            if (line.EndsWith(Constants.EndCommandOutputAnchor, StringComparison.Ordinal))
-                break;
-
-            values.Add(line);
+            return (values.ToArray(), true);
         }
-
-        return (values.ToArray(), true);
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 }
 
