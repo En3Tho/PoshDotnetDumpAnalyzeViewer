@@ -1,6 +1,5 @@
 using System.Text.RegularExpressions;
 using PoshDotnetDumpAnalyzeViewer.Parsing;
-using PoshDotnetDumpAnalyzeViewer.Views;
 
 namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 

@@ -1,8 +1,7 @@
-﻿using PoshDotnetDumpAnalyzeViewer.OutputViewFactories;
-using PoshDotnetDumpAnalyzeViewer.Tasks;
+﻿using PoshDotnetDumpAnalyzeViewer.UI;
+using PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+using PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 using PoshDotnetDumpAnalyzeViewer.Utilities;
-using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
-using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer;
