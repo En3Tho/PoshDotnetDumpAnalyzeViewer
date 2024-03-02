@@ -54,7 +54,7 @@ public static class App
             new ParallelStacksViewFactory(mainLayout, clipboard, commandQueue),
             new ClrStackViewFactory(mainLayout, clipboard, commandQueue),
             (SosCommandViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
-            new DefaultCommandViewFactory(clipboard)
+            new FallbackCommandViewFactory(clipboard)
         ];
 
         viewFactories[^2] = new SosCommandViewFactory(mainLayout, clipboard, commandQueue, viewFactories);
