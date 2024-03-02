@@ -28,8 +28,8 @@ public static partial class Commands
 
     public const string DumpObject = "do";
     public const string DumpArray = "dumparray";
-    public const string DumpConcurrentDictionary = "dumparray";
-    public const string DumpConcurrentQueue = "dumparray";
+    public const string DumpConcurrentDictionary = "dcd";
+    public const string DumpConcurrentQueue = "dcq";
 
     public const string DumpClass = "dumpclass";
     public const string DumpModule = "dumpmodule";
