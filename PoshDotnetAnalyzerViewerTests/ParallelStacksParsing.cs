@@ -1,4 +1,5 @@
 using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.OutputViewFactories;
 using PoshDotnetDumpAnalyzeViewer.Parsing;
 using PoshDotnetDumpAnalyzeViewer.Utilities;
 using PoshDotnetDumpAnalyzeViewer.Views;
@@ -132,7 +133,7 @@ public class ParallelStacksParsing
     [Fact]
     public void TestThatShrinkingParallelStacksOutputWorksCorrectly()
     {
-        var shrinkedOutput = ParallelStacksOutputFactory.ShrinkParallelStacksOutput(Output);
+        var shrinkedOutput = ParallelStacksParser.ShrinkParallelStacksOutput(Output);
 
         Assert.True(shrinkedOutput is
         [

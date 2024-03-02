@@ -40,10 +40,10 @@ public class ClrThreadsParsing
             not ClrThreadsOutputLine,
             not ClrThreadsOutputLine,
             not ClrThreadsOutputLine,
-            ClrThreadsOutputLine { OsThreadId.Span: "1", ClrThreadId.Span: "1", ThreadState.Span: "2020020" },
-            ClrThreadsOutputLine { OsThreadId.Span: "10", ClrThreadId.Span: "2", ThreadState.Span: "21220" },
-            ClrThreadsOutputLine { OsThreadId.Span: "12", ClrThreadId.Span: "4", ThreadState.Span: "21220" },
-            ClrThreadsOutputLine { OsThreadId.Span: "13", ClrThreadId.Span: "5", ThreadState.Span: "1020220" },
+            ClrThreadsOutputLine { OsThreadId: "1", ClrThreadId: "1", ThreadState: "2020020" },
+            ClrThreadsOutputLine { OsThreadId: "10", ClrThreadId: "2", ThreadState: "21220" },
+            ClrThreadsOutputLine { OsThreadId: "12", ClrThreadId: "4", ThreadState: "21220" },
+            ClrThreadsOutputLine { OsThreadId: "13", ClrThreadId: "5", ThreadState: "1020220" },
             not ClrThreadsOutputLine
         ]);
     }

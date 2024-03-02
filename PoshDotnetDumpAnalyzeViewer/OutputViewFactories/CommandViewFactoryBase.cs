@@ -1,17 +1,14 @@
 using System.Collections.Immutable;
 using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Subcommands;
 using PoshDotnetDumpAnalyzeViewer.Utilities;
 using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
+using PoshDotnetDumpAnalyzeViewer.Views;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer.Views;
+namespace PoshDotnetDumpAnalyzeViewer.OutputViewFactories;
 
-public interface IOutputParser
-{
-    static abstract OutputLine Parse(string line, string command);
-}
-
-public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard)
+public abstract record CommandViewFactoryBase(IClipboard Clipboard)
 {
     public abstract ImmutableArray<string> SupportedCommands { get; }
 
@@ -31,7 +28,7 @@ public abstract record CommandOutputViewFactoryBase(IClipboard Clipboard)
     protected abstract View CreateView(CommandOutput output);
 }
 
-public abstract record ParsedCommandOutputViewFactoryBase<TParser>(MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandOutputViewFactoryBase(Clipboard)
+public abstract record ParsedCommandViewFactoryBase<TParser>(MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactoryBase(Clipboard)
     where TParser : IOutputParser, new()
 {
     protected override View CreateView(CommandOutput output)
@@ -45,7 +42,7 @@ public abstract record ParsedCommandOutputViewFactoryBase<TParser>(MainLayout Ma
             {
                 if (views.ListView.TryParseLine<TParser>(line) is { } outputLine)
                 {
-                    return SubcommandsDialog.TryCreate(MainLayout, outputLine, Clipboard, CommandQueue);
+                    return SubcommandsDialog.TryCreate(MainLayout, outputLine, _ => [], Clipboard, CommandQueue);
                 }
 
                 return null;
@@ -57,5 +54,17 @@ public abstract record ParsedCommandOutputViewFactoryBase<TParser>(MainLayout Ma
             });
 
         return views;
+    }
+}
+
+public sealed record DefaultCommandViewFactory(IClipboard Clipboard) : CommandViewFactoryBase(Clipboard)
+{
+    public override ImmutableArray<string> SupportedCommands { get; } = [];
+    public override bool IsSupported(string command) => true;
+
+    protected override View CreateView(CommandOutput output)
+    {
+        var view = new CommandOutputView(output.Lines).AddDefaultBehavior(Clipboard);
+        return view;
     }
 }

@@ -40,7 +40,7 @@ public class DumpModuleParsing
             {},
             {},
             {},
-            AssemblyAddressOutputLine { AssemblyAddress.Span: "000055a42e4d9030" },
+            AssemblyAddressOutputLine { AssemblyAddress: "000055a42e4d9030" },
             {},
             {},
             {},

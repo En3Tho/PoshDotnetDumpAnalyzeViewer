@@ -5,7 +5,7 @@ namespace PoshDotnetDumpAnalyzeViewer.ViewBehavior;
 
 public static class CommandOutputViewExtensions
 {
-    public static CommandOutputView AddDefaultBehavior(this CommandOutputView @this, IClipboard clipboard)
+    public static T AddDefaultBehavior<T>(this T @this, IClipboard clipboard) where T : CommandOutputView
     {
         @this.ListView
             .AddClipboard(clipboard)

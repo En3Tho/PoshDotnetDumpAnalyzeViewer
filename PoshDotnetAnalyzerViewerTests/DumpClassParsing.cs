@@ -31,12 +31,12 @@ public class DumpClassParsing
         Assert.True(lines is
         [
             {},
-            TypeNameOutputLine { TypeName.Span: "System.Object[]" },
+            TypeNameOutputLine { TypeName: "System.Object[]" },
             {},
             {},
-            EEClassAddressOutputLine { EEClassAddress.Span: "00007f003ea1d908" },
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007f003dfe4020" },
-            MethodTableOutputLine { MethodTable.Span: "00007f003e9f6760" },
+            EEClassAddressOutputLine { EEClassAddress: "00007f003ea1d908" },
+            ModuleAddressOutputLine { ModuleAddress: "00007f003dfe4020" },
+            MethodTableOutputLine { MethodTable: "00007f003e9f6760" },
             {},
             {},
             {},

@@ -2,6 +2,24 @@
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
+file static class Constants
+{
+    public const string EndCommandOutputAnchor = "<END_COMMAND_OUTPUT>";
+    public const string EndCommandErrorAnchor = "<END_COMMAND_ERROR>";
+}
+
+file static class StreamReaderExtensions
+{
+    public static async IAsyncEnumerable<string> ReadAllLinesToEndAsync(this StreamReader @this)
+    {
+        while (!@this.EndOfStream)
+        {
+            if (await @this.ReadLineAsync() is { } line)
+                yield return line;
+        }
+    }
+}
+
 public static class ProcessUtil
 {
     public static async Task<Process> StartDotnetDumpAnalyze(string fileName, string analyzeArgs)
@@ -46,24 +64,6 @@ public static class ProcessUtil
         }
 
         return dotnetDump;
-    }
-}
-
-public static class Constants
-{
-    public const string EndCommandOutputAnchor = "<END_COMMAND_OUTPUT>";
-    public const string EndCommandErrorAnchor = "<END_COMMAND_ERROR>";
-}
-
-public static class StreamReaderExtensions
-{
-    public static async IAsyncEnumerable<string> ReadAllLinesToEndAsync(this StreamReader @this)
-    {
-        while (!@this.EndOfStream)
-        {
-            if (await @this.ReadLineAsync() is { } line)
-                yield return line;
-        }
     }
 }
 

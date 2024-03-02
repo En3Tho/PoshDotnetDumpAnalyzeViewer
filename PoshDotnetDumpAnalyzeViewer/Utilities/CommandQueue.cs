@@ -1,4 +1,5 @@
 using System.Threading.Channels;
+using PoshDotnetDumpAnalyzeViewer.OutputViewFactories;
 using PoshDotnetDumpAnalyzeViewer.Tasks;
 using PoshDotnetDumpAnalyzeViewer.ViewBehavior;
 using PoshDotnetDumpAnalyzeViewer.Views;
@@ -12,7 +13,7 @@ public record CommandQueueWorker(
     MainLayout MainLayout,
     HistoryList<string> CommandHistory,
     TabManager TabManager,
-    IEnumerable<CommandOutputViewFactoryBase> ViewFactories)
+    IEnumerable<CommandViewFactoryBase> ViewFactories)
 {
     private void UpdateTab(Tab tabToUpdate, View view)
     {

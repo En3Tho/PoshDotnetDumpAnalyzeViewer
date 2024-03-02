@@ -34,8 +34,8 @@ public class PrintExceptionParsing
         Assert.True(lines is
         [
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
-            ExceptionObjectAddressOutputLine { Address.Span: "00007ef62a1e2e60" },
-            TypeNameOutputLine { TypeName.Span: "System.Net.WebSockets.WebSocketException" },
+            ExceptionObjectAddressOutputLine { Address: "00007ef62a1e2e60" },
+            TypeNameOutputLine { TypeName: "System.Net.WebSockets.WebSocketException" },
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
@@ -77,10 +77,10 @@ public class PrintExceptionParsing
         Assert.True(lines is
         [
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
-            ExceptionObjectAddressOutputLine { Address.Span: "00007ef62a1e2fc8" },
-            TypeNameOutputLine { TypeName.Span: "System.OperationCanceledException" },
+            ExceptionObjectAddressOutputLine { Address: "00007ef62a1e2fc8" },
+            TypeNameOutputLine { TypeName: "System.OperationCanceledException" },
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
-            ExceptionObjectAddressOutputLine { Address.Span: "00007EF62A1E2E60" },
+            ExceptionObjectAddressOutputLine { Address: "00007EF62A1E2E60" },
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),
             not (ObjectAddressOutputLine or ExceptionObjectAddressOutputLine or TypeNameOutputLine),

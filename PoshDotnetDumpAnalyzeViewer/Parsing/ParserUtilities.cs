@@ -1,10 +1,10 @@
 ﻿namespace PoshDotnetDumpAnalyzeViewer.Parsing;
 
-public static class OutputLinesExtensions
+public static class ParserUtilities
 {
     public static int GetIntOsThreadId(this IOsThreadId osThreadId)
     {
-        return OsThreadIdReader.Read(osThreadId.OsThreadId.Span);
+        return OsThreadIdReader.Read(osThreadId.OsThreadId);
     }
 }
 

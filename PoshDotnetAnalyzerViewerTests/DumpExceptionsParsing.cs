@@ -30,10 +30,10 @@ public class DumpExceptionsParsing
         [
             not DumpExceptionsOutputLine,
             not DumpExceptionsOutputLine,
-            DumpExceptionsOutputLine { Address.Span: "01e422d00788", MethodTable.Span: "7ff8b7357890", TypeName.Span: "StackExchange.Redis.RedisConnectionException" },
+            DumpExceptionsOutputLine { Address: "01e422d00788", MethodTable: "7ff8b7357890", TypeName: "StackExchange.Redis.RedisConnectionException" },
             not DumpExceptionsOutputLine,
             not DumpExceptionsOutputLine,
-            DumpExceptionsOutputLine { Address.Span: "01e462a93fc8", MethodTable.Span: "7ff90fec88d8", TypeName.Span: "System.Net.Sockets.SocketException" },
+            DumpExceptionsOutputLine { Address: "01e462a93fc8", MethodTable: "7ff90fec88d8", TypeName: "System.Net.Sockets.SocketException" },
             not DumpExceptionsOutputLine,
             not DumpExceptionsOutputLine,
             not DumpExceptionsOutputLine,

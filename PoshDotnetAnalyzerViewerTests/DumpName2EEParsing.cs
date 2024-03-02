@@ -32,17 +32,17 @@ public class DumpName2EEParsing
         Assert.True(lines is
         [
             {},
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007f003dfe4020" },
+            ModuleAddressOutputLine { ModuleAddress: "00007f003dfe4020" },
             not AssemblyAddressOutputLine,
             {},
-            MethodTableOutputLine { MethodTable.Span: "00007f003eab93e0" },
-            EEClassAddressOutputLine { EEClassAddress.Span: "00007f003eaa3530" },
-            TypeNameOutputLine { TypeName.Span: "System.Exception" },
+            MethodTableOutputLine { MethodTable: "00007f003eab93e0" },
+            EEClassAddressOutputLine { EEClassAddress: "00007f003eaa3530" },
+            TypeNameOutputLine { TypeName: "System.Exception" },
             {},
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007f003ead44a8" },
+            ModuleAddressOutputLine { ModuleAddress: "00007f003ead44a8" },
             not AssemblyAddressOutputLine,
             {},
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007f003eb46ed8" },
+            ModuleAddressOutputLine { ModuleAddress: "00007f003eb46ed8" },
             not AssemblyAddressOutputLine,
         ]);
     }

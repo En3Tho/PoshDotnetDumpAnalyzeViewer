@@ -31,9 +31,9 @@ public class DumpMethodTableParsing
         Assert.True(lines is
         [
             {},
-            EEClassAddressOutputLine { EEClassAddress.Span: "00007F9F56DFCF48" },
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007F9F55CB8278" },
-            TypeNameOutputLine { TypeName.Span: "System.Collections.Immutable.SortedInt32KeyNode`1[[System.Collections.Immutable.ImmutableDictionary`2+HashBucket[[System.String, System.Private.CoreLib],[Microsoft.Build.Execution.ProjectMetadataInstance, Microsoft.Build]], System.Collections.Immutable]]" },
+            EEClassAddressOutputLine { EEClassAddress: "00007F9F56DFCF48" },
+            ModuleAddressOutputLine { ModuleAddress: "00007F9F55CB8278" },
+            TypeNameOutputLine { TypeName: "System.Collections.Immutable.SortedInt32KeyNode`1[[System.Collections.Immutable.ImmutableDictionary`2+HashBucket[[System.String, System.Private.CoreLib],[Microsoft.Build.Execution.ProjectMetadataInstance, Microsoft.Build]], System.Collections.Immutable]]" },
             {},
             {},
             {},

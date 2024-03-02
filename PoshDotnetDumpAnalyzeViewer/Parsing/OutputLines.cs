@@ -2,81 +2,72 @@ namespace PoshDotnetDumpAnalyzeViewer.Parsing;
 
 public interface IClrThreadId
 {
-    ReadOnlyMemory<char> ClrThreadId { get; }
+    string ClrThreadId { get; }
 }
 
 public interface IObjectAddress
 {
-    ReadOnlyMemory<char> Address { get; }
-}
-
-public interface IExceptionObjectAddress : IObjectAddress
-{
+    string Address { get; }
 }
 
 public interface IMethodTable
 {
-    ReadOnlyMemory<char> MethodTable { get; }
+    string MethodTable { get; }
 }
 
 public interface ITypeName
 {
-    ReadOnlyMemory<char> TypeName { get; }
-}
-
-public interface IHelpCommand
-{
-    string[] Commands { get; }
+    string TypeName { get; }
 }
 
 public interface IOsThreadId
 {
-    ReadOnlyMemory<char> OsThreadId { get; }
+    string OsThreadId { get; }
 }
 
 public interface ISyncBlockIndex
 {
-    ReadOnlyMemory<char> SyncBlockIndex { get; }
+    string SyncBlockIndex { get; }
 }
 
 public interface IThreadState
 {
-    ReadOnlyMemory<char> ThreadState { get; }
+    string ThreadState { get; }
 }
 
 public interface ISyncBlockAddress
 {
-    ReadOnlyMemory<char> SyncBlockAddress { get; }
+    string SyncBlockAddress { get; }
 }
 
 public interface ISyncBlockOwnerAddress
 {
-    ReadOnlyMemory<char> SyncBlockOwnerAddress { get; }
+    string SyncBlockOwnerAddress { get; }
 }
 
 public interface ISyncBlockOwnerTypeName
 {
-    ReadOnlyMemory<char> SyncBlockOwnerTypeName { get; }
+    string SyncBlockOwnerTypeName { get; }
 }
 
 public interface IEEClassAddress
 {
-    ReadOnlyMemory<char> EEClassAddress { get; }
+    string EEClassAddress { get; }
 }
 
 public interface IModuleAddress
 {
-    ReadOnlyMemory<char> ModuleAddress { get; }
+    string ModuleAddress { get; }
 }
 
 public interface IAssemblyAddress
 {
-    ReadOnlyMemory<char> AssemblyAddress { get; }
+    string AssemblyAddress { get; }
 }
 
 public interface IDomainAddress
 {
-    ReadOnlyMemory<char> DomainAddress { get; }
+    string DomainAddress { get; }
 }
 
 public record OutputLine(string Line)
@@ -86,163 +77,103 @@ public record OutputLine(string Line)
 
 public record struct ObjectAddressRanges(Range Address);
 
-public sealed record ObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IObjectAddress
-{
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
-}
+public sealed record ObjectAddressOutputLine(string Line, string Address)
+    : OutputLine(Line), IObjectAddress;
 
-public sealed record ExceptionObjectAddressOutputLine(string Line, ObjectAddressRanges Ranges) : OutputLine(Line), IExceptionObjectAddress
-{
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
-}
+public interface IExceptionObjectAddress : IObjectAddress;
+public sealed record ExceptionObjectAddressOutputLine(string Line, string Address)
+    : OutputLine(Line), IExceptionObjectAddress;
 
 public record struct TypeNameRanges(Range TypeName);
 
-public sealed record TypeNameOutputLine(string Line, TypeNameRanges Ranges) : OutputLine(Line), ITypeName
-{
-    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.TypeName);
-}
+public sealed record TypeNameOutputLine(string Line, string TypeName)
+    : OutputLine(Line), ITypeName;
 
 public record struct MethodTableRanges(Range MethodTable);
 
-public sealed record MethodTableOutputLine(string Line, MethodTableRanges Ranges) : OutputLine(Line), IMethodTable
-{
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-}
+public sealed record MethodTableOutputLine(string Line, string MethodTable)
+    : OutputLine(Line), IMethodTable;
 
 public record struct EEClassAddressRanges(Range EEClass);
 
-public sealed record EEClassAddressOutputLine(string Line, EEClassAddressRanges Ranges) : OutputLine(Line), IEEClassAddress
-{
-    public ReadOnlyMemory<char> EEClassAddress => Line.AsMemory(Ranges.EEClass);
-}
+public sealed record EEClassAddressOutputLine(string Line, string EEClassAddress)
+    : OutputLine(Line), IEEClassAddress;
 
 public record struct ModuleAddressRanges(Range Module);
 
-public sealed record ModuleAddressOutputLine(string Line, ModuleAddressRanges Ranges) : OutputLine(Line), IModuleAddress
-{
-    public ReadOnlyMemory<char> ModuleAddress => Line.AsMemory(Ranges.Module);
-}
+public sealed record ModuleAddressOutputLine(string Line, string ModuleAddress)
+    : OutputLine(Line), IModuleAddress;
 
 public record struct AssemblyAddressRanges(Range Assembly);
 
-public sealed record AssemblyAddressOutputLine(string Line, AssemblyAddressRanges Ranges) : OutputLine(Line), IAssemblyAddress
-{
-    public ReadOnlyMemory<char> AssemblyAddress => Line.AsMemory(Ranges.Assembly);
-}
+public sealed record AssemblyAddressOutputLine(string Line, string AssemblyAddress)
+    : OutputLine(Line), IAssemblyAddress;
 
 public record struct DomainAddressRanges(Range Domain);
 
-public sealed record DomainAddressOutputLine(string Line, DomainAddressRanges Ranges) : OutputLine(Line), IDomainAddress
-{
-    public ReadOnlyMemory<char> DomainAddress => Line.AsMemory(Ranges.Domain);
-}
+public sealed record DomainAddressOutputLine(string Line, string DomainAddress)
+    : OutputLine(Line), IDomainAddress;
 
 public record struct OsThreadIdRanges(Range OsThreadId);
 
-public sealed record OsThreadIdOutputLine(string Line, OsThreadIdRanges IdRanges) : OutputLine(Line), IOsThreadId
-{
-    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(IdRanges.OsThreadId);
-}
+public sealed record OsThreadIdOutputLine(string Line, string OsThreadId)
+    : OutputLine(Line), IOsThreadId;
 
-public sealed record HelpOutputLine(string Line) : OutputLine(Line), IHelpCommand
-{
-    public string[] Commands => HelpParser.GetCommandsFromLine(Line);
-}
+public sealed record HelpOutputLine(string Line, string[] Commands)
+    : OutputLine(Line);
 
 public record struct DumpObjectRanges(Range MethodTable, Range Field, Range Offset, Range Type, Range VT, Range Attr, Range Value, Range Name);
 
-public sealed record DumpObjectOutputLine(string Line, DumpObjectRanges Ranges) : OutputLine(Line), IMethodTable, IObjectAddress
-{
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Value);
-}
+public sealed record DumpObjectOutputLine(string Line, string Address, string MethodTable)
+    : OutputLine(Line), IMethodTable, IObjectAddress;
 
 public record struct GCRootRanges(Range Address, Range TypeName);
-public sealed record GCRootOutputLine(string Line, GCRootRanges Ranges) : OutputLine(Line), IObjectAddress, ITypeName
-{
-    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.TypeName);
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
-}
+public sealed record GCRootOutputLine(string Line, string Address, string TypeName)
+    : OutputLine(Line), IObjectAddress, ITypeName;
 
 public record struct DumpExceptionRanges(Range Address, Range MethodTable, Range TypeName);
-public sealed record DumpExceptionsOutputLine(string Line, DumpExceptionRanges Ranges) : OutputLine(Line), IExceptionObjectAddress, IMethodTable, ITypeName
-{
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.TypeName);
-}
+public sealed record DumpExceptionsOutputLine(string Line, string Address, string MethodTable, string TypeName)
+    : OutputLine(Line), IExceptionObjectAddress, IMethodTable, ITypeName;
 
 public record struct DumpHeapRanges(Range Address, Range MethodTable, Range Size);
 
-public sealed record DumpHeapOutputLine(string Line, DumpHeapRanges Ranges) : OutputLine(Line), IMethodTable, IObjectAddress
-{
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
-}
+public sealed record DumpHeapOutputLine(string Line, string Address, string MethodTable)
+    : OutputLine(Line), IMethodTable, IObjectAddress;
 
 public record struct DumpHeapStatisticsRanges(Range MethodTable, Range Count, Range TotalSize, Range ClassName);
 
-public sealed record DumpHeapStatisticsOutputLine(string Line, DumpHeapStatisticsRanges Ranges) : OutputLine(Line),
-    IMethodTable, ITypeName
-{
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.ClassName);
-}
+public sealed record DumpHeapStatisticsOutputLine(string Line, string MethodTable, string TypeName)
+    : OutputLine(Line), IMethodTable, ITypeName;
 
 public record struct ObjSizeRanges(Range Address, Range MethodTable, Range Size);
 
-public sealed record ObjSizeOutputLine(string Line, ObjSizeRanges Ranges) : OutputLine(Line), IMethodTable, IObjectAddress
-{
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-    public ReadOnlyMemory<char> Address => Line.AsMemory(Ranges.Address);
-}
+public sealed record ObjSizeOutputLine(string Line, string Address, string MethodTable)
+    : OutputLine(Line), IMethodTable, IObjectAddress;
 
 public record struct ObjSizeStatisticsRanges(Range MethodTable, Range Count, Range TotalSize, Range ClassName);
 
-public sealed record ObjSizeStatisticsOutputLine(string Line, ObjSizeStatisticsRanges Ranges) : OutputLine(Line),
-    IMethodTable, ITypeName
-{
-    public ReadOnlyMemory<char> MethodTable => Line.AsMemory(Ranges.MethodTable);
-    public ReadOnlyMemory<char> TypeName => Line.AsMemory(Ranges.ClassName);
-}
+public sealed record ObjSizeStatisticsOutputLine(string Line, string MethodTable, string TypeName)
+    : OutputLine(Line), IMethodTable, ITypeName;
 
 public record struct ClrThreadsRanges(Range Dbg, Range Id, Range OsId, Range ThreadObj, Range State, Range GcMode,
     Range GcAllocContext, Range Domain, Range LockCount, Range Apt, Range Exception); // not sure if AptException is one thing or 2 different ones
 
-public sealed record ClrThreadsOutputLine(string Line, ClrThreadsRanges Ranges) : OutputLine(Line), IOsThreadId, IClrThreadId, IThreadState
-{
-    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OsId);
-    public ReadOnlyMemory<char> ClrThreadId => Line.AsMemory(Ranges.Id);
-    public ReadOnlyMemory<char> ThreadState => Line.AsMemory(Ranges.State);
-}
+public sealed record ClrThreadsOutputLine(string Line, string OsThreadId, string ClrThreadId, string ThreadState)
+    : OutputLine(Line), IOsThreadId, IClrThreadId, IThreadState;
 
 public record struct SyncBlockRanges(Range Index, Range SyncBlock, Range MonitorHeld, Range Recursion, Range OwningThreadAddress, Range OwningThreadOsId,
     Range OwningThreadDbgId, Range SyncBlockOwnerAddress, Range SyncBlockOwnerType);
 
-public sealed record SyncBlockOutputLine(string Line, SyncBlockRanges Ranges) : OutputLine(Line), ISyncBlockAddress, ISyncBlockIndex, IOsThreadId, ISyncBlockOwnerAddress, ISyncBlockOwnerTypeName
-{
-    public ReadOnlyMemory<char> SyncBlockAddress => Line.AsMemory(Ranges.SyncBlock);
-    public ReadOnlyMemory<char> SyncBlockIndex => Line.AsMemory(Ranges.Index);
-    public ReadOnlyMemory<char> OsThreadId => Line.AsMemory(Ranges.OwningThreadOsId);
-    public ReadOnlyMemory<char> SyncBlockOwnerAddress => Line.AsMemory(Ranges.SyncBlockOwnerAddress);
-    public ReadOnlyMemory<char> SyncBlockOwnerTypeName => Line.AsMemory(Ranges.SyncBlockOwnerType);
-}
+public sealed record SyncBlockOutputLine(string Line, string OsThreadId, string SyncBlockOwnerAddress, string SyncBlockOwnerTypeName, string SyncBlockAddress, string SyncBlockIndex)
+    : OutputLine(Line), ISyncBlockAddress, ISyncBlockIndex, IOsThreadId, ISyncBlockOwnerAddress, ISyncBlockOwnerTypeName;
 
 public record struct SyncBlockZeroRanges(Range Index, Range SyncBlock, Range MonitorHeld, Range Recursion, Range OwningThreadAddress,
     Range OwningThreadDbgId, Range SyncBlockOwnerAddress, Range SyncBlockOwnerType);
 
-public sealed record SyncBlockZeroOutputLine(string Line, SyncBlockZeroRanges Ranges) : OutputLine(Line), ISyncBlockAddress, ISyncBlockIndex, ISyncBlockOwnerAddress, ISyncBlockOwnerTypeName
-{
-    public ReadOnlyMemory<char> SyncBlockAddress => Line.AsMemory(Ranges.SyncBlock);
-    public ReadOnlyMemory<char> SyncBlockIndex => Line.AsMemory(Ranges.Index);
-    public ReadOnlyMemory<char> SyncBlockOwnerAddress => Line.AsMemory(Ranges.SyncBlockOwnerAddress);
-    public ReadOnlyMemory<char> SyncBlockOwnerTypeName => Line.AsMemory(Ranges.SyncBlockOwnerType);
-}
+public sealed record SyncBlockZeroOutputLine(string Line, string SyncBlockOwnerAddress, string SyncBlockOwnerTypeName, string SyncBlockAddress, string SyncBlockIndex)
+    : OutputLine(Line), ISyncBlockAddress, ISyncBlockIndex, ISyncBlockOwnerAddress, ISyncBlockOwnerTypeName;
 
 public record struct ParallelStacksRanges(Range OsThreadIds);
 
-public sealed record ParallelStacksOutputLine(string Line, ParallelStacksRanges Ranges) : OutputLine(Line)
-{
-    public ReadOnlyMemory<char> OsThreadIds => Line.AsMemory(Ranges.OsThreadIds);
-}
+public sealed record ParallelStacksOutputLine(string Line, string[] OsThreadIds)
+    : OutputLine(Line);

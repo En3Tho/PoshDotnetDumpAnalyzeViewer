@@ -43,15 +43,15 @@ public class DumpDomainParsing
             {},
             {},
             {},
-            AssemblyAddressOutputLine { AssemblyAddress.Span: "000055a42e4d9030" },
+            AssemblyAddressOutputLine { AssemblyAddress: "000055a42e4d9030" },
             {},
             {},
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007f003dfe4020" },
+            ModuleAddressOutputLine { ModuleAddress: "00007f003dfe4020" },
             {},
-            AssemblyAddressOutputLine { AssemblyAddress.Span: "000055a42e3e3150" },
+            AssemblyAddressOutputLine { AssemblyAddress: "000055a42e3e3150" },
             {},
             {},
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007f003ead44a8" },
+            ModuleAddressOutputLine { ModuleAddress: "00007f003ead44a8" },
         ]);
     }
 }

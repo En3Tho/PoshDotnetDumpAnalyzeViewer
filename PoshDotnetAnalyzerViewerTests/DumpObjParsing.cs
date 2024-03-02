@@ -35,21 +35,21 @@ public class DumpObjParsing
 
         Assert.True(lines is
         [
-            ObjectAddressOutputLine { Address.Span: "00007f9f1bfff138" },
-            TypeNameOutputLine { TypeName.Span: "System.StackOverflowException" },
-            MethodTableOutputLine { MethodTable.Span: "00007f9f540ff000" },
-            EEClassAddressOutputLine { EEClassAddress.Span: "00007f9f540d81a8" },
+            ObjectAddressOutputLine { Address: "00007f9f1bfff138" },
+            TypeNameOutputLine { TypeName: "System.StackOverflowException" },
+            MethodTableOutputLine { MethodTable: "00007f9f540ff000" },
+            EEClassAddressOutputLine { EEClassAddress: "00007f9f540d81a8" },
             {},
             {},
             {},
             {},
             {},
-            DumpObjectOutputLine { MethodTable.Span: "00007f9f54381c38" },
-            DumpObjectOutputLine { MethodTable.Span: "00007f9f540fd2e0" },
-            DumpObjectOutputLine { MethodTable.Span: "00007f9f54101250" },
-            DumpObjectOutputLine { MethodTable.Span: "00007f9f540fec90" },
-            DumpObjectOutputLine { MethodTable.Span: "00007f9f540fd2e0" },
-            DumpObjectOutputLine { MethodTable.Span: "00007f9f54b986b8" },
+            DumpObjectOutputLine { MethodTable: "00007f9f54381c38" },
+            DumpObjectOutputLine { MethodTable: "00007f9f540fd2e0" },
+            DumpObjectOutputLine { MethodTable: "00007f9f54101250" },
+            DumpObjectOutputLine { MethodTable: "00007f9f540fec90" },
+            DumpObjectOutputLine { MethodTable: "00007f9f540fd2e0" },
+            DumpObjectOutputLine { MethodTable: "00007f9f54b986b8" },
             {},
             {}
         ]);
