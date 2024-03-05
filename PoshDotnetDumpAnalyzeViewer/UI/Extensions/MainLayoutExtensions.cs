@@ -36,7 +36,7 @@ public static class MainLayoutExtensions
             }
         };
 
-        void ProcessEnterKey(bool forceRefresh)
+        void ProcessEnterKey(bool forceRefresh = false)
         {
             var command = @this.CommandInput.Text;
             if (string.IsNullOrWhiteSpace(command)) return;
@@ -51,11 +51,17 @@ public static class MainLayoutExtensions
             switch (args.KeyCode)
             {
                 case KeyCode.CtrlMask | KeyCode.Enter:
-                    ProcessEnterKey(true);
+                    if (!@this.CommandInput.ReadOnly)
+                    {
+                        ProcessEnterKey(true);
+                    }
                     args.Handled = true;
                     break;
                 case KeyCode.Enter:
-                    ProcessEnterKey(false);
+                    if (!@this.CommandInput.ReadOnly)
+                    {
+                        ProcessEnterKey();
+                    }
                     args.Handled = true;
                     break;
             }
