@@ -10,9 +10,9 @@ public static class App
 {
     public const string DotnetDumpToolName = "dotnet-dump";
 
-    public static async Task Run(string fileName, string analyzeArgs)
+    public static async Task Run(string dotnetDumpPath, string fileName)
     {
-        var process = await ProcessUtil.StartDotnetDumpAnalyze(fileName, analyzeArgs);
+        var process = await ProcessUtil.StartDotnetDumpAnalyze(dotnetDumpPath, fileName);
         Application.Init();
         UISynchronizationContext.Set(SynchronizationContext.Current ?? throw new InvalidOperationException("SynchronizationContext.Current is null"));
 
@@ -23,19 +23,13 @@ public static class App
         var clipboard = new MiniClipboard(Application.Driver.Clipboard);
         var historyList = new HistoryList<string>();
 
-        Application.Top.Closing += (_, _) =>
-        {
-            source.Cancel();
-            process.Kill(true);
-        };
-
         var exceptionHandler = ViewExceptionHandler.Create(tabManager, clipboard);
         var commandQueue = new CommandQueue(exn => exceptionHandler(exn));
 
         CommandViewFactoryBase[] viewFactories =
         [
             new QuitCommandViewFactory(clipboard),
-            new HelpCommandViewFactory(clipboard, commandQueue, mainLayout),
+            new HelpCommandViewFactory(clipboard, commandQueue, mainLayout, fileName),
             new DumpHeapCommandViewFactory(mainLayout, clipboard, commandQueue),
             new ObjSizeCommandViewFactory(mainLayout, clipboard, commandQueue),
             new SetThreadCommandViewFactory(mainLayout, clipboard, commandQueue),
@@ -64,13 +58,20 @@ public static class App
         mainLayout.AddDefaultBehavior(tabManager, commandQueue, clipboard, historyList);
 
         commandQueue.Start(commandQueueWorker, source.Token);
-
-        Application.Top.Loaded += (_, _) =>
+        
+        var top = new Toplevel();
+        top.Closing += (_, _) =>
+        {
+            source.Cancel();
+            process.Kill(true);
+        };
+        
+        top.Loaded += (_, _) =>
         {
             commandQueue.SendCommand("help");
         };
 
-        Application.Run(Application.Top.With(mainLayout), exceptionHandler);
+        Application.Run(top.With(mainLayout), exceptionHandler);
         Application.Shutdown();
     }
 }

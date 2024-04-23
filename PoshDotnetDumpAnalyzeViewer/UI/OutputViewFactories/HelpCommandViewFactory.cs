@@ -7,7 +7,7 @@ using Terminal.Gui;
 namespace PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 
 public sealed record HelpCommandViewFactory
-    (IClipboard Clipboard, CommandQueue CommandQueue, MainLayout MainLayout) : CommandViewFactoryBase(Clipboard)
+    (IClipboard Clipboard, CommandQueue CommandQueue, MainLayout MainLayout, string FileName) : CommandViewFactoryBase(Clipboard)
 {
     public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Help);
 
@@ -16,6 +16,7 @@ public sealed record HelpCommandViewFactory
 
     protected override View CreateView(CommandOutput output)
     {
+        output.Lines[0] = $"{output.Lines[0]} ({FileName})";
         var view = new CommandOutputView(output.Lines).AddDefaultBehavior(Clipboard);
         view.ListView.KeyDown += (_, args) =>
         {

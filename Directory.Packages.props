@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Terminal.Gui" Version="2.0.0-pre.296" />
+    <PackageVersion Include="Terminal.Gui" Version="2.0.0-pre.917" />
     <PackageVersion Include="Microsoft.PowerShell.SDK" Version="7.4.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageVersion Include="xunit" Version="2.7.0" />

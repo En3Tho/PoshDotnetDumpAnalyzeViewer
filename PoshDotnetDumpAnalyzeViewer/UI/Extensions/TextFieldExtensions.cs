@@ -8,7 +8,7 @@ public static class TextFieldExtensions
     public static TextField AddClipboard(this TextField @this, IClipboard clipboard,
         KeyCode copyKey = KeyCode.CtrlMask | KeyCode.C, KeyCode pasteKey = KeyCode.CtrlMask | KeyCode.V)
     {
-        @this.KeyDown += (_, key) =>
+        @this.KeyUp += (_, key) =>
         {
             if (key.KeyCode == copyKey)
             {

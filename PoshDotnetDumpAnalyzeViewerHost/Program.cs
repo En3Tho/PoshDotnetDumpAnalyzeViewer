@@ -9,8 +9,8 @@ if (args.Length == 0)
 
 try
 {
-    //const string fileName = @"X:\Sources\dotnet\diagnostics\artifacts\bin\dotnet-dump\Release\net6.0\dotnet-dump.exe";
-    const string fileName = @"dotnet-dump";
+    const string fileName = @"X:\Sources\dotnet\diagnostics\artifacts\bin\dotnet-dump\Release\net6.0\dotnet-dump.exe";
+    //const string fileName = @"dotnet-dump";
     var analyzeArgs = args[0];
     await App.Run(fileName, analyzeArgs);
 }
