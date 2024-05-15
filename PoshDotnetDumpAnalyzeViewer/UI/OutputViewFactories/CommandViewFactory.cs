@@ -72,110 +72,110 @@ public sealed record ClrStackViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<ClrStackParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ClrStack);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.ClrStack];
 }
 
 public sealed record ClrThreadsCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<ClrThreadsParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ClrThreads);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.ClrThreads];
 }
 
 public sealed record DumpAssemblyCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpAssemblyParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpAssembly);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpAssembly];
 }
 
 public sealed record DumpClassCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpClassParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpClass);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpClass];
 }
 
 public sealed record DumpDomainCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpDomainParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpDomain);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpDomain];
 }
 
 public sealed record DumpExceptionFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpExceptionsParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpExceptions);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpExceptions];
 }
 
 public sealed record DumpHeapCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpHeapParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpHeap);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpHeap];
 }
 
 public sealed record DumpMethodTableCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpMethodTableParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpMethodTable);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpMethodTable];
 }
 
 public sealed record DumpModuleCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpModuleParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpModule);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpModule];
 }
 
 public sealed record DumpObjectCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<DumpObjectParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.DumpObject);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.DumpObject];
 }
 
 public sealed record GcRootCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<GCRootParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.GCRoot);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.GCRoot];
 }
 
 public sealed record Name2EeCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<Name2EEParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Name2EE);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.Name2EE];
 }
 
 public sealed record ObjSizeCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<ObjSizeParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ObjSize);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.ObjSize];
 }
 
 public sealed record PrintExceptionFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<PrintExceptionParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.PrintException);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.PrintException];
 }
 
 public sealed record SetThreadCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<SetThreadParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SetThread, Commands.Threads);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.SetThread, Commands.Threads];
 }
 
 public sealed record SyncBlockCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue) : CommandViewFactory<SyncBlockParser>(
     MainLayout, Clipboard, CommandQueue)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.SyncBlock);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.SyncBlock];
 }

@@ -61,5 +61,5 @@ public sealed record ParallelStacksViewFactory
         return view;
     }
 
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.ParallelStacks);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.ParallelStacks];
 }

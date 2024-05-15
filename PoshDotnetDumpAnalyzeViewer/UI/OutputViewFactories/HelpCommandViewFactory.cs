@@ -9,7 +9,7 @@ namespace PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 public sealed record HelpCommandViewFactory
     (IClipboard Clipboard, CommandQueue CommandQueue, MainLayout MainLayout, string FileName) : CommandViewFactoryBase(Clipboard)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Help);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.Help];
 
     public override bool IsSupported(string command) =>
         command.Equals(Commands.Help, StringComparison.OrdinalIgnoreCase);

@@ -8,7 +8,7 @@ namespace PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 public sealed record SosCommandViewFactory
     (MainLayout MainLayout, IClipboard Clipboard, CommandQueue CommandQueue, CommandViewFactoryBase[] Factories) : CommandViewFactoryBase(Clipboard)
 {
-    public override ImmutableArray<string> SupportedCommands { get; } = ImmutableArray.Create(Commands.Sos, Commands.Ext);
+    public override ImmutableArray<string> SupportedCommands { get; } = [Commands.Sos, Commands.Ext];
 
     protected override View CreateView(CommandOutput output)
     {
