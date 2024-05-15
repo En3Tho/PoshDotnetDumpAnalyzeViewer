@@ -4,10 +4,10 @@ namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 
 public class TabManager(TabView tabView)
 {
-    private readonly Dictionary<string, (Tab Tab, View View, bool IsOk)> _tabMap =
+    private readonly Dictionary<string, (Tab Tab, bool IsOk)> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public (Tab Tab, View View, bool IsOk)? TryGetTab(string command)
+    public (Tab Tab, bool IsOk)? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
         return default;
@@ -27,9 +27,12 @@ public class TabManager(TabView tabView)
     public void RemoveTab(Tab tab)
     {
         var command = TryGetCommand(tab);
+        tabView.RemoveTab(tab);
 
-        if (command is { })
-            RemoveTab(command);
+        if (command is {})
+        {
+            _tabMap.Remove(command);
+        }
     }
 
     public void RemoveTab(string command)
@@ -42,10 +45,10 @@ public class TabManager(TabView tabView)
         _tabMap.Remove(command);
     }
 
-    public void AddTab(string command, View view, Tab tab, bool isOk)
+    public void AddTab(string command, Tab tab, bool isOk)
     {
         RemoveTab(command);
-        _tabMap[command] = (tab, view, isOk);
+        _tabMap[command] = (tab, isOk);
         tabView.AddTab(tab, true);
     }
 

@@ -1,4 +1,4 @@
-using PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+using PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI;

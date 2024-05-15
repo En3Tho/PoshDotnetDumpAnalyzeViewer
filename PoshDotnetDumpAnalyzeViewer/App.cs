@@ -1,5 +1,5 @@
 ﻿using PoshDotnetDumpAnalyzeViewer.UI;
-using PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+using PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 using PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Terminal.Gui;

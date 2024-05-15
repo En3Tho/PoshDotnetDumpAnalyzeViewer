@@ -1,5 +1,5 @@
 ﻿using PoshDotnetDumpAnalyzeViewer.UI;
-using PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+using PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.Utilities;
@@ -21,7 +21,7 @@ public class ViewExceptionHandler
                 Title = "Unhandled exception",
                 View = commandView
             };
-            tabManager.AddTab(exn.Message, commandView, tab, false);
+            tabManager.AddTab(exn.Message, tab, false);
 
             return true;
         };

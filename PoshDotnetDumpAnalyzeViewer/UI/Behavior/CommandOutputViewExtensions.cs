@@ -1,6 +1,6 @@
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+namespace PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 
 public static class CommandOutputViewExtensions
 {
@@ -9,7 +9,7 @@ public static class CommandOutputViewExtensions
         @this.ListView
             .AddClipboard(clipboard)
             .LinkWithFilterField(@this.Filter, (line, filter) => line.Contains(filter, StringComparison.OrdinalIgnoreCase))
-            .FixNavigationDown();
+            .ClipNavigationDown();
 
         @this.Filter.AddClipboard(clipboard);
 

@@ -1,7 +1,7 @@
 ﻿using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+namespace PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 
 public static class MainLayoutExtensions
 {

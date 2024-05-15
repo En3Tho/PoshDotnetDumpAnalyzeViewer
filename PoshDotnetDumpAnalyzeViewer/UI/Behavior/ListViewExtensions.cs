@@ -2,43 +2,36 @@ using PoshDotnetDumpAnalyzeViewer.Parsing;
 using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+namespace PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 
 public static class ListViewExtensions
 {
 
-    public static void SetSelectedBounded(this ListView @this, int selectedItem)
+    public static void SetSelectedClipTop(this ListView @this, int selectedItem, bool tryDisplayInTheMiddle = false)
     {
         @this.SelectedItem = selectedItem;
         if (selectedItem + @this.Frame.Height > @this.Source.Count)
         {
             @this.TopItem = Math.Max(0, @this.Source.Count - @this.Frame.Height);
+        } else if (tryDisplayInTheMiddle)
+        {
+            @this.TopItem = Math.Max(0, @this.SelectedItem - @this.Frame.Height / 2);
         }
     }
 
-    public static ListView FixNavigationDown(this ListView @this)
+    public static ListView ClipNavigationDown(this ListView @this)
     {
         @this.KeyDown += (_, args) =>
         {
             switch (args.KeyCode)
             {
                 case KeyCode.End:
-                    var jumpMax1 = @this.Source.Count - @this.Frame.Height;
-                    @this.SelectedItem = @this.Source.Count - 1;
-                    @this.TopItem = Math.Max(0, jumpMax1);
+                    @this.SetSelectedClipTop(@this.Source.Count - 1);
                     args.Handled = true;
                     break;
                 case KeyCode.PageDown:
-                    var jumpSize = @this.Frame.Height;
-                    var jumpPoint = @this.SelectedItem;
-                    var jumpMax = @this.Source.Count - @this.Frame.Height;
-                    if (jumpPoint + jumpSize > jumpMax)
-                    {
-                        @this.SelectedItem = Math.Min(@this.Source.Count - 1, jumpPoint + jumpSize);
-                        @this.TopItem = Math.Max(0, jumpMax);
-                        args.Handled = true;
-                    }
-
+                    @this.SetSelectedClipTop(Math.Min(@this.Source.Count - 1, @this.SelectedItem + @this.Frame.Height));
+                    args.Handled = true;
                     break;
             }
         };
@@ -188,15 +181,8 @@ public static class ArrayListViewExtensions
                 {
                     if (!@this.HasFocus)
                         @this.SetFocus();
-                    // display this item in the middle of the list if there is enough space left
-                    var linesInList = @this.Viewport.Height;
-                    var topItemIndex =
-                        start < linesInList - 1
-                            ? 0
-                            : start - linesInList / 2;
 
-                    @this.TopItem = topItemIndex;
-                    @this.SelectedItem = start;
+                    @this.SetSelectedClipTop(start, true);
                     return true;
                 }
 

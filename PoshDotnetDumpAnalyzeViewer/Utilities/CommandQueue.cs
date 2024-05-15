@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 using PoshDotnetDumpAnalyzeViewer.UI;
-using PoshDotnetDumpAnalyzeViewer.UI.Extensions;
+using PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 using PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 using Terminal.Gui;
 
@@ -33,7 +33,7 @@ public record CommandQueueWorker(
             View = view
         };
 
-        TabManager.AddTab(command, view, newTab,  true);
+        TabManager.AddTab(command, newTab,  true);
         return newTab;
     }
 
@@ -56,7 +56,7 @@ public record CommandQueueWorker(
 
             if (!forceRefresh && TabManager.TryGetTab(commandTabName) is { } tabToUpdate)
             {
-                var updatedView = mapView?.Invoke(tabToUpdate.View) ?? tabToUpdate.View;
+                var updatedView = mapView?.Invoke(tabToUpdate.Tab.View) ?? tabToUpdate.Tab.View;
                 if (ignoreOutput)
                     return;
 
