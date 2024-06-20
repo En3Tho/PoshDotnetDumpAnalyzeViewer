@@ -105,19 +105,19 @@ public static class ArrayListViewExtensions
             }
         };
 
-        void FilterListItems()
+        void FilterListItems(T[] source)
         {
             var filterText = filter.Text;
             if (lastFilter.Equals(filterText)) return;
 
             if (string.IsNullOrEmpty(filterText))
             {
-                @this.SetSource(@this.InitialSource);
+                @this.SetSource(source);
             }
             else
             {
                 var filteredOutput =
-                    @this.InitialSource
+                    source
                         .Where(x => filterPredicate(x, filterText))
                         .ToArray();
 
@@ -145,7 +145,11 @@ public static class ArrayListViewExtensions
             switch (args.KeyCode)
             {
                 case KeyCode.Enter:
-                    FilterListItems();
+                    FilterListItems(@this.Source);
+                    args.Handled = true;
+                    break;
+                case KeyCode.CtrlMask | KeyCode.Enter:
+                    FilterListItems(@this.InitialSource);
                     args.Handled = true;
                     break;
                 case KeyCode.Tab:
