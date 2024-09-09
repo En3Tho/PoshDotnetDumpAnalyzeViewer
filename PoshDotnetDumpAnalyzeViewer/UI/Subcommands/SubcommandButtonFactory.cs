@@ -84,6 +84,9 @@ public record SubcommandButtonFactory(SubcommandsView SubcommandContainer, MainL
             "Dump memory", $"{Commands.DumpMemory} {address}");
 
         yield return MakeCommandButton(SubcommandsPriority.DumpMemory,
+            "Dump array", $"{Commands.DumpArray} {address}");
+
+        yield return MakeCommandButton(SubcommandsPriority.DumpMemory,
             "Dump memory as bytes", $"{Commands.DumpMemoryAsBytes} {address}");
 
         yield return MakeCommandButton(SubcommandsPriority.DumpMemory,
