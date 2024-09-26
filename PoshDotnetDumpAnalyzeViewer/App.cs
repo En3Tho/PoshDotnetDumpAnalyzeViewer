@@ -20,7 +20,7 @@ public static class App
         var bridge = new DotnetDump(process, source.Token);
         var mainLayout = new MainLayout();
         var tabManager = new TabManager(mainLayout.TabView);
-        var clipboard = new MiniClipboard(Application.Driver.Clipboard);
+        var clipboard = new MiniClipboard(Application.Driver!.Clipboard!);
         var historyList = new HistoryList<string>();
 
         var exceptionHandler = ViewExceptionHandler.Create(tabManager, clipboard);

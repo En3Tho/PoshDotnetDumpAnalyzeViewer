@@ -15,7 +15,7 @@ public class HistoryList<T>
     {
         if (_currentIndex >= 0 && _currentIndex < _items.Count)
             return _items[_currentIndex];
-        return default;
+        return default(T?);
     }
 
     public void Add(T command)

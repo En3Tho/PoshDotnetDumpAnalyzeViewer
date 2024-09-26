@@ -10,7 +10,7 @@ public class TabManager(TabView tabView)
     public (Tab Tab, bool IsOk)? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
-        return default;
+        return default((Tab Tab, bool IsOk)?);
     }
 
     public string? TryGetCommand(Tab tab)

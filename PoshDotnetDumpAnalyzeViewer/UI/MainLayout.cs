@@ -16,7 +16,7 @@ public class MainLayout : Window
         TabView = new()
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill() - Dim.Sized(3)
+            Height = Dim.Fill()! - Dim.Absolute(3)!
         };
 
         var commandFrame = new FrameView

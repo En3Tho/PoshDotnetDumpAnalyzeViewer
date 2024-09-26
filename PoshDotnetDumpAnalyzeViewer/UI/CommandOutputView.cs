@@ -15,7 +15,7 @@ public class CommandOutputView : Window
 
         ListView = new(data)
         {
-            Height = Dim.Fill() - Dim.Sized(2),
+            Height = Dim.Fill()! - Dim.Absolute(2)!,
             Width = Dim.Fill()
         };
 

@@ -46,7 +46,7 @@ public struct UITaskMethodBuilder
         {
             var fakeAwaiter = new FakeAwaiter();
             _methodBuilder.AwaitUnsafeOnCompleted(ref fakeAwaiter, ref stateMachine);
-            ctx.Post(obj => ((Action)obj!)(), fakeAwaiter.action);
+            ctx.Post(static obj => ((Action)obj!)(), fakeAwaiter.action);
         }
     }
 
@@ -74,5 +74,4 @@ public struct UITaskMethodBuilder
     }
 
     public UITask Task => new(_methodBuilder.Task);
-
 }
