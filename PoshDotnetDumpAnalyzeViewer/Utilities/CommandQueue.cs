@@ -6,6 +6,9 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 
+// v2 notes:
+// change TabView.Tab to Tab
+// Change Text to DisplayText
 public record CommandQueueWorker(
     IClipboard Clipboard,
     DotnetDump DotnetDump,
@@ -14,22 +17,22 @@ public record CommandQueueWorker(
     TabManager TabManager,
     IEnumerable<CommandViewFactoryBase> ViewFactories)
 {
-    private void UpdateTab(Tab tabToUpdate, View view)
+    private void UpdateTab(TabView.Tab tabToUpdate, View view)
     {
         tabToUpdate.View = view;
         TabManager.SetSelected(tabToUpdate);
     }
 
-    Tab GetOrCreateTabForCommand(string command, View view)
+    TabView.Tab GetOrCreateTabForCommand(string command, View view)
     {
         if (TabManager.TryGetTab(command) is { } tabToUpgrade)
         {
             return tabToUpgrade.Tab;
         }
 
-        var newTab = new Tab
+        var newTab = new TabView.Tab
         {
-            DisplayText = command,
+            Text = command,
             View = view
         };
 
@@ -44,7 +47,7 @@ public record CommandQueueWorker(
         Func<string[], string[]>? mapOutput = null)
     {
         var textToRestore = MainLayout.CommandInput.Text;
-        if (command.Equals(textToRestore)) textToRestore = "";
+        if (command.Equals(textToRestore?.ToString())) textToRestore = "";
 
         try
         {

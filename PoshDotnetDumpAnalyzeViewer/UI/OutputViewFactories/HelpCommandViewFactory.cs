@@ -6,6 +6,11 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 
+using KeyCode = Key;
+
+// v2 notes: args to (_, args)
+// Remove KeyCode
+
 public sealed record HelpCommandViewFactory
     (IClipboard Clipboard, CommandQueue CommandQueue, MainLayout MainLayout, string FileName) : CommandViewFactoryBase(Clipboard)
 {
@@ -18,9 +23,9 @@ public sealed record HelpCommandViewFactory
     {
         output.Lines[0] = $"{output.Lines[0]} ({FileName})";
         var view = new CommandOutputView(output.Lines).AddDefaultBehavior(Clipboard);
-        view.ListView.KeyDown += (_, args) =>
+        view.ListView.KeyDown += args =>
         {
-            if (args.KeyCode == KeyCode.Enter)
+            if (args.KeyEvent.Key == KeyCode.Enter)
             {
                 if (view.ListView.TryParseLine<HelpParser>(output.Command) is HelpOutputLine help)
                 {

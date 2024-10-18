@@ -16,9 +16,9 @@ public class ViewExceptionHandler
 
             var commandView = new CommandOutputView(errorSource).AddDefaultBehavior(clipboard);
 
-            var tab = new Tab
+            var tab = new TabView.Tab
             {
-                Title = "Unhandled exception",
+                Text = "Unhandled exception",
                 View = commandView
             };
             tabManager.AddTab(exn.Message, tab, false);

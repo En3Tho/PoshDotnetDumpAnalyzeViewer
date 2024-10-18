@@ -2,18 +2,20 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 
+// v2 notes:
+// change TabView.Tab to Tab
 public class TabManager(TabView tabView)
 {
-    private readonly Dictionary<string, (Tab Tab, bool IsOk)> _tabMap =
+    private readonly Dictionary<string, (TabView.Tab Tab, bool IsOk)> _tabMap =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public (Tab Tab, bool IsOk)? TryGetTab(string command)
+    public (TabView.Tab Tab, bool IsOk)? TryGetTab(string command)
     {
         if (_tabMap.TryGetValue(command, out var result)) return result;
-        return default((Tab Tab, bool IsOk)?);
+        return default((TabView.Tab Tab, bool IsOk)?);
     }
 
-    public string? TryGetCommand(Tab tab)
+    public string? TryGetCommand(TabView.Tab tab)
     {
         foreach (var commandsAndKeys in _tabMap)
         {
@@ -24,7 +26,7 @@ public class TabManager(TabView tabView)
         return null;
     }
 
-    public void RemoveTab(Tab tab)
+    public void RemoveTab(TabView.Tab tab)
     {
         var command = TryGetCommand(tab);
         tabView.RemoveTab(tab);
@@ -45,14 +47,14 @@ public class TabManager(TabView tabView)
         _tabMap.Remove(command);
     }
 
-    public void AddTab(string command, Tab tab, bool isOk)
+    public void AddTab(string command, TabView.Tab tab, bool isOk)
     {
         RemoveTab(command);
         _tabMap[command] = (tab, isOk);
         tabView.AddTab(tab, true);
     }
 
-    public void SetSelected(Tab tab)
+    public void SetSelected(TabView.Tab tab)
     {
         tabView.SelectedTab = tab;
     }

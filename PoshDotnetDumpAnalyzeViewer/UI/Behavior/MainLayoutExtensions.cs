@@ -3,19 +3,26 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 
+using KeyCode = Key;
+
+// v2 notes: args to (_, args)
+// Remove KeyCode
+// Text to Title or something like that
+// KeyEvent to KeyCode
+
 public static class MainLayoutExtensions
 {
     public static MainLayout AddDefaultBehavior(this MainLayout @this, TabManager tabManager, CommandQueue commandQueue, IClipboard clipboard,
         HistoryList<string> commandHistory)
     {
-        @this.TabView.KeyDown += (_, args) =>
+        @this.TabView.KeyDown += args =>
         {
-            switch (args.KeyCode)
+            switch (args.KeyEvent.Key)
             {
                 case KeyCode.CtrlMask | KeyCode.W:
                 {
                     // special case help
-                    if (@this.TabView is { SelectedTab: { Text: not "help" } selectedTab})
+                    if (@this.TabView is { SelectedTab: { Text: {} tabText } selectedTab} && tabText?.ToString() is not "help")
                         tabManager.RemoveTab(selectedTab);
                     args.Handled = true;
                     break;
@@ -23,7 +30,7 @@ public static class MainLayoutExtensions
                 case KeyCode.CtrlMask | KeyCode.R:
                 {
                     // special case help
-                    if (@this.TabView is { SelectedTab.Text: not "help" and var tabText})
+                    if (@this.TabView is { SelectedTab.Text: {} tabTextU } && tabTextU.ToString()! is not "help" and var tabText)
                     {
                         if (tabManager.TryGetTab(tabText) is { IsOk: true })
                         {
@@ -38,7 +45,7 @@ public static class MainLayoutExtensions
 
         void ProcessEnterKey(bool forceRefresh = false)
         {
-            var command = @this.CommandInput.Text;
+            var command = @this.CommandInput.Text?.ToString();
             if (string.IsNullOrWhiteSpace(command)) return;
             commandQueue.SendCommand(command, forceRefresh: forceRefresh);
         }
@@ -46,9 +53,9 @@ public static class MainLayoutExtensions
         @this.CommandInput
             .AddClipboard(clipboard)
             .AddCommandHistory(commandHistory)
-            .KeyDown += (_, args) =>
+            .KeyDown += args =>
         {
-            switch (args.KeyCode)
+            switch (args.KeyEvent.Key)
             {
                 case KeyCode.CtrlMask | KeyCode.Enter:
                     if (!@this.CommandInput.ReadOnly)

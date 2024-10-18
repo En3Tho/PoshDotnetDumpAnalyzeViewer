@@ -4,6 +4,13 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI.Subcommands;
 
+using KeyCode = Key;
+
+// v2 notes: args to (_, args)
+// Remove KeyCode
+// Text to Title or something like that
+// KeyEvent to KeyCode
+
 public static class SubcommandsDialog
 {
     public static SubcommandButton MakeButton(Toplevel parent, SubcommandsPriority priority, string title, Action onEnter, Action? onTab = null)
@@ -12,12 +19,12 @@ public static class SubcommandsDialog
         {
             X = 0,
             Y = 0,
-            Title = title
+            Text = title
         };
 
-        button.KeyDown += (_, args) =>
+        button.KeyDown += args =>
         {
-            switch (args.KeyCode)
+            switch (args.KeyEvent.Key)
             {
                 case KeyCode.Tab:
                     if (onTab is { })

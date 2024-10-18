@@ -3,6 +3,8 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI;
 
+// v2 notes Dim.Sized => Dim.Absolute
+
 public class MainLayout : Window
 {
     public TabView TabView { get; }
@@ -16,7 +18,7 @@ public class MainLayout : Window
         TabView = new()
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill()! - Dim.Absolute(3)!
+            Height = Dim.Fill()! - Dim.Sized(3)!
         };
 
         var commandFrame = new FrameView

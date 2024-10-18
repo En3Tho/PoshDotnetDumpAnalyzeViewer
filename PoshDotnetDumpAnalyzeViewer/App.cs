@@ -60,13 +60,13 @@ public static class App
         commandQueue.Start(commandQueueWorker, source.Token);
         
         var top = new Toplevel();
-        top.Closing += (_, _) =>
+        top.Closing += _ =>
         {
             source.Cancel();
             process.Kill(true);
         };
         
-        top.Loaded += (_, _) =>
+        top.Loaded += () =>
         {
             commandQueue.SendCommand("help");
         };

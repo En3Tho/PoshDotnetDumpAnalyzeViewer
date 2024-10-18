@@ -11,7 +11,6 @@ public readonly struct UITask(Task task)
 public static class UISynchronizationContext
 {
     public static SynchronizationContext Value { get; private set; } = null!;
-
     public static void Set(SynchronizationContext context) => Value = context;
 }
 

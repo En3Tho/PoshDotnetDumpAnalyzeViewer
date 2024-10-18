@@ -3,6 +3,8 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI;
 
+// v2 notes Dim.Sized => Dim.Absolute
+
 public class CommandOutputView : Window
 {
     public ArrayListView<string> ListView { get; }
@@ -15,7 +17,7 @@ public class CommandOutputView : Window
 
         ListView = new(data)
         {
-            Height = Dim.Fill()! - Dim.Absolute(2)!,
+            Height = Dim.Fill()! - Dim.Sized(2)!,
             Width = Dim.Fill()
         };
 

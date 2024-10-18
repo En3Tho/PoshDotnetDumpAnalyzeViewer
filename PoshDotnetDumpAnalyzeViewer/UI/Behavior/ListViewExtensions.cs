@@ -4,6 +4,12 @@ using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI.Behavior;
 
+// v2 notes: remove KeyCode
+// args to (_, args)
+// args.Key to args.KeyCode
+
+using KeyCode = Key;
+
 public static class ListViewExtensions
 {
 
@@ -21,9 +27,9 @@ public static class ListViewExtensions
 
     public static ListView ClipNavigationDown(this ListView @this)
     {
-        @this.KeyDown += (_, args) =>
+        @this.KeyDown += args =>
         {
-            switch (args.KeyCode)
+            switch (args.KeyEvent.Key)
             {
                 case KeyCode.End:
                     @this.SetSelectedClipTop(@this.Source.Count - 1);
@@ -43,9 +49,9 @@ public static class ArrayListViewExtensions
 {
     public static ArrayListView<T> AddClipboard<T>(this ArrayListView<T> @this, IClipboard clipboard)
     {
-        @this.KeyUp += (_, args) =>
+        @this.KeyUp += args =>
         {
-            switch (args.KeyCode)
+            switch (args.KeyEvent.Key)
             {
                 case KeyCode.CtrlMask | KeyCode.C:
                     clipboard.SetClipboardData(@this.Source[@this.SelectedItem]!.ToString());
@@ -65,9 +71,9 @@ public static class ArrayListViewExtensions
         Func<T, Toplevel?> dialogFactory,
         Func<Exception, bool> exceptionHandler)
     {
-        @this.KeyDown += (_, args) =>
+        @this.KeyDown += args =>
         {
-            if (args.KeyCode == KeyCode.Enter)
+            if (args.KeyEvent.Key == KeyCode.Enter)
             {
                 if (dialogFactory(@this.Source[@this.SelectedItem]) is { } dialog)
                 {
@@ -85,9 +91,10 @@ public static class ArrayListViewExtensions
         var filterHistory = new HistoryList<string>();
         var lastFilter = "";
 
-        @this.KeyDown += (_, args) =>
+        @this.KeyDown += args =>
         {
-            switch (args.KeyCode)
+            var key = args.KeyEvent.Key;
+            switch (key)
             {
                 case KeyCode.Tab:
                     FindNextListItem();
@@ -96,9 +103,9 @@ public static class ArrayListViewExtensions
                 default:
                     // delegate simple number and letter keystrokes to filter
                     // TODO: backspace is not processed anymore in v2. A bug?
-                    if (args.KeyCode is >= KeyCode.Space and <= KeyCode.Z or KeyCode.Backspace)
+                    if (key is >= KeyCode.Space and <= KeyCode.Z or KeyCode.Backspace)
                     {
-                        filter.OnProcessKeyDown(args.KeyCode);
+                        filter.OnKeyDown(args.KeyEvent);
                         args.Handled = true;
                     }
                     break;
@@ -107,7 +114,7 @@ public static class ArrayListViewExtensions
 
         void FilterListItems(T[] source)
         {
-            var filterText = filter.Text;
+            var filterText = filter.Text?.ToString();
             if (lastFilter.Equals(filterText)) return;
 
             if (string.IsNullOrEmpty(filterText))
@@ -130,7 +137,7 @@ public static class ArrayListViewExtensions
 
         void FindNextListItem()
         {
-            var filterText = filter.Text;
+            var filterText = filter.Text?.ToString();
 
             if (string.IsNullOrWhiteSpace(filterText))
                 return;
@@ -140,9 +147,9 @@ public static class ArrayListViewExtensions
 
         filter
             .AddCommandHistory(filterHistory)
-            .KeyDown += (_, args) =>
+            .KeyDown += args =>
         {
-            switch (args.KeyCode)
+            switch (args.KeyEvent.Key)
             {
                 case KeyCode.Enter:
                     FilterListItems(@this.Source);
