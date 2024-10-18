@@ -103,7 +103,7 @@ public static class ArrayListViewExtensions
                 default:
                     // delegate simple number and letter keystrokes to filter
                     // TODO: backspace is not processed anymore in v2. A bug?
-                    if (key is >= KeyCode.Space and <= KeyCode.Z or KeyCode.Backspace)
+                    if (key is >= KeyCode.Space and <= KeyCode.z or KeyCode.Backspace)
                     {
                         filter.OnKeyDown(args.KeyEvent);
                         args.Handled = true;

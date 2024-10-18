@@ -1,7 +1,8 @@
-﻿using System.Collections.ObjectModel;
-using Terminal.Gui;
+﻿using Terminal.Gui;
 
 namespace PoshDotnetDumpAnalyzeViewer.UI;
+
+// v2 notes: new ObservableCollection(source)
 
 public class ArrayListView<T> : ListView
 {
@@ -13,7 +14,7 @@ public class ArrayListView<T> : ListView
 
     public T[] InitialSource { get; }
 
-    public void SetSource(T[] source) => base.SetSource(new ObservableCollection<T>(source));
+    public void SetSource(T[] source) => base.SetSource(source);
 
     public new T[] Source => (T[]) base.Source.ToList();
 }
