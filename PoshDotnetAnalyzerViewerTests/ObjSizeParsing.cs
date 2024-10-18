@@ -1,4 +1,6 @@
 using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Xunit;
 
 namespace PoshDotnetAnalyzerViewerTests;
@@ -33,16 +35,16 @@ public class ObjSizeParsing
             not (ObjSizeOutputLine or ObjSizeStatisticsOutputLine),
             not (ObjSizeOutputLine or ObjSizeStatisticsOutputLine),
             not (ObjSizeOutputLine or ObjSizeStatisticsOutputLine),
-            ObjSizeOutputLine { Address.Span: "7efc28036bc8", MethodTable.Span: "7f003e9f6760" },
-            ObjSizeOutputLine { Address.Span: "7ef6284d32c8", MethodTable.Span: "7f0044ef10d0" },
-            ObjSizeOutputLine { Address.Span: "7ef6284d32e0", MethodTable.Span: "7f0044ef1340" },
-            ObjSizeOutputLine { Address.Span: "7ef6284d3398", MethodTable.Span: "7f0044e1eb18" },
+            ObjSizeOutputLine { Address: "7efc28036bc8", MethodTable: "7f003e9f6760" },
+            ObjSizeOutputLine { Address: "7ef6284d32c8", MethodTable: "7f0044ef10d0" },
+            ObjSizeOutputLine { Address: "7ef6284d32e0", MethodTable: "7f0044ef1340" },
+            ObjSizeOutputLine { Address: "7ef6284d3398", MethodTable: "7f0044e1eb18" },
             not (ObjSizeOutputLine or ObjSizeStatisticsOutputLine),
             not (ObjSizeOutputLine or ObjSizeStatisticsOutputLine),
             not (ObjSizeOutputLine or ObjSizeStatisticsOutputLine),
-            ObjSizeStatisticsOutputLine { MethodTable.Span: "7f0044bc3970", TypeName.Span: "System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Boolean>+AsyncStateMachineBox<MySqlConnector.Core.ServerSession+<TryResetConnectionAsync>d__77>" },
-            ObjSizeStatisticsOutputLine { MethodTable.Span: "7f003eab2498", TypeName.Span: "System.SByte[]" },
-            ObjSizeStatisticsOutputLine { MethodTable.Span: "7f003eab7a60", TypeName.Span: "System.String" },
+            ObjSizeStatisticsOutputLine { MethodTable: "7f0044bc3970", TypeName: "System.Runtime.CompilerServices.AsyncTaskMethodBuilder<System.Boolean>+AsyncStateMachineBox<MySqlConnector.Core.ServerSession+<TryResetConnectionAsync>d__77>" },
+            ObjSizeStatisticsOutputLine { MethodTable: "7f003eab2498", TypeName: "System.SByte[]" },
+            ObjSizeStatisticsOutputLine { MethodTable: "7f003eab7a60", TypeName: "System.String" },
             not (ObjSizeOutputLine or ObjSizeStatisticsOutputLine)
         ]);
     }

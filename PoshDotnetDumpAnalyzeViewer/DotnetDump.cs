@@ -2,6 +2,24 @@
 
 namespace PoshDotnetDumpAnalyzeViewer;
 
+file static class Constants
+{
+    public const string EndCommandOutputAnchor = "<END_COMMAND_OUTPUT>";
+    public const string EndCommandErrorAnchor = "<END_COMMAND_ERROR>";
+}
+
+file static class StreamReaderExtensions
+{
+    public static async IAsyncEnumerable<string> ReadAllLinesToEndAsync(this StreamReader @this)
+    {
+        while (!@this.EndOfStream)
+        {
+            if (await @this.ReadLineAsync() is { } line)
+                yield return line;
+        }
+    }
+}
+
 public static class ProcessUtil
 {
     public static async Task<Process> StartDotnetDumpAnalyze(string fileName, string analyzeArgs)
@@ -49,56 +67,39 @@ public static class ProcessUtil
     }
 }
 
-public static class Constants
+public class DotnetDump(Process dotnetDump, CancellationToken cancellationToken)
 {
-    public const string EndCommandOutputAnchor = "<END_COMMAND_OUTPUT>";
-    public const string EndCommandErrorAnchor = "<END_COMMAND_ERROR>";
-}
+    private readonly SemaphoreSlim _semaphore = new(1);
 
-public static class StreamReaderExtensions
-{
-    public static async IAsyncEnumerable<string> ReadAllLinesToEndAsync(this StreamReader @this)
+    public async Task<(string[] Output, bool IsOk)> Run(string command)
     {
-        while (!@this.EndOfStream)
+        await _semaphore.WaitAsync(cancellationToken);
+        try
         {
-            if (await @this.ReadLineAsync() is { } line)
-                yield return line;
-        }
-    }
-}
+            List<string> values = new(8192);
 
-public class DotnetDumpAnalyzeBridge
-{
-    private readonly Process _dotnetDump;
-    private readonly CancellationToken _cancellationToken;
+            await dotnetDump.StandardInput.WriteLineAsync(command);
 
-    public DotnetDumpAnalyzeBridge(Process dotnetDump, CancellationToken cancellationToken)
-    {
-        _dotnetDump = dotnetDump;
-        _cancellationToken = cancellationToken;
-    }
-
-    public async Task<(string[] Output, bool IsOk)> PerformCommand(string command)
-    {
-        // TODO: jagged array?
-        List<string> values = new(8192);
-
-        await _dotnetDump.StandardInput.WriteLineAsync(command);
-
-        await foreach (var line in _dotnetDump.StandardOutput.ReadAllLinesToEndAsync().WithCancellation(_cancellationToken))
-        {
-            if (line is Constants.EndCommandErrorAnchor)
+            await foreach (var line in dotnetDump.StandardOutput.ReadAllLinesToEndAsync()
+                               .WithCancellation(cancellationToken))
             {
-                return (values.ToArray(), false);
+                if (line.EndsWith(Constants.EndCommandErrorAnchor, StringComparison.Ordinal))
+                {
+                    return (values.ToArray(), false);
+                }
+
+                if (line.EndsWith(Constants.EndCommandOutputAnchor, StringComparison.Ordinal))
+                    break;
+
+                values.Add(line);
             }
 
-            if (line is Constants.EndCommandOutputAnchor)
-                break;
-
-            values.Add(line);
+            return (values.ToArray(), true);
         }
-
-        return (values.ToArray(), true);
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 }
 

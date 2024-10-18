@@ -1,4 +1,6 @@
 using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Xunit;
 
 namespace PoshDotnetAnalyzerViewerTests;
@@ -38,7 +40,7 @@ public class DumpModuleParsing
             {},
             {},
             {},
-            AssemblyAddressOutputLine { AssemblyAddress.Span: "000055a42e4d9030" },
+            AssemblyAddressOutputLine { AssemblyAddress: "000055a42e4d9030" },
             {},
             {},
             {},

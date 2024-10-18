@@ -1,7 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Parsing;
 
 static class RegexPatterns
 {
@@ -281,6 +282,11 @@ static class RegexPatterns
     }
 }
 
+public interface IOutputParser
+{
+    static abstract OutputLine Parse(string line, string command);
+}
+
 public partial class HelpParser : IOutputParser
 {
     [GeneratedRegex(RegexPatterns.Help)]
@@ -288,12 +294,14 @@ public partial class HelpParser : IOutputParser
 
     public static OutputLine Parse(string line, string _)
     {
-        if (Regex().IsMatch(line))
-            return new HelpOutputLine(line);
-
+        if (Regex().Match(line) is { Success: true } match)
+        {
+            var commands = match.Groups[1].Value.Split(",", StringSplitOptions.TrimEntries);
+            return new HelpOutputLine(line, commands);
+        }
+        
         return new(line);
     }
-
 
     public static string[] GetCommandsFromLine(string line)
     {
@@ -312,10 +320,10 @@ public partial class DumpHeapParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetDumpHeapStatisticsHeaderRanges(line) is {} dumpHeapStatisticsRanges)
-            return new DumpHeapStatisticsOutputLine(line, dumpHeapStatisticsRanges);
+            return new DumpHeapStatisticsOutputLine(line, line[dumpHeapStatisticsRanges.MethodTable], line[dumpHeapStatisticsRanges.ClassName]);
 
         if (GetDumpHeapHeaderRanges(line) is {} dumpHeapRanges)
-            return new DumpHeapOutputLine(line, dumpHeapRanges);
+            return new DumpHeapOutputLine(line, line[dumpHeapRanges.Address], line[dumpHeapRanges.MethodTable]);
 
         return new(line);
     }
@@ -329,7 +337,7 @@ public partial class DumpHeapParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2]);
         }
 
-        return default;
+        return default(DumpHeapRanges?);
     }
 
     public static DumpHeapStatisticsRanges? GetDumpHeapStatisticsHeaderRanges(string line)
@@ -341,7 +349,7 @@ public partial class DumpHeapParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2], ranges[3]);
         }
 
-        return default;
+        return default(DumpHeapStatisticsRanges?);
     }
 }
 
@@ -355,11 +363,11 @@ public partial class ObjSizeParser : IOutputParser
 
     public static OutputLine Parse(string line, string _)
     {
-        if (GetObjSizeStatisticsHeaderRanges(line) is {} objSizeStatisticsRanges)
-            return new ObjSizeStatisticsOutputLine(line, objSizeStatisticsRanges);
+        if (GetObjSizeStatisticsHeaderRanges(line) is { } objSizeStatisticsRanges)
+            return new ObjSizeStatisticsOutputLine(line, line[objSizeStatisticsRanges.MethodTable], line[objSizeStatisticsRanges.ClassName]);
 
         if (GetObjSizeHeaderRanges(line) is {} objSizeRanges)
-            return new ObjSizeOutputLine(line, objSizeRanges);
+            return new ObjSizeOutputLine(line, line[objSizeRanges.Address], line[objSizeRanges.MethodTable]);
 
         return new(line);
     }
@@ -373,7 +381,7 @@ public partial class ObjSizeParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2]);
         }
 
-        return default;
+        return default(ObjSizeRanges?);
     }
 
     public static ObjSizeStatisticsRanges? GetObjSizeStatisticsHeaderRanges(string line)
@@ -385,7 +393,7 @@ public partial class ObjSizeParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2], ranges[3]);
         }
 
-        return default;
+        return default(ObjSizeStatisticsRanges?);
     }
 }
 
@@ -397,7 +405,7 @@ public partial class SetThreadParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetRanges(line) is {} ranges)
-            return new OsThreadIdOutputLine(line, ranges);
+            return new OsThreadIdOutputLine(line, line[ranges.OsThreadId]);
 
         return new(line);
     }
@@ -411,7 +419,7 @@ public partial class SetThreadParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(OsThreadIdRanges?);
     }
 }
 
@@ -423,7 +431,7 @@ public partial class ClrThreadsParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetRanges(line) is {} ranges)
-            return new ClrThreadsOutputLine(line, ranges);
+            return new ClrThreadsOutputLine(line, line[ranges.OsId], line[ranges.Id], line[ranges.State]);
 
         return new(line);
     }
@@ -437,7 +445,7 @@ public partial class ClrThreadsParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7], ranges[8], ranges[9], ranges[10]);
         }
 
-        return default;
+        return default(ClrThreadsRanges?);
     }
 }
 
@@ -452,7 +460,7 @@ public partial class SyncBlockParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetRanges(line) is {} ranges)
-            return new SyncBlockOutputLine(line, ranges);
+            return new SyncBlockOutputLine(line, line[ranges.OwningThreadOsId], line[ranges.SyncBlockOwnerAddress], line[ranges.SyncBlockOwnerType], line[ranges.SyncBlock], line[ranges.Index]);
 
         if (GetZeroRanges(line) is {} zeroRanges)
         {
@@ -460,7 +468,7 @@ public partial class SyncBlockParser : IOutputParser
             // 64 0000000000000000            0         0 0000000000000000     none           0 Free
             if (line.AsSpan()[zeroRanges.SyncBlock].IndexOfAnyExcept('0') > -1)
             {
-                return new SyncBlockZeroOutputLine(line, zeroRanges);
+                return new SyncBlockZeroOutputLine(line, line[zeroRanges.SyncBlockOwnerAddress], line[zeroRanges.SyncBlockOwnerType], line[zeroRanges.SyncBlock], line[zeroRanges.Index]);
             }
         }
 
@@ -476,7 +484,7 @@ public partial class SyncBlockParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7], ranges[8]);
         }
 
-        return default;
+        return default(SyncBlockRanges?);
     }
 
     public static SyncBlockZeroRanges? GetZeroRanges(string line)
@@ -488,30 +496,30 @@ public partial class SyncBlockParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7]);
         }
 
-        return default;
+        return default(SyncBlockZeroRanges?);
     }
 }
 
 public partial class GCRootParser : IOutputParser
 {
     [GeneratedRegex(RegexPatterns.GCRoot.Root)]
-    public static partial Regex StrongHandleRegex();
+    public static partial Regex GCRootRegex();
 
     [GeneratedRegex(RegexPatterns.GCRoot.ThreadId)]
     public static partial Regex ThreadIdRegex();
 
     public static OutputLine Parse(string line, string _)
     {
-        if (GetRanges(line) is { } ranges)
+        if (GetGCRootRanges(line) is { } ranges)
         {
             if (line.AsSpan()[ranges.TypeName].Contains("strong handle", StringComparison.Ordinal))
-                return new ObjectAddressOutputLine(line, new(ranges.Address));
+                return new ObjectAddressOutputLine(line, line[ranges.Address]);
 
-            return new GCRootOutputLine(line, ranges);
+            return new GCRootOutputLine(line, line[ranges.Address], line[ranges.TypeName]);
         }
 
         if (GetOsThreadIdRanges(line) is { } osThreadIdRanges)
-            return new OsThreadIdOutputLine(line, osThreadIdRanges);
+            return new OsThreadIdOutputLine(line, line[osThreadIdRanges.OsThreadId]);
 
         return new(line);
     }
@@ -525,19 +533,19 @@ public partial class GCRootParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(OsThreadIdRanges?);
     }
 
-    public static GCRootRanges? GetRanges(string line)
+    public static GCRootRanges? GetGCRootRanges(string line)
     {
-        if (StrongHandleRegex().Match(line) is { Success: true } match)
+        if (GCRootRegex().Match(line) is { Success: true } match)
         {
             var ranges = new Range[2];
             match.CopyGroupsRangesTo(ranges);
             return new(ranges[0], ranges[1]);
         }
 
-        return default;
+        return default(GCRootRanges?);
     }
 }
 
@@ -550,7 +558,7 @@ public partial class DumpExceptionsParser : IOutputParser
     {
         if (GetRanges(line) is { } ranges)
         {
-            return new DumpExceptionsOutputLine(line, ranges);
+            return new DumpExceptionsOutputLine(line, line[ranges.Address], line[ranges.MethodTable], line[ranges.TypeName]);
         }
 
         return new(line);
@@ -565,7 +573,7 @@ public partial class DumpExceptionsParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2]);
         }
 
-        return default;
+        return default(DumpExceptionRanges?);
     }
 }
 
@@ -589,19 +597,19 @@ public partial class DumpObjectParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetMainRanges(line) is {} mainRanges)
-            return new DumpObjectOutputLine(line, mainRanges);
+            return new DumpObjectOutputLine(line, line[mainRanges.Value], line[mainRanges.MethodTable]);
 
         if (GetObjectAddressRanges(line) is {} objectAddressRanges)
-            return new ObjectAddressOutputLine(line, objectAddressRanges);
+            return new ObjectAddressOutputLine(line, line[objectAddressRanges.Address]);
 
         if (GetMethodTableRanges(line) is {} methodTableRanges)
-            return new MethodTableOutputLine(line, methodTableRanges);
+            return new MethodTableOutputLine(line, line[methodTableRanges.MethodTable]);
 
         if (GetTypeNameRanges(line) is {} typeNameRanges)
-            return new TypeNameOutputLine(line, typeNameRanges);
+            return new TypeNameOutputLine(line, line[typeNameRanges.TypeName]);
 
         if (GetEEClassRanges(line) is {} eeClassRanges)
-            return new EEClassAddressOutputLine(line, eeClassRanges);
+            return new EEClassAddressOutputLine(line, line[eeClassRanges.EEClass]);
 
         return new(line);
     }
@@ -615,7 +623,7 @@ public partial class DumpObjectParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ObjectAddressRanges?);
     }
 
     public static MethodTableRanges? GetMethodTableRanges(string line)
@@ -627,7 +635,7 @@ public partial class DumpObjectParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(MethodTableRanges?);
     }
 
     public static TypeNameRanges? GetTypeNameRanges(string line)
@@ -639,7 +647,7 @@ public partial class DumpObjectParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(TypeNameRanges?);
     }
 
     public static EEClassAddressRanges? GetEEClassRanges(string line)
@@ -651,7 +659,7 @@ public partial class DumpObjectParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(EEClassAddressRanges?);
     }
 
     public static DumpObjectRanges? GetMainRanges(string line)
@@ -663,7 +671,7 @@ public partial class DumpObjectParser : IOutputParser
             return new(ranges[0], ranges[1], ranges[2], ranges[3], ranges[4], ranges[5], ranges[6], ranges[7]);
         }
 
-        return default;
+        return default(DumpObjectRanges?);
     }
 }
 
@@ -681,13 +689,13 @@ public partial class DumpMethodTableParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
-            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+            return new ModuleAddressOutputLine(line, line[moduleAddressRanges.Module]);
 
         if (GetTypeNameRanges(line) is {} typeNameRanges)
-            return new TypeNameOutputLine(line, typeNameRanges);
+            return new TypeNameOutputLine(line, line[typeNameRanges.TypeName]);
 
         if (GetEEClassRanges(line) is {} eeClassRanges)
-            return new EEClassAddressOutputLine(line, eeClassRanges);
+            return new EEClassAddressOutputLine(line, line[eeClassRanges.EEClass]);
 
         return new(line);
     }
@@ -701,7 +709,7 @@ public partial class DumpMethodTableParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ModuleAddressRanges?);
     }
 
     public static TypeNameRanges? GetTypeNameRanges(string line)
@@ -713,7 +721,7 @@ public partial class DumpMethodTableParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(TypeNameRanges?);
     }
 
     public static EEClassAddressRanges? GetEEClassRanges(string line)
@@ -725,7 +733,7 @@ public partial class DumpMethodTableParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(EEClassAddressRanges?);
     }
 }
 
@@ -746,16 +754,16 @@ public partial class DumpClassParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
-            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+            return new ModuleAddressOutputLine(line, line[moduleAddressRanges.Module]);
 
         if (GetTypeNameRanges(line) is {} typeNameRanges)
-            return new TypeNameOutputLine(line, typeNameRanges);
+            return new TypeNameOutputLine(line, line[typeNameRanges.TypeName]);
 
         if (GetParentClassRanges(line) is {} eeClassRanges)
-            return new EEClassAddressOutputLine(line, eeClassRanges);
+            return new EEClassAddressOutputLine(line, line[eeClassRanges.EEClass]);
         
         if (GetMethodTableRanges(line) is {} methodTableRanges)
-            return new MethodTableOutputLine(line, methodTableRanges);
+            return new MethodTableOutputLine(line, line[methodTableRanges.MethodTable]);
         
         return new(line);
     }
@@ -769,7 +777,7 @@ public partial class DumpClassParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ModuleAddressRanges?);
     }
 
     public static TypeNameRanges? GetTypeNameRanges(string line)
@@ -781,7 +789,7 @@ public partial class DumpClassParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(TypeNameRanges?);
     }
 
     public static EEClassAddressRanges? GetParentClassRanges(string line)
@@ -793,7 +801,7 @@ public partial class DumpClassParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(EEClassAddressRanges?);
     }
     
     public static MethodTableRanges? GetMethodTableRanges(string line)
@@ -805,7 +813,7 @@ public partial class DumpClassParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(MethodTableRanges?);
     }
 }
 
@@ -818,7 +826,7 @@ public partial class DumpModuleParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetAssemblyAddressRanges(line) is {} assemblyAddressRanges)
-            return new AssemblyAddressOutputLine(line, assemblyAddressRanges);
+            return new AssemblyAddressOutputLine(line, line[assemblyAddressRanges.Assembly]);
 
         return new(line);
     }
@@ -832,7 +840,7 @@ public partial class DumpModuleParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(AssemblyAddressRanges?);
     }
 }
 
@@ -847,10 +855,10 @@ public partial class DumpAssemblyParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
-            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+            return new ModuleAddressOutputLine(line, line[moduleAddressRanges.Module]);
 
         if (GetDomainAddressRanges(line) is {} domainAddressRanges)
-            return new DomainAddressOutputLine(line, domainAddressRanges);
+            return new DomainAddressOutputLine(line, line[domainAddressRanges.Domain]);
 
         return new(line);
     }
@@ -864,7 +872,7 @@ public partial class DumpAssemblyParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ModuleAddressRanges?);
     }
 
     public static DomainAddressRanges? GetDomainAddressRanges(string line)
@@ -876,7 +884,7 @@ public partial class DumpAssemblyParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(DomainAddressRanges?);
     }
 }
 
@@ -891,10 +899,10 @@ public partial class DumpDomainParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
-            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+            return new ModuleAddressOutputLine(line, line[moduleAddressRanges.Module]);
 
         if (GetAssemblyAddressRanges(line) is {} assemblyAddressRanges)
-            return new AssemblyAddressOutputLine(line, assemblyAddressRanges);
+            return new AssemblyAddressOutputLine(line, line[assemblyAddressRanges.Assembly]);
 
         return new(line);
     }
@@ -908,7 +916,7 @@ public partial class DumpDomainParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ModuleAddressRanges?);
     }
 
     public static AssemblyAddressRanges? GetAssemblyAddressRanges(string line)
@@ -920,7 +928,7 @@ public partial class DumpDomainParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(AssemblyAddressRanges?);
     }
 }
 
@@ -941,16 +949,16 @@ public partial class Name2EEParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetModuleAddressRanges(line) is {} moduleAddressRanges)
-            return new ModuleAddressOutputLine(line, moduleAddressRanges);
+            return new ModuleAddressOutputLine(line, line[moduleAddressRanges.Module]);
 
         if (GetTypeNameRanges(line) is {} typeNameRanges)
-            return new TypeNameOutputLine(line, typeNameRanges);
+            return new TypeNameOutputLine(line, line[typeNameRanges.TypeName]);
 
         if (GetParentClassRanges(line) is {} eeClassRanges)
-            return new EEClassAddressOutputLine(line, eeClassRanges);
+            return new EEClassAddressOutputLine(line, line[eeClassRanges.EEClass]);
 
         if (GetMethodTableRanges(line) is {} methodTableRanges)
-            return new MethodTableOutputLine(line, methodTableRanges);
+            return new MethodTableOutputLine(line, line[methodTableRanges.MethodTable]);
 
         return new(line);
     }
@@ -964,7 +972,7 @@ public partial class Name2EEParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ModuleAddressRanges?);
     }
 
     public static TypeNameRanges? GetTypeNameRanges(string line)
@@ -976,7 +984,7 @@ public partial class Name2EEParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(TypeNameRanges?);
     }
 
     public static EEClassAddressRanges? GetParentClassRanges(string line)
@@ -988,7 +996,7 @@ public partial class Name2EEParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(EEClassAddressRanges?);
     }
 
     public static MethodTableRanges? GetMethodTableRanges(string line)
@@ -1000,7 +1008,7 @@ public partial class Name2EEParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(MethodTableRanges?);
     }
 }
 
@@ -1018,13 +1026,13 @@ public partial class PrintExceptionParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (GetExceptionObjectRanges(line) is {} exceptionObjectRanges)
-            return new ExceptionObjectAddressOutputLine(line, exceptionObjectRanges);
+            return new ExceptionObjectAddressOutputLine(line, line[exceptionObjectRanges.Address]);
 
         if (GetExceptionTypeRanges(line) is {} typeNameRanges)
-            return new TypeNameOutputLine(line, typeNameRanges);
+            return new TypeNameOutputLine(line, line[typeNameRanges.TypeName]);
 
         if (GetInnerExceptionRanges(line) is {} innerExceptionRanges)
-            return new ExceptionObjectAddressOutputLine(line, innerExceptionRanges);
+            return new ExceptionObjectAddressOutputLine(line, line[innerExceptionRanges.Address]);
 
         return new(line);
     }
@@ -1038,7 +1046,7 @@ public partial class PrintExceptionParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ObjectAddressRanges?);
     }
 
     public static TypeNameRanges? GetExceptionTypeRanges(string line)
@@ -1050,7 +1058,7 @@ public partial class PrintExceptionParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(TypeNameRanges?);
     }
 
     public static ObjectAddressRanges? GetInnerExceptionRanges(string line)
@@ -1062,7 +1070,7 @@ public partial class PrintExceptionParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ObjectAddressRanges?);
     }
 }
 
@@ -1076,8 +1084,8 @@ public partial class ParallelStacksParser : IOutputParser
 
     public static OutputLine Parse(string line, string command)
     {
-        var ranges = ThreadNamesRanges(line) ?? default;
-        return new ParallelStacksOutputLine(line, ranges);
+        var ranges = ThreadNamesRanges(line) ?? default(ParallelStacksRanges);
+        return new ParallelStacksOutputLine(line, line[ranges.OsThreadIds].Split(',', StringSplitOptions.RemoveEmptyEntries));
     }
 
     public static bool TryParseThreadCount(string line, out int threadCount)
@@ -1103,10 +1111,55 @@ public partial class ParallelStacksParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ParallelStacksRanges?);
     }
 
     public static bool IsThreadNames(string line) => ThreadNames().IsMatch(line);
+
+    public static string[] ShrinkParallelStacksOutput(string[] lines)
+    {
+        var reducedStack = new List<string>(lines.Length / 10);
+        var currentThreadCount = -1;
+        var firstLine = "";
+        var lastLine = "";
+
+        foreach (var line in lines)
+        {
+            if (IsThreadNames(line))
+            {
+                reducedStack.Add(firstLine);
+                reducedStack.Add(lastLine);
+                reducedStack.Add(line);
+                currentThreadCount = -1;
+                continue;
+            }
+
+            if (TryParseThreadCount(line, out var threadCount))
+            {
+                if (currentThreadCount != -1 && currentThreadCount != threadCount)
+                {
+                    reducedStack.Add(firstLine);
+                    if (!ReferenceEquals(firstLine, lastLine))
+                    {
+                        reducedStack.Add(lastLine);
+                    }
+                }
+
+                if (currentThreadCount != threadCount)
+                {
+                    firstLine = line;
+                    currentThreadCount = threadCount;
+                }
+
+                lastLine = line;
+                continue;
+            }
+
+            reducedStack.Add(line);
+        }
+
+        return reducedStack.ToArray();
+    }
 }
 
 public partial class ClrStackParser : IOutputParser
@@ -1117,7 +1170,7 @@ public partial class ClrStackParser : IOutputParser
     public static OutputLine Parse(string line, string _)
     {
         if (ParameterOrLocalAddressRanges(line) is {} objectAddressRanges)
-            return new ObjectAddressOutputLine(line, objectAddressRanges);
+            return new ObjectAddressOutputLine(line, line[objectAddressRanges.Address]);
 
         return new(line);
     }
@@ -1131,6 +1184,6 @@ public partial class ClrStackParser : IOutputParser
             return new(ranges[0]);
         }
 
-        return default;
+        return default(ObjectAddressRanges?);
     }
 }

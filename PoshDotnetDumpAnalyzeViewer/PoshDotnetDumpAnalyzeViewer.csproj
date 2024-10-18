@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <PackageReference Include="System.Runtime.Experimental" />
         <PackageReference Include="Terminal.Gui" />
     </ItemGroup>
 </Project>

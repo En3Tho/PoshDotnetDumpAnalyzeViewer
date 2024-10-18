@@ -1,4 +1,6 @@
 ﻿using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Xunit;
 
 namespace PoshDotnetAnalyzerViewerTests;
@@ -22,7 +24,7 @@ public class ClrStackParsing
         Assert.True(lines is [
             not ObjectAddressOutputLine,
             not ObjectAddressOutputLine,
-            ObjectAddressOutputLine { Address.Span: "0x000001c4c14c1600" },
+            ObjectAddressOutputLine { Address: "0x000001c4c14c1600" },
             not ObjectAddressOutputLine,
             not ObjectAddressOutputLine,
         ]);

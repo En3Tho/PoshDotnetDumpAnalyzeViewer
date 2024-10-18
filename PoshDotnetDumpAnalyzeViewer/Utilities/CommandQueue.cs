@@ -1,51 +1,65 @@
 using System.Threading.Channels;
+using PoshDotnetDumpAnalyzeViewer.UI;
+using PoshDotnetDumpAnalyzeViewer.UI.Behavior;
+using PoshDotnetDumpAnalyzeViewer.UI.OutputViewFactories;
 using Terminal.Gui;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 
+// v2 notes:
+// change TabView.Tab to Tab
+// Change Text to DisplayText
 public record CommandQueueWorker(
     IClipboard Clipboard,
-    DotnetDumpAnalyzeBridge DotnetDump,
-    TopLevelViews TopLevelViews,
+    DotnetDump DotnetDump,
+    MainLayout MainLayout,
     HistoryList<string> CommandHistory,
     TabManager TabManager,
-    IEnumerable<ICommandOutputViewFactory> ViewFactories)
+    IEnumerable<CommandViewFactoryBase> ViewFactories)
 {
-    private void UpdateTab(TabView.Tab tabToUpdate, CommandOutputViews views)
+    private void UpdateTab(TabView.Tab tabToUpdate, View view)
     {
-        tabToUpdate.View = views.Window;
+        tabToUpdate.View = view;
         TabManager.SetSelected(tabToUpdate);
     }
 
-    TabView.Tab GetOrCreateTabForCommand(string command, CommandOutputViews views)
+    TabView.Tab GetOrCreateTabForCommand(string command, View view)
     {
         if (TabManager.TryGetTab(command) is { } tabToUpgrade)
         {
             return tabToUpgrade.Tab;
         }
 
-        var newTab = new TabView.Tab(command, views.Window);
-        TabManager.AddTab(command, views, newTab,  true);
+        var newTab = new TabView.Tab
+        {
+            Text = command,
+            View = view
+        };
+
+        TabManager.AddTab(command, newTab,  true);
         return newTab;
     }
 
     // TODO: rewrite this to di based commands maybe ?
     // TODO: too many booleans? -_-
     public async UITask Process(string command, string commandTabName, bool forceRefresh = false, bool ignoreOutput = false,
-        Func<CommandOutputViews, CommandOutputViews>? mapView = null,
+        Func<View, View>? mapView = null,
         Func<string[], string[]>? mapOutput = null)
     {
-        var textToRestore = TopLevelViews.CommandInput.Text?.ToString();
-        if (command.Equals(textToRestore)) textToRestore = "";
+        var textToRestore = MainLayout.CommandInput.Text;
+        if (command.Equals(textToRestore?.ToString())) textToRestore = "";
 
         try
         {
-            TopLevelViews.CommandInput.Text = command;
-            TopLevelViews.CommandInput.ReadOnly = true;
+            var viewFactory = ViewFactories.First(x => x.IsSupported(command));
+            command = viewFactory.NormalizeCommand(command);
+
+            MainLayout.CommandInput.Text = command;
+            MainLayout.CommandInput.ReadOnly = true;
 
             if (!forceRefresh && TabManager.TryGetTab(commandTabName) is { } tabToUpdate)
             {
-                var updatedView = mapView?.Invoke(tabToUpdate.Views) ?? tabToUpdate.Views;
+                var updatedView = mapView?.Invoke(tabToUpdate.Tab.View) ?? tabToUpdate.Tab.View;
                 if (ignoreOutput)
                     return;
 
@@ -61,59 +75,56 @@ public record CommandQueueWorker(
 
                 while (!token.IsCancellationRequested)
                 {
-                    TopLevelViews.CommandInput.Text = $"{command} ... executing command ({seconds++}s)";
+                    MainLayout.CommandInput.Text = $"{command} ... executing command ({seconds++}s)";
                     await timer.WaitForNextTickAsync(token);
                 }
             }
 
             _ = RunTicker(cts.Token);
-            var result = await cts.AwaitAndCancel(Task.Run(() => DotnetDump.PerformCommand(command)));
-
+            var result = await cts.AwaitAndCancel(Task.Run(() => DotnetDump.Run(command)));
 
             if (!result.IsOk)
             {
-                var errorOutput = new CommandOutput(command, result.Output);
-                var errorViews = UI.MakeDefaultCommandViews(errorOutput).SetupLogic(Clipboard, errorOutput);
+                var errorViews = new CommandOutputView(result.Output).AddDefaultBehavior(Clipboard);
                 GetOrCreateTabForCommand(commandTabName, errorViews);
                 return;
             }
 
             var lines = mapOutput?.Invoke(result.Output) ?? result.Output;
             var output = new CommandOutput(command, lines);
-            var viewFactory = ViewFactories.First(x => x.IsSupported(command));
             var views = viewFactory.HandleOutput(output);
-            var updatedViews = mapView?.Invoke(views) ?? views;
+            var updatedView2 = mapView?.Invoke(views) ?? views;
 
             if (ignoreOutput)
             {
                 // in case we need something from resulting view
-                updatedViews.Window.Dispose();
+                updatedView2.Dispose();
                 return;
             }
 
             CommandHistory.Add(command);
-            var tab = GetOrCreateTabForCommand(commandTabName, updatedViews);
-            UpdateTab(tab, updatedViews);
+            var tab = GetOrCreateTabForCommand(commandTabName, updatedView2);
+            UpdateTab(tab, updatedView2);
         }
         finally
         {
-            TopLevelViews.CommandInput.ReadOnly = false;
-            TopLevelViews.CommandInput.Text = textToRestore;
+            MainLayout.CommandInput.ReadOnly = false;
+            MainLayout.CommandInput.Text = textToRestore;
         }
     }
 }
 
 public record CommandQueue(Action<Exception> ExceptionHandler)
 {
-    private readonly Channel<(string, string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?, Func<string[], string[]>?)> _channel =
-        Channel.CreateUnbounded<(string, string, bool, bool, Func<CommandOutputViews, CommandOutputViews>?, Func<string[], string[]>?)>(new() { SingleReader = true});
+    private readonly Channel<(string, string, bool, bool, Func<View, View>?, Func<string[], string[]>?)> _channel =
+        Channel.CreateUnbounded<(string, string, bool, bool, Func<View, View>?, Func<string[], string[]>?)>(new() { SingleReader = true});
 
-    public void SendCommand(string command, string commandTabName,  bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? mapView = null, Func<string[], string[]>? mapOutput = null)
+    public void SendCommand(string command, string commandTabName,  bool forceRefresh = false, bool ignoreOutput = false, Func<View, View>? mapView = null, Func<string[], string[]>? mapOutput = null)
     {
         _channel.Writer.TryWrite((command, commandTabName, forceRefresh, ignoreOutput, mapView, mapOutput));
     }
 
-    public void SendCommand(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<CommandOutputViews, CommandOutputViews>? mapView = null, Func<string[], string[]>? mapOutput = null)
+    public void SendCommand(string command, bool forceRefresh = false, bool ignoreOutput = false, Func<View, View>? mapView = null, Func<string[], string[]>? mapOutput = null)
     {
         _channel.Writer.TryWrite((command, command, forceRefresh, ignoreOutput, mapView, mapOutput));
     }

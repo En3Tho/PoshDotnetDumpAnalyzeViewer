@@ -1,4 +1,6 @@
 using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Xunit;
 
 namespace PoshDotnetAnalyzerViewerTests;
@@ -30,15 +32,15 @@ public class DumpHeapParsing
         [
             not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
             not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
-            DumpHeapOutputLine { Address.Span: "000002a724541000", MethodTable.Span: "000002a722993230" },
-            DumpHeapOutputLine { Address.Span: "000002a724541018", MethodTable.Span: "000002a722993230" },
-            DumpHeapOutputLine { Address.Span: "000002a724541030", MethodTable.Span: "000002a722993230" },
+            DumpHeapOutputLine { Address: "000002a724541000", MethodTable: "000002a722993230" },
+            DumpHeapOutputLine { Address: "000002a724541018", MethodTable: "000002a722993230" },
+            DumpHeapOutputLine { Address: "000002a724541030", MethodTable: "000002a722993230" },
             not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
             not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
             not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine),
-            DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b774a70", TypeName.Span: "System.IO.SyncTextReader" },
-            DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b773e68", TypeName.Span: "System.Threading.Tasks.Task+<>c" },
-            DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b72e0c8", TypeName.Span: "System.IO.Stream+NullStream" },
+            DumpHeapStatisticsOutputLine { MethodTable: "00007fff4b774a70", TypeName: "System.IO.SyncTextReader" },
+            DumpHeapStatisticsOutputLine { MethodTable: "00007fff4b773e68", TypeName: "System.Threading.Tasks.Task+<>c" },
+            DumpHeapStatisticsOutputLine { MethodTable: "00007fff4b72e0c8", TypeName: "System.IO.Stream+NullStream" },
             not (DumpHeapOutputLine or DumpHeapStatisticsOutputLine)
         ]);
     }
@@ -65,10 +67,10 @@ public class DumpHeapParsing
             {},
             {},
             {},
-            DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b774a70", TypeName.Span: "System.IO.SyncTextReader" },
-            DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b773e68", TypeName.Span: "System.Threading.Tasks.Task+<>c" },
-            DumpHeapStatisticsOutputLine { MethodTable.Span: "00007fff4b72e0c8", TypeName.Span: "System.IO.Stream+NullStream" },
-            DumpHeapStatisticsOutputLine { MethodTable.Span: "7fff9b7859c0", TypeName.Span: "System.String" },
+            DumpHeapStatisticsOutputLine { MethodTable: "00007fff4b774a70", TypeName: "System.IO.SyncTextReader" },
+            DumpHeapStatisticsOutputLine { MethodTable: "00007fff4b773e68", TypeName: "System.Threading.Tasks.Task+<>c" },
+            DumpHeapStatisticsOutputLine { MethodTable: "00007fff4b72e0c8", TypeName: "System.IO.Stream+NullStream" },
+            DumpHeapStatisticsOutputLine { MethodTable: "7fff9b7859c0", TypeName: "System.String" },
             {}
         ]);
     }

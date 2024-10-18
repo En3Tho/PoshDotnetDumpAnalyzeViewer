@@ -1,32 +1,35 @@
 $solutionPath = Get-Location
-
 pushd $solutionPath
+try
+{
+    $version = "0.0.8"
+    $modulePath = "$solutionPath\PoshDotnetDumpAnalyzeViewerModule"
+    $configuration = "Release"
+    $output = "$solutionPath\Releases\publish"
 
-$version = "0.0.8"
-$modulePath = "$solutionPath\PoshDotnetDumpAnalyzeViewerModule"
-$configuration = "Release"
-$output = "$solutionPath\Releases\publish"
+    dotnet publish $modulePath -c $configuration -o $output
+    cd "$solutionPath\Releases"
 
-dotnet publish $modulePath -c $configuration -o $output
-cd "$solutionPath\Releases"
+    Remove-Item $version -Force -Recurse -ErrorAction SilentlyContinue
 
-Remove-Item $version -Force -Recurse -ErrorAction SilentlyContinue
+    mkdir $version
+    cd $version
+    mkdir "PoshDotnetDumpAnalyzeViewerModule"
+    cd "PoshDotnetDumpAnalyzeViewerModule"
 
-mkdir $version
-cd $version
-mkdir "PoshDotnetDumpAnalyzeViewerModule"
-cd "PoshDotnetDumpAnalyzeViewerModule"
-
-$dllNames =
+    $dllNames =
     "NStack.dll",
     "PoshDotnetDumpAnalyzeViewer.dll",
     "PoshDotnetDumpAnalyzeViewerModule.dll",
     "Terminal.Gui.dll"
 
-foreach ($file in $dllNames) {
-    Copy-Item "$output\$file" -Destination ".\"
+    foreach ($file in $dllNames) {
+        Copy-Item "$output\$file" -Destination ".\"
+    }
+
+    Copy-Item "$modulePath\PoshDotnetDumpAnalyzeViewerModule.psd1" -Destination ".\"
 }
-
-Copy-Item "$modulePath\PoshDotnetDumpAnalyzeViewerModule.psd1" -Destination ".\"
-
-popd
+finally
+{
+    popd
+}

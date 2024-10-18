@@ -1,4 +1,6 @@
 using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Xunit;
 
 namespace PoshDotnetAnalyzerViewerTests;
@@ -23,11 +25,11 @@ public class DumpAssemblyParsing
         Assert.True(lines is
         [
             {},
-            DomainAddressOutputLine { DomainAddress.Span: "000055a42e3ce3e0" },
+            DomainAddressOutputLine { DomainAddress: "000055a42e3ce3e0" },
             {},
             {},
             {},
-            ModuleAddressOutputLine { ModuleAddress.Span: "00007f003dfe4020" },
+            ModuleAddressOutputLine { ModuleAddress: "00007f003dfe4020" },
         ]);
     }
 }

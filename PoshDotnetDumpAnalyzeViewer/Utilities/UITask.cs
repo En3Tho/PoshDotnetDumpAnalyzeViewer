@@ -1,24 +1,16 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace PoshDotnetDumpAnalyzeViewer;
+namespace PoshDotnetDumpAnalyzeViewer.Utilities;
 
 [AsyncMethodBuilder(typeof(UITaskMethodBuilder))]
-public readonly struct UITask
+public readonly struct UITask(Task task)
 {
-    private readonly Task _task;
-
-    public UITask(Task task)
-    {
-        _task = task;
-    }
-
-    public TaskAwaiter GetAwaiter() => _task.GetAwaiter();
+    public TaskAwaiter GetAwaiter() => task.GetAwaiter();
 }
 
 public static class UISynchronizationContext
 {
     public static SynchronizationContext Value { get; private set; } = null!;
-
     public static void Set(SynchronizationContext context) => Value = context;
 }
 
@@ -53,7 +45,7 @@ public struct UITaskMethodBuilder
         {
             var fakeAwaiter = new FakeAwaiter();
             _methodBuilder.AwaitUnsafeOnCompleted(ref fakeAwaiter, ref stateMachine);
-            ctx.Post(obj => ((Action)obj!)(), fakeAwaiter.action);
+            ctx.Post(static obj => ((Action)obj!)(), fakeAwaiter.action);
         }
     }
 
@@ -81,5 +73,4 @@ public struct UITaskMethodBuilder
     }
 
     public UITask Task => new(_methodBuilder.Task);
-
 }

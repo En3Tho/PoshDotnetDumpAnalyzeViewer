@@ -1,12 +1,19 @@
 <Project>
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <LangVersion>11</LangVersion>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <PropertyGroup>
-        <CmdletVersion>0.0.8</CmdletVersion>
+        <CmdletVersion>8.0.0</CmdletVersion>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <UseArtifactsOutput>true</UseArtifactsOutput>
+        <ARTIFACTS_PATH_DOTNET Condition=" '$(ARTIFACTS_PATH_DOTNET)' == '' ">$(MSBuildThisFileDirectory)artifacts</ARTIFACTS_PATH_DOTNET>
+        <ARTIFACTS_PATH_DOTNET Condition=" '$(ARTIFACTS_PATH_DOTNET)' != '' ">$(ARTIFACTS_PATH_DOTNET)\$(SolutionName)</ARTIFACTS_PATH_DOTNET>
+        <ArtifactsPath>$(ARTIFACTS_PATH_DOTNET)</ArtifactsPath>
+    </PropertyGroup>
+
 </Project>

@@ -1,4 +1,6 @@
 using PoshDotnetDumpAnalyzeViewer;
+using PoshDotnetDumpAnalyzeViewer.Parsing;
+using PoshDotnetDumpAnalyzeViewer.Utilities;
 using Xunit;
 
 namespace PoshDotnetAnalyzerViewerTests;
@@ -7,7 +9,7 @@ public class ParallelStacksParsing
 {
     // note: this is a reversed output
     private static readonly string[] Output =
-    {
+    [
         "==> 6 threads with 4 roots",
         "",
         "",
@@ -66,8 +68,8 @@ public class ParallelStacksParsing
         " ~~~~ 24d0",
         "________________________________________________",
         "",
-        "> pstacks -a",
-    };
+        "> pstacks -a"
+    ];
 
     [Fact]
     public void TestThatObjSizeDefaultOutputIsParsedCorrectly()
@@ -129,7 +131,7 @@ public class ParallelStacksParsing
     [Fact]
     public void TestThatShrinkingParallelStacksOutputWorksCorrectly()
     {
-        var shrinkedOutput = ParallelStacksOutputFactory.ShrinkParallelStacksOutput(Output);
+        var shrinkedOutput = ParallelStacksParser.ShrinkParallelStacksOutput(Output);
 
         Assert.True(shrinkedOutput is
         [
