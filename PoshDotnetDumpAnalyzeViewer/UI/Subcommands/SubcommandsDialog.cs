@@ -60,6 +60,21 @@ public static class SubcommandsDialog
             Title = "Available commands",
         };
 
+        buttonsContainer.KeyDown += args =>
+        {
+            switch (args.KeyEvent.Key)
+            {
+                case KeyCode.CursorUp:
+                    buttonsContainer.ProcessKey(new(KeyCode.CursorLeft, new()));
+                    args.Handled = true;
+                    break;
+                case KeyCode.CursorDown:
+                    buttonsContainer.ProcessKey(new(KeyCode.CursorRight, new()));
+                    args.Handled = true;
+                    break;
+            }
+        };
+
         var buttonFactory = new SubcommandButtonFactory(buttonsContainer, mainLayout, clipboard, commandQueue);
         buttonFactory.AddFrom(line);
         buttonsContainer.AddButtons(customButtonsFactory(buttonFactory));

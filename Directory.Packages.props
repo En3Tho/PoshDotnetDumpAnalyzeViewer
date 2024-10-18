@@ -17,6 +17,6 @@
     </PackageVersion>
   </ItemGroup>
   <ItemGroup>
-    <GlobalPackageReference Include="Microsoft.Build.CopyOnWrite" Version="1.0.302" />
+    <GlobalPackageReference Include="Microsoft.Build.CopyOnWrite" Version="1.0.330" />
   </ItemGroup>
 </Project>

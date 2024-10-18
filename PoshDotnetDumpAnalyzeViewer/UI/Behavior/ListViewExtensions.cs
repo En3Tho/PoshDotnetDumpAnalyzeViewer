@@ -105,7 +105,7 @@ public static class ArrayListViewExtensions
                     // TODO: backspace is not processed anymore in v2. A bug?
                     if (key is >= KeyCode.Space and <= KeyCode.z or KeyCode.Backspace)
                     {
-                        filter.OnKeyDown(args.KeyEvent);
+                        filter.ProcessKey(args.KeyEvent);
                         args.Handled = true;
                     }
                     break;
