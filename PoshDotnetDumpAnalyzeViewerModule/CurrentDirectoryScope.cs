@@ -1,6 +1,6 @@
 namespace PoshDotnetDumpAnalyzeViewerModule;
 
-public sealed record CurrentDirectoryScope(string Path) : IDisposable
+public sealed class CurrentDirectoryScope(string path) : IDisposable
 {
     private static string SwitchCurrentDirectory(string path)
     {
@@ -9,7 +9,7 @@ public sealed record CurrentDirectoryScope(string Path) : IDisposable
         return currentPath;
     }
 
-    private readonly string _pathToRestore = SwitchCurrentDirectory(Path);
+    private readonly string _pathToRestore = SwitchCurrentDirectory(path);
 
     public void Dispose()
     {
