@@ -80,7 +80,7 @@ public record CommandQueueWorker(
             }
 
             _ = RunTicker(cts.Token);
-            var result = await cts.AwaitAndCancel(Task.Run(() => DotnetDump.Run(command)));
+            var result = await cts.AwaitAndCancel(DotnetDump.Run(command));
 
             if (!result.IsOk)
             {

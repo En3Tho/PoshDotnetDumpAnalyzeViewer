@@ -28,20 +28,15 @@ public class SubcommandsView(IEnumerable<SubcommandButton> buttons) : Window
         Height = _buttons.Count + 2;
     }
 
-    public void AddButton(SubcommandButton button)
-    {
-        _buttons.Add(button);
-        if (maxButtonLength < button.Text.Length)
-        {
-            maxButtonLength = button.Text.Length;
-        }
-    }
-
     public void AddButtons(IEnumerable<SubcommandButton> buttons)
     {
         foreach (var button in buttons)
         {
-            AddButton(button);
+            _buttons.Add(button);
+            if (maxButtonLength < button.Text.Length)
+            {
+                maxButtonLength = button.Text.Length;
+            }
         }
         Resize();
     }
