@@ -72,6 +72,8 @@ static class RegexPatterns
     [StringSyntax(StringSyntaxAttribute.Regex)]
     private const string T = @"(?:(?:,\s)|\S)+";
 
+    private const string CmdHeader = @"^> \w+ ";
+
     /// <summary>
     /// Digit group
     /// </summary>
@@ -175,6 +177,27 @@ static class RegexPatterns
         // "MT  Field   Offset  Type VT     Attr            Value Name",
         // "Ag  Hg      Dg      Tg   Dg     Sg              Hg      Sg",
         public const string Main = $"{Ag}{WS}{Hg}{WS}{Hg}{WS}{Tg}{WS}{Dg}{WS}{Sg}{WS}{Hg}{WS}{Sg}";
+    }
+
+    public static class DumpArray
+    {
+        public const string TypeName =
+            $"Name:{WSo}{Tg}";
+
+        public const string MethodTable =
+            $"MethodTable:{WSo}{Ag}";
+
+        public const string EEClass =
+            $"EEClass:{WSo}{Ag}";
+
+        public const string ElementMethodTable =
+            $"Element Methodtable:{WSo}{Ag}";
+
+        public const string ElementAddress =
+            $@"\[{D}\]{WSo}{Ag}";
+
+        public const string ArrayAddress =
+            $"{CmdHeader}{Ag}";
     }
 
     public static class GCRoot
@@ -672,6 +695,122 @@ public partial class DumpObjectParser : IOutputParser
         }
 
         return default(DumpObjectRanges?);
+    }
+}
+
+public partial class DumpArrayParser : IOutputParser
+{
+    [GeneratedRegex(RegexPatterns.DumpArray.ElementMethodTable)]
+    public static partial Regex ElementMethodTable();
+
+    [GeneratedRegex(RegexPatterns.DumpArray.MethodTable)]
+    public static partial Regex MethodTable();
+
+    [GeneratedRegex(RegexPatterns.DumpArray.TypeName)]
+    public static partial Regex TypeName();
+
+    [GeneratedRegex(RegexPatterns.DumpArray.EEClass)]
+    public static partial Regex EEClass();
+
+    [GeneratedRegex(RegexPatterns.DumpArray.ElementAddress)]
+    public static partial Regex ElementAddress();
+
+    [GeneratedRegex(RegexPatterns.DumpArray.ArrayAddress)]
+    public static partial Regex ArrayAddress();
+
+    public static OutputLine Parse(string line, string _)
+    {
+        if (GetElementMethodTableRanges(line) is {} elementMethodTableRanges)
+            return new MethodTableOutputLine(line, line[elementMethodTableRanges.MethodTable]);
+
+        if (GetMethodTableRanges(line) is {} methodTableRanges)
+            return new MethodTableOutputLine(line, line[methodTableRanges.MethodTable]);
+
+        if (GetTypeNameRanges(line) is {} typeNameRanges)
+            return new TypeNameOutputLine(line, line[typeNameRanges.TypeName]);
+
+        if (GetEEClassRanges(line) is {} eeClassRanges)
+            return new EEClassAddressOutputLine(line, line[eeClassRanges.EEClass]);
+
+        if (GetElementAddressRanges(line) is {} elementAddressRanges)
+            return new ObjectAddressOutputLine(line, line[elementAddressRanges.Address]);
+
+        if (GetArrayAddressRanges(line) is {} arrayAddressRanges)
+            return new ObjectAddressOutputLine(line, line[arrayAddressRanges.Address]);
+
+        return new(line);
+    }
+
+    public static MethodTableRanges? GetElementMethodTableRanges(string line)
+    {
+        if (ElementMethodTable().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default(MethodTableRanges?);
+    }
+
+    public static MethodTableRanges? GetMethodTableRanges(string line)
+    {
+        if (MethodTable().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default(MethodTableRanges?);
+    }
+
+    public static TypeNameRanges? GetTypeNameRanges(string line)
+    {
+        if (TypeName().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default(TypeNameRanges?);
+    }
+
+    public static EEClassAddressRanges? GetEEClassRanges(string line)
+    {
+        if (EEClass().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default(EEClassAddressRanges?);
+    }
+
+    public static ObjectAddressRanges? GetElementAddressRanges(string line)
+    {
+        if (ElementAddress().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default(ObjectAddressRanges?);
+    }
+
+    public static ObjectAddressRanges? GetArrayAddressRanges(string line)
+    {
+        if (ArrayAddress().Match(line) is { Success: true } match)
+        {
+            var ranges = new Range[1];
+            match.CopyGroupsRangesTo(ranges);
+            return new(ranges[0]);
+        }
+
+        return default(ObjectAddressRanges?);
     }
 }
 

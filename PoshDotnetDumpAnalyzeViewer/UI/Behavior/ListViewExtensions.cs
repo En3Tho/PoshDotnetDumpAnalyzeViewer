@@ -32,12 +32,12 @@ public static class ListViewExtensions
             switch (args.KeyEvent.Key)
             {
                 case KeyCode.End:
-                    @this.SetSelectedClipTop(@this.Source.Count - 1);
                     args.Handled = true;
+                    @this.SetSelectedClipTop(@this.Source.Count - 1);
                     break;
                 case KeyCode.PageDown:
-                    @this.SetSelectedClipTop(Math.Min(@this.Source.Count - 1, @this.SelectedItem + @this.Frame.Height));
                     args.Handled = true;
+                    @this.SetSelectedClipTop(Math.Min(@this.Source.Count - 1, @this.SelectedItem + @this.Frame.Height));
                     break;
             }
         };
@@ -54,13 +54,13 @@ public static class ArrayListViewExtensions
             switch (args.KeyEvent.Key)
             {
                 case KeyCode.CtrlMask | KeyCode.C:
-                    clipboard.SetClipboardData(@this.Source[@this.SelectedItem]!.ToString());
                     args.Handled = true;
+                    clipboard.SetClipboardData(@this.Source[@this.SelectedItem]!.ToString());
                     break;
 
                 case KeyCode.CtrlMask | KeyCode.ShiftMask | KeyCode.C:
-                    clipboard.SetClipboardData(string.Join(Environment.NewLine, @this.Source));
                     args.Handled = true;
+                    clipboard.SetClipboardData(string.Join(Environment.NewLine, @this.Source));
                     break;
             }
         };
@@ -75,11 +75,11 @@ public static class ArrayListViewExtensions
         {
             if (args.KeyEvent.Key == KeyCode.Enter)
             {
+                args.Handled = true;
                 if (dialogFactory(@this.Source[@this.SelectedItem]) is { } dialog)
                 {
                     Application.Run(dialog, exceptionHandler);
                 }
-                args.Handled = true;
             }
         };
 
@@ -91,22 +91,22 @@ public static class ArrayListViewExtensions
         var filterHistory = new HistoryList<string>();
         var lastFilter = "";
 
-        @this.KeyDown += args =>
+        @this.KeyUp += args =>
         {
             var key = args.KeyEvent.Key;
             switch (key)
             {
                 case KeyCode.Tab:
-                    FindNextListItem();
                     args.Handled = true;
+                    FindNextListItem();
                     break;
                 default:
                     // delegate simple number and letter keystrokes to filter
                     // TODO: backspace is not processed anymore in v2. A bug?
                     if (key is >= KeyCode.Space and <= KeyCode.z or KeyCode.Backspace)
                     {
-                        filter.ProcessKey(args.KeyEvent);
                         args.Handled = true;
+                        filter.ProcessKey(args.KeyEvent);
                     }
                     break;
             }
@@ -152,16 +152,16 @@ public static class ArrayListViewExtensions
             switch (args.KeyEvent.Key)
             {
                 case KeyCode.Enter:
-                    FilterListItems(@this.Source);
                     args.Handled = true;
+                    FilterListItems(@this.Source);
                     break;
                 case KeyCode.CtrlMask | KeyCode.Enter:
-                    FilterListItems(@this.InitialSource);
                     args.Handled = true;
+                    FilterListItems(@this.InitialSource);
                     break;
                 case KeyCode.Tab:
-                    FindNextListItem();
                     args.Handled = true;
+                    FindNextListItem();
                     break;
             }
         };

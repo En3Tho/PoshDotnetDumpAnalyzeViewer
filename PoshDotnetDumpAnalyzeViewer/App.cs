@@ -47,7 +47,8 @@ public static class App
             new DumpExceptionFactory(mainLayout, clipboard, commandQueue),
             new ParallelStacksViewFactory(mainLayout, clipboard, commandQueue),
             new ClrStackViewFactory(mainLayout, clipboard, commandQueue),
-            (SosCommandViewFactory)null!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
+            new DumpArrayCommandViewFactory(mainLayout, clipboard, commandQueue),
+            default(SosCommandViewFactory)!, // this slot is for sos, it's sorta special as it delegates output parsing to other factories
             new FallbackCommandViewFactory(clipboard)
         ];
 

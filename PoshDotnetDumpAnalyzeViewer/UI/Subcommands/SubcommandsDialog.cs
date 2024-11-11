@@ -29,17 +29,18 @@ public static class SubcommandsDialog
                 case KeyCode.Tab:
                     if (onTab is { })
                     {
+                        args.Handled = true;
                         Application.RequestStop(parent);
                         onTab();
-                        args.Handled = true;
                     }
                     break;
                 case KeyCode.Enter:
+                    args.Handled = true;
                     Application.RequestStop(parent);
                     onEnter();
-                    args.Handled = true;
                     break;
                 case KeyCode.Esc:
+                    args.Handled = true;
                     Application.RequestStop(parent);
                     break;
             }
@@ -65,12 +66,12 @@ public static class SubcommandsDialog
             switch (args.KeyEvent.Key)
             {
                 case KeyCode.CursorUp:
-                    buttonsContainer.ProcessKey(new(KeyCode.CursorLeft, new()));
                     args.Handled = true;
+                    buttonsContainer.ProcessKey(new(KeyCode.CursorLeft, new()));
                     break;
                 case KeyCode.CursorDown:
-                    buttonsContainer.ProcessKey(new(KeyCode.CursorRight, new()));
                     args.Handled = true;
+                    buttonsContainer.ProcessKey(new(KeyCode.CursorRight, new()));
                     break;
             }
         };

@@ -29,8 +29,8 @@ public sealed record HelpCommandViewFactory
             {
                 if (view.ListView.TryParseLine<HelpParser>(output.Command) is HelpOutputLine help)
                 {
-                    CommandQueue.SendCommand($"help {help.Commands[0]}");
                     args.Handled = true;
+                    CommandQueue.SendCommand($"help {help.Commands[0]}");
                 }
             }
         };

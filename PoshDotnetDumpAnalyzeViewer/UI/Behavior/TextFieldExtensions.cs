@@ -19,14 +19,14 @@ public static class TextFieldExtensions
 
             if (key == copyKey)
             {
-                @this.Copy(clipboard);
                 args.Handled = true;
+                @this.Copy(clipboard);
             }
             else if (key == pasteKey)
             {
+                args.Handled = true;
                 if (clipboard.GetClipboardData() is { } clipboardData)
                     @this.Paste(clipboardData);
-                args.Handled = true;
             }
         };
 
@@ -41,15 +41,14 @@ public static class TextFieldExtensions
             var key = args.KeyEvent.Key;
             if (key == previousCommandKey)
             {
+                args.Handled = true;
                 if (historyList.Previous() is { } previousCommand)
                     @this.Text = previousCommand;
-
-                args.Handled = true;
             }
             else if (key == nextCommandKey)
             {
-                @this.Text = historyList.Next() ?? "";
                 args.Handled = true;
+                @this.Text = historyList.Next() ?? "";
             }
         };
 

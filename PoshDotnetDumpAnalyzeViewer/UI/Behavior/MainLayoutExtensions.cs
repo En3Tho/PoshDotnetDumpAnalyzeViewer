@@ -21,14 +21,15 @@ public static class MainLayoutExtensions
             {
                 case KeyCode.CtrlMask | KeyCode.W:
                 {
+                    args.Handled = true;
                     // special case help
                     if (@this.TabView is { SelectedTab: { Text: {} tabText } selectedTab} && tabText?.ToString() is not "help")
                         tabManager.RemoveTab(selectedTab);
-                    args.Handled = true;
                     break;
                 }
                 case KeyCode.CtrlMask | KeyCode.R:
                 {
+                    args.Handled = true;
                     // special case help
                     if (@this.TabView is { SelectedTab.Text: {} tabTextU } && tabTextU.ToString()! is not "help" and var tabText)
                     {
@@ -37,7 +38,6 @@ public static class MainLayoutExtensions
                             commandQueue.SendCommand(tabText, forceRefresh: true);
                         }
                     }
-                    args.Handled = true;
                     break;
                 }
             }
@@ -58,18 +58,18 @@ public static class MainLayoutExtensions
             switch (args.KeyEvent.Key)
             {
                 case KeyCode.CtrlMask | KeyCode.Enter:
+                    args.Handled = true;
                     if (!@this.CommandInput.ReadOnly)
                     {
                         ProcessEnterKey(true);
                     }
-                    args.Handled = true;
                     break;
                 case KeyCode.Enter:
+                    args.Handled = true;
                     if (!@this.CommandInput.ReadOnly)
                     {
                         ProcessEnterKey();
                     }
-                    args.Handled = true;
                     break;
             }
         };

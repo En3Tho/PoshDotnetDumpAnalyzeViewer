@@ -52,7 +52,6 @@ public record CommandQueueWorker(
         try
         {
             var viewFactory = ViewFactories.First(x => x.IsSupported(command));
-            command = viewFactory.NormalizeCommand(command);
 
             MainLayout.CommandInput.Text = command;
             MainLayout.CommandInput.ReadOnly = true;
