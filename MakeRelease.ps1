@@ -18,10 +18,10 @@ try
     cd "PoshDotnetDumpAnalyzeViewerModule"
 
     $dllNames =
-    "NStack.dll",
-    "PoshDotnetDumpAnalyzeViewer.dll",
-    "PoshDotnetDumpAnalyzeViewerModule.dll",
-    "Terminal.Gui.dll"
+        "NStack.dll",
+        "PoshDotnetDumpAnalyzeViewer.dll",
+        "PoshDotnetDumpAnalyzeViewerModule.dll",
+        "Terminal.Gui.dll"
 
     foreach ($file in $dllNames) {
         Copy-Item "$output\$file" -Destination ".\"
