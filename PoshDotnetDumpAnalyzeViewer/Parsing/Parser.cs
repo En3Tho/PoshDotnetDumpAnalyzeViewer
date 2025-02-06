@@ -1266,10 +1266,18 @@ public partial class ParallelStacksParser : IOutputParser
         {
             if (IsThreadNames(line))
             {
-                reducedStack.Add(firstLine);
-                reducedStack.Add(lastLine);
+                if (!string.IsNullOrEmpty(firstLine))
+                {
+                    reducedStack.Add(firstLine);
+                }
+                if (!ReferenceEquals(firstLine, lastLine))
+                {
+                    reducedStack.Add(lastLine);
+                }
                 reducedStack.Add(line);
                 currentThreadCount = -1;
+                firstLine = "";
+                lastLine = "";
                 continue;
             }
 

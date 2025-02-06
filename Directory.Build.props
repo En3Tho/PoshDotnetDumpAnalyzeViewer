@@ -10,10 +10,4 @@
         <CmdletVersion>8.0.0</CmdletVersion>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(ARTIFACTS_PATH_DOTNET)' != '' ">
-        <MSBuildThisFileDirectoryName>$([System.IO.Path]::GetFileName($(MSBuildThisFileDirectory.TrimEnd($([System.IO.Path]::DirectorySeparatorChar)))))</MSBuildThisFileDirectoryName>
-        <SolutionName Condition="'$(SolutionName)' == ''">$(MSBuildThisFileDirectoryName)</SolutionName>
-        <ArtifactsPath>$(ARTIFACTS_PATH_DOTNET)\$(SolutionName)</ArtifactsPath>
-    </PropertyGroup>
-
 </Project>
